@@ -1,0 +1,19 @@
+version: "3.4"
+services:
+  streamservice:
+    image: ftl_stream_service:dev
+    build:
+      context: ./
+      dockerfile: ./Dockerfile
+      target: build
+    environment:
+      NODE_ENV: development
+      REDIS_HOST: redis
+    volumes:
+      - ./packages:/usr/src/app/packages
+    command: ["yarn", "workspace", "@ftl/stream-service", "run", "start:dev"]
+    ports:
+      - "8080:8080"
+  redis:
+    image: redis:alpine
+    command: redis-server --maxmemory 200mb --save "" --appendonly no
