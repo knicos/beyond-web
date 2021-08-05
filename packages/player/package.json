@@ -1,10 +1,12 @@
 {
   "name": "@ftl/player",
   "version": "1.0.0",
+  "main": "dist/index.js",
   "devDependencies": {
     "@types/event-emitter": "^0.3.3",
     "@types/jest": "^26.0.24",
     "@types/node": "^16.3.0",
+    "@types/three": "^0.130.1",
     "jest": "^27.0.6",
     "typescript": "^4.3.5"
   },
@@ -14,6 +16,8 @@
   },
   "dependencies": {
     "event-emitter": "^0.3.5",
-    "mux.js": "^5.6.2"
+    "mux.js": "^5.6.2",
+    "react": "^17.0.2",
+    "three": "^0.131.2"
   }
 }

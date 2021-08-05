@@ -1,10 +1,23 @@
 version: "3.4"
 services:
+  client:
+    image: ftl_client:dev
+    build:
+      context: ./
+      dockerfile: ./docker/Dockerfile.client
+    ports:
+      - "8080:8080"
+    environment:
+      FTL_STREAM_SERVICE: streamservice:8080
+    depends_on:
+      - streamservice
+    volumes:
+      - ./packages/client/dist:/usr/share/nginx/html
   streamservice:
     image: ftl_stream_service:dev
     build:
       context: ./
-      dockerfile: ./Dockerfile
+      dockerfile: ./docker/Dockerfile.services
       target: build
     environment:
       NODE_ENV: development
@@ -12,8 +25,6 @@ services:
     volumes:
       - ./packages:/usr/src/app/packages
     command: ["yarn", "workspace", "@ftl/stream-service", "run", "start:dev"]
-    ports:
-      - "8080:8080"
   redis:
     image: redis:alpine
     command: redis-server --maxmemory 200mb --save "" --appendonly no
