@@ -1,5 +1,6 @@
-import {Peer} from '@ftl/protocol';
-import THREE from 'three';
+import * as THREE from 'three';
+import {FTLStream} from '@ftl/stream';
+import {FTLMSE} from './mse';
 
 class FTLFrameset {
 	id: number;
@@ -11,8 +12,6 @@ class FTLFrameset {
 }
 
 export class FTLPlayer {
-    uri: string;
-    peer: Peer;
     current = "";
     current_fs = 0;
     current_source = 0;
@@ -25,11 +24,9 @@ export class FTLPlayer {
     scene: THREE.Scene;
     mesh: THREE.Mesh;
     renderer: THREE.WebGLRenderer;
+    mse: FTLMSE;
 
-    constructor(peer, uri, element: HTMLElement) {
-        this.uri = uri;
-	    this.peer = peer;
-
+    constructor(element: HTMLElement) {
         this.outer = element;
         this.outer.classList.add("ftl");
         this.outer.classList.add("container");
@@ -42,10 +39,16 @@ export class FTLPlayer {
         this.element.id = "ftl-video-element";
         this.outer.appendChild(this.element);
 
+        this.mse = new FTLMSE(this.element);
+        this.mse.select(0, 0, 0);
+
+        const width = element.clientWidth;
+        const height = element.clientHeight;
+
         if (false) {
             this.camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 1100 );
         } else {
-            this.camera = new THREE.OrthographicCamera(window.innerWidth/-2, window.innerWidth/2, window.innerHeight/2, window.innerHeight/-2, 1, 4);
+            this.camera = new THREE.OrthographicCamera(width/-2, width/2, height/2, height/-2, 1, 4);
         }
         //this.camera.target = new THREE.Vector3( 0, 0, 0 );
     
@@ -70,8 +73,39 @@ export class FTLPlayer {
 
         this.renderer = new THREE.WebGLRenderer();
         this.renderer.setPixelRatio( window.devicePixelRatio );
-        this.renderer.setSize( window.innerWidth, window.innerHeight );
+        this.renderer.setSize( width, height );
         this.outer.appendChild( this.renderer.domElement );
+
+        const update = () => {
+            /*me.lat = Math.max( - 85, Math.min( 85, me.lat ) );
+            let phi = THREE.MathUtils.degToRad( 90 - me.lat );
+            let theta = THREE.MathUtils.degToRad( me.lon );*/
+    
+            this.camera.position.x = 0;
+            this.camera.position.y = 0;
+            this.camera.position.z = -2;
+    
+            this.camera.lookAt(0, 0, 0);
+    
+            this.renderer.render( this.scene, this.camera );
+    
+        }
+    
+        function animate() {
+            requestAnimationFrame( animate );
+            update();
+        }
+    
+        animate();
+    }
+
+    play() {
+        this.element.play();
+    }
+
+    push(spkt, pkt) {
+        console.log('MSE PUSH', spkt[0], spkt[3]);
+        this.mse.push(spkt, pkt);
     }
 
 	//this.elements_ = {};
@@ -81,10 +115,6 @@ export class FTLPlayer {
 	
 	//this.player = videojs('ftl-video-element');
 	//this.player.vr({projection: '360'});
-
-	
-
-	var me = this;
 
 	/*this.isUserInteracting = false;
 	this.onPointerDownPointerX = 0;
@@ -134,33 +164,6 @@ export class FTLPlayer {
 		this.distance = THREE.MathUtils.clamp( this.distance, 1, 50 );
 	});*/
 
-	function update() {
-		/*me.lat = Math.max( - 85, Math.min( 85, me.lat ) );
-		let phi = THREE.MathUtils.degToRad( 90 - me.lat );
-		let theta = THREE.MathUtils.degToRad( me.lon );
-
-		me.camera.position.x = 0;
-		me.camera.position.y = 0;
-		me.camera.position.z = -2;
-
-		me.camera.lookAt( me.camera.target );*/
-
-		me.renderer.render( me.scene, me.camera );
-
-	}
-
-	function animate() {
-
-		requestAnimationFrame( animate );
-		update();
-
-	}
-
-	animate();
-
-	this.paused = false;
-	this.active = true;
-
 	/*this.overlay.addEventListener('keydown', (event) => {
 		console.log(event);
 		switch(event.code) {
@@ -178,7 +181,7 @@ export class FTLPlayer {
 	this.translateY = 0;
 	this.translateZ = 0;*/
 
-    let rxcount = 0;
+    /*let rxcount = 0;
 
 	this.mse = new FTLMSE(this.element);
 
@@ -214,12 +217,10 @@ export class FTLPlayer {
 		this.peer.on("connect", (p)=> {
 			this.start(0,0,0);
 		});
-	}
-
-	this.element.play();
+	}*/
 }
 
-FTLStream.prototype.on = function(name, cb) {
+/*FTLStream.prototype.on = function(name, cb) {
 	if (!this.handlers.hasOwnProperty(name)) {
 		this.handlers[name] = [];
 	}
@@ -280,4 +281,4 @@ FTLStream.prototype.start = function(fs, source, channel) {
 			this.peer.send(this.uri, 0, [1,fs,255,channel],[255,7,35,0,0,Buffer.alloc(0)]);
 		}, this.uri);
 	}
-}
+}*/

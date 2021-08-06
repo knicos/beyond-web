@@ -2,7 +2,7 @@ import React from 'react';
 import styled from 'styled-components';
 import {ReactPlayer} from '@ftl/player';
 import {useRecoilValue} from 'recoil';
-import {currentStream} from '../../recoil/atoms';
+import {currentStream, frameTime} from '../../recoil/atoms';
 
 const Main = styled.section`
     padding: 1rem;
@@ -41,8 +41,15 @@ const VideoContainer = styled.div`
     box-shadow: 2px 2px 5px #aaa;
 `;
 
+const StatsBar = styled.div`
+    width: 100%;
+    padding: 1rem;
+`;
+
 export function SKRView() {
     const stream = useRecoilValue(currentStream);
+    const time = useRecoilValue(frameTime);
+    const seconds = stream ? ((time - stream.startTimestamp) / 1000).toFixed(1) : 0;
 
     return <Main>
         <Card className="menu">
@@ -53,6 +60,9 @@ export function SKRView() {
                 <VideoContainer>
                     <ReactPlayer stream={stream} />
                 </VideoContainer>
+                <StatsBar>
+                    {`Time: ${seconds}s`}
+                </StatsBar>
             </PlayerContainer>
         </Card>
         <Card className="side">

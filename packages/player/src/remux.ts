@@ -210,8 +210,6 @@ export class FTLRemux {
 		if (this.paused || !this.active) {
 			return;
 		}
-
-        console.log('REMUX PKT', spkt, pkt);
 	
 		if (pkt[0] === 33) {  // Opus audio
 			if (this.has_audio && this.init_seg) {

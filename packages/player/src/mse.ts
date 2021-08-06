@@ -29,6 +29,7 @@ export class FTLMSE {
 
 		this.remux.on('data', (data) => {
 			if (this.sourceBuffer.updating) {
+                console.log('QUEUE');
 				this.queue.push(data);
 			} else {
 				//console.log("Direct append: ", data);
@@ -77,7 +78,7 @@ export class FTLMSE {
 				if (this.queue.length > 0 && !this.sourceBuffer.updating) {
 					let s = this.queue[0];
 					this.queue.shift();
-					//console.log("Append", s);
+					console.log("Append", s);
 
 					try {
 						this.sourceBuffer.appendBuffer(s);

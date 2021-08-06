@@ -1,5 +1,5 @@
 import React, {useRef, useState, useEffect} from 'react';
-import {FTLMSE} from './mse';
+import {FTLPlayer} from './player';
 import {FTLStream} from '@ftl/stream';
 
 interface Props {
@@ -8,24 +8,26 @@ interface Props {
 
 export function ReactPlayer({stream}: Props) {
     const ref = useRef();
-    const [mse] = useState({mse: null});
+    const [state] = useState({player: null});
 
     useEffect(() => {
-        mse.mse = new FTLMSE(ref.current);
-        mse.mse.select(0, 0, 0);
-    }, [ref.current]);
+        state.player = new FTLPlayer(ref.current);
+    }, []);
 
     useEffect(() => {
         if (stream) {
             stream.enableVideo(0, 0, 0);
             stream.on('packet', (spkt, pkt) => {
-                //console.log('MSE packet', spkt[3]);
-                if (mse.mse && spkt[3] < 34) {
-                    mse.mse.push(spkt, pkt);
+                if (state.player && spkt[3] < 34) {
+                    state.player.push(spkt, pkt);
                 }
             });
         }
     }, [stream]);
 
-    return <video ref={ref} />;
+    return <div style={{width: '300px', height: '250px'}} ref={ref} onClick={() => {
+        if (state.player) {
+            state.player.play();
+        }
+    }} />;
 }

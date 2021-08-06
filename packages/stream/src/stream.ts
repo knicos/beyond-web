@@ -22,6 +22,7 @@ export class FTLStream {
     enabledChannels = new Map<string, IVideoState>();
     found = false;
     lastTimestamp = 0;
+    startTimestamp = 0;
 
 	constructor(peer: Peer, uri: string) {
         this.peer = peer;
@@ -35,6 +36,10 @@ export class FTLStream {
             this.emit('raw', streampckg, pckg);
 
             // console.log('PACKET', streampckg);
+
+            if (this.startTimestamp === 0) {
+                this.startTimestamp = streampckg[0];
+            }
 
             if (streampckg[0] !== this.lastTimestamp) {
                 this.emit('frameEnd', this.lastTimestamp);
@@ -52,7 +57,7 @@ export class FTLStream {
                     state.rxcount++;
                     if (state.rxcount >= 25) {
                         state.rxcount = 0;
-                        this.peer.send(this.uri, 0, [1,0,255,0],[255,7,35,0,0,Buffer.alloc(0)]);
+                        this.peer.send(this.uri, 0, [1,0,255,0,5],[255,7,35,0,0,Buffer.alloc(0)]);
                     }
 
                     this.emit('packet', streampckg, pckg);
@@ -71,7 +76,7 @@ export class FTLStream {
 
     private start(fs: number, frame: number, channel: number) {
         if (this.found) {
-            this.peer.send(this.uri, 0, [1,fs,255,channel],[255,7,35,0,0,Buffer.alloc(0)]);
+            this.peer.send(this.uri, 0, [1,fs,255,channel, 5],[255,7,35,0,0,Buffer.alloc(0)]);
         } else {
             this.peer.rpc("find_stream", res => {
                 if (!res) {
@@ -83,7 +88,7 @@ export class FTLStream {
                 }
                 console.log('RES', res);
                 this.found = true;
-                this.peer.send(this.uri, 0, [1,fs,255,channel],[255,7,35,0,0,Buffer.alloc(0)]);
+                this.peer.send(this.uri, 0, [1,fs,255,channel, 5],[255,7,35,0,0,Buffer.alloc(0)]);
             }, this.uri, true);
         }
     }

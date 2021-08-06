@@ -30,19 +30,19 @@ export class OutputStream {
 
 		redisSubscribe(`stream-in:${this.base_uri}`, message => {
 			// Return data...
-            console.log('SOURCE DATA', message);
+            //console.log('SOURCE DATA', message);
             const args = decode(message);
             this.peer.send(this.base_uri, ...args);
 		});
 	
-		console.log("Sending request");
-		this.peer.send(this.base_uri, 0, [1,255,255,74,1],[7,0,1,255,0,new Uint8Array(0)]);
+		// console.log("Sending request");
+		// this.peer.send(this.base_uri, 0, [1,255,255,74,1],[7,0,1,255,0,new Uint8Array(0)]);
 	}
 
 	private parseFrame(spacket: unknown, packet: unknown) {
 		if (spacket[3] >= 64 && packet[5].length > 0 && packet[0] == 103) {
 			this.data[spacket[3]] = decode(packet[5]);
-			console.log('Got data: ', spacket[3], this.data[spacket[3]]);
+			//console.log('Got data: ', spacket[3], this.data[spacket[3]]);
 		}
 	}
 
