@@ -1,5 +1,7 @@
 import ee, {Emitter} from 'event-emitter';
 import {Peer} from '@ftl/protocol';
+import msgpack from 'msgpack5';
+const {encode, decode} = msgpack();
 
 interface IStreamPacket {
 	0: number,
@@ -23,6 +25,7 @@ export class FTLStream {
     found = false;
     lastTimestamp = 0;
     startTimestamp = 0;
+    data = new Map<number, any>();
 
 	constructor(peer: Peer, uri: string) {
         this.peer = peer;
@@ -48,6 +51,14 @@ export class FTLStream {
             }
 
             if (streampckg[3] >= 32) {
+                if (streampckg[3] > 64 && pckg[5].length > 0) {
+                    try {
+                        const data = decode(pckg[5]);
+                        this.data.set(streampckg[3], data);
+                    } catch(err) {
+                        console.error('Decode error', err, pckg[5]);
+                    }
+                }
                 this.emit('packet', streampckg, pckg);
             } else {
                 const id = "id-"+streampckg[1]+"-"+streampckg[2]+"-"+streampckg[3];

@@ -25,7 +25,7 @@ export function ReactPlayer({stream}: Props) {
         }
     }, [stream]);
 
-    return <div style={{width: '300px', height: '250px'}} ref={ref} onClick={() => {
+    return <div style={{width: '640px', height: '480px'}} ref={ref} onClick={() => {
         if (state.player) {
             state.player.play();
         }

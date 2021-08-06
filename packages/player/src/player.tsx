@@ -59,7 +59,7 @@ export class FTLPlayer {
         if (false) {
             geometry = new THREE.SphereBufferGeometry( 500, 60, 40 );
         } else {
-            geometry = new THREE.PlaneGeometry(1280, 720, 32);
+            geometry = new THREE.PlaneGeometry(width, height, 32);
         }
         // invert the geometry on the x-axis so that all of the faces point inward
         geometry.scale( - 1, 1, 1 );

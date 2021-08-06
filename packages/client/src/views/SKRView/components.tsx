@@ -1,0 +1,99 @@
+import React, {useState, useEffect} from 'react';
+import styled from 'styled-components';
+
+const Item = styled.div`
+    border-top: 1px solid black;
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    padding: 0.2rem 0.5rem;
+    align-items: center;
+
+    > span.number {
+        color: blue;
+    }
+
+    > span.boolean {
+        color: green;
+    }
+
+    > span.string {
+        color: red;
+    }
+`;
+
+interface IManifest {
+    label: string;
+    component: string;
+}
+
+function DataItem({name, value}: {name: string, value: string | number | boolean | React.ReactNode}) {
+    const type = typeof value;
+
+    const element = type === 'object' ? value : `${value}`;
+
+    return <Item>
+        <span>{name}</span>
+        <span className={type} >{element}</span>
+    </Item>
+}
+
+function Calibration({data}: {data: number[][]}) {
+    return <>
+        <DataItem name="Focal" value={data[0][0]} />
+        <DataItem name="Width" value={data[0][4]} />
+        <DataItem name="Height" value={data[0][5]} />
+    </>;
+}
+
+function Image({data, config}: {data: any, config: IManifest}) {
+    const [img, setImg] = useState(null);
+    useEffect(() => {
+        setImg(URL.createObjectURL(
+            new Blob([data])
+        ));
+    }, [data])
+    return <DataItem name={config.label} value={<img width="50" src={img} />} />
+}
+
+interface IMetaData {
+    device: string;
+    name: string;
+    uri: string;
+}
+
+function Metadata({data}: {data: IMetaData}) {
+    return <>
+        <DataItem name="Device" value={data.device} />
+        <DataItem name="Name" value={data.name} />
+        <DataItem name="URI" value={data.uri} />
+    </>;
+}
+
+const CAPABILITIES = [
+    "Movable",
+    "Active",
+    "Video",
+    "Adjustable",
+    "Virtual",
+    "Touch",
+    "VR",
+    "Live",
+    "Fused",
+    "Streamed",
+    "Equi-rectangular",
+    "Stereo",
+];
+
+function Capabilities({data}: {data: number[]}) {
+    return <>
+        {data.map((d, ix) => <DataItem key={ix} name={CAPABILITIES[d]} value={true} />)}
+    </>;
+}
+
+export const components: Record<string, React.FunctionComponent<{data: unknown, config?: IManifest}>> = {
+    Calibration,
+    Metadata,
+    Image,
+    Capabilities,
+};

@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import {ReactPlayer} from '@ftl/player';
 import {useRecoilValue} from 'recoil';
 import {currentStream, frameTime} from '../../recoil/atoms';
+import {DataListing} from './DataListing';
 
 const Main = styled.section`
     padding: 1rem;
@@ -21,11 +22,11 @@ const Card = styled.div`
     }
 
     &.main {
-        grid-column: span 5;
+        grid-column: span 4;
     }
 
     &.side {
-        grid-column: span 1;
+        grid-column: span 2;
     }
 `;
 
@@ -66,7 +67,7 @@ export function SKRView() {
             </PlayerContainer>
         </Card>
         <Card className="side">
-            Side panel
+            <DataListing stream={stream} time={time} />
         </Card>
     </Main>;
 }

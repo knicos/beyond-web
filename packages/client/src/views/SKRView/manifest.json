@@ -1,0 +1,18 @@
+{
+    "65": {
+        "label": "Calibration",
+        "component": "Calibration"
+    },
+    "71": {
+        "label": "Metadata",
+        "component": "Metadata"
+    },
+    "74": {
+        "label": "Thumbnail",
+        "component": "Image"
+    },
+    "72": {
+        "label": "Capabilities",
+        "component": "Capabilities"
+    }
+}
