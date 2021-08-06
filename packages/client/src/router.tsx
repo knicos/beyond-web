@@ -1,14 +1,13 @@
 import React from 'react';
 import {Switch, Route} from 'react-router';
-import {SKRView} from './views/SKRView';
+import {Apps} from './views/Apps';
+import {StreamIndex} from './views/StreamIndex';
 
 export function Router() {
     return (
         <Switch>
-            <Route exact path="/" >
-                Welcome
-            </Route>
-            <Route path="/skr" component={SKRView} />
+            <Route exact path="/" component={StreamIndex} />
+            <Route path="/apps" component={Apps} />
         </Switch>
     )
 }

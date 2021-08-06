@@ -210,6 +210,8 @@ export class FTLRemux {
 		if (this.paused || !this.active) {
 			return;
 		}
+
+        console.log('REMUX PKT', spkt, pkt);
 	
 		if (pkt[0] === 33) {  // Opus audio
 			if (this.has_audio && this.init_seg) {
@@ -226,7 +228,7 @@ export class FTLRemux {
 				this.emit('data', result);
 				this.audiotrack.baseMediaDecodeTime += 1800*samples.length; // 1800 = 20ms*90 or frame size 960@48000hz in 90000 ticks/s
 			}
-		} else if(pkt[0] === 2){  // H264 packet.
+		} else if(pkt[0] === 2) {  // H264 packet.
 			if (spkt[1] == this.frameset && spkt[2] == this.source && spkt[3] == this.channel) {
 	
 				if (!this.seen_keyframe) {
@@ -271,7 +273,9 @@ export class FTLRemux {
 					this.ts = spkt[0];
 				}
 			}
-		}
+		} else {
+            console.error('Unsupported codec', pkt[0]);
+        }
 	}
 	
 	select(frameset, source, channel) {

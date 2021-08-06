@@ -3,7 +3,7 @@
 	  "module": "CommonJS",
 	  "resolveJsonModule": true,
 	  "esModuleInterop": true,
-	  "target": "ES2019",
+	  "target": "ES6",
 	  "moduleResolution": "node",
 	  "sourceMap": true,
 	  "outDir": "dist",

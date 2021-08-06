@@ -1,10 +1,12 @@
 import {Peer} from "@ftl/protocol";
 import {InputStream} from "./InputStream";
+import {OutputStream} from "./OutputStream";
 import { redisAddItem, redisRemoveItem, redisTopItems } from "@ftl/common";
 
 const peer_uris = new Map<string, string[]>();
 const uri_to_peer = new Map<string, Peer>();
 const input_streams = new Map<string, InputStream>();
+const output_streams = new Map<string, OutputStream>();
 
 /**
  * Returns the first part of the URI
@@ -18,32 +20,22 @@ const input_streams = new Map<string, InputStream>();
 }
 
 export async function getStreams(): Promise<string[]> {
-	const streams = await redisTopItems('streams');
-	console.log('STREAMS', streams);
-	return streams;
+	return redisTopItems('streams');
+}
+
+export async function getActiveStreams(): Promise<string[]> {
+	return redisTopItems('activestreams');
 }
 
 export async function bindToStream(p: Peer, uri: string) {
 	const parsedURI = removeQueryString(uri);
-	const streams = await getStreams();
+	const streams = await getActiveStreams();
 	if (streams.some(p => p === parsedURI)) {
 		console.log("Stream found: ", uri, parsedURI);
 
 		if (!p.isBound(parsedURI)) {
 			console.log("Adding local stream binding: ", parsedURI);
-			p.bind(parsedURI, (ttimeoff, spkt, pkt) => {
-				//console.log("STREAM: ", ttimeoff, spkt, pkt);
-				let speer = uri_to_peer[parsedURI];
-				if (speer) {
-					try {
-					//uri_data[parsedURI].addClient(p);
-					speer.send(parsedURI, ttimeoff, spkt, pkt);
-					} catch(e) {
-						console.error("EXCEPTION", e);
-					}
-				} else if (speer) console.log("Stream response");
-				else console.error("No stream peer");
-			});
+            output_streams.set(p.string_id, new OutputStream(parsedURI, p));
 		}
 
 		return [Peer.uuid];
@@ -55,7 +47,7 @@ export async function bindToStream(p: Peer, uri: string) {
 
 export function checkStreams(peer: Peer) {
 	if (!peer_uris.has(peer.string_id)) {
-		peer_uris[peer.string_id] = [];
+		peer_uris.set(peer.string_id, []);
 	}
 
 	if (!peer.master) {
@@ -77,12 +69,12 @@ export function checkStreams(peer: Peer) {
 }
 
 export function removeStreams(peer: Peer) {
-	const puris = peer_uris[peer.string_id];
+	const puris = peer_uris.get(peer.string_id);
 	if (puris) {
 		for (let i=0; i<puris.length; i++) {
 			console.log("Removing stream: ", puris[i]);
+            redisRemoveItem('activestreams', puris[i]);
 			uri_to_peer.delete(puris[i]);
-			redisRemoveItem('streams', puris[i]);
 			if (input_streams.has(puris[i])) {
 				input_streams.delete(puris[i]);
 			}
@@ -95,11 +87,12 @@ export function removeStreams(peer: Peer) {
 export function createStream(peer: Peer, uri: string) {
 	const parsedURI = removeQueryString(uri)
 	console.log("Adding stream: ", uri);
-	peer_uris[peer.string_id].push(parsedURI);
-	uri_to_peer[parsedURI] = peer;
-	input_streams[parsedURI] = new InputStream(uri, peer);
+	peer_uris.get(peer.string_id).push(parsedURI);
+	uri_to_peer.set(parsedURI, peer);
+	input_streams.set(parsedURI, new InputStream(uri, peer));
 	//stream_list[uri] = true;
 	redisAddItem('streams', parsedURI, Date.now());
+    redisAddItem('activestreams', parsedURI, Date.now());
 
 	//broadcastExcept(p, "add_stream", uri);
 }

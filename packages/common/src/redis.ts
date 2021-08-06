@@ -16,10 +16,14 @@ function initRedis(): void {
 		redisSub = redisClient.duplicate({return_buffers: true})
 		redisPub = redisClient.duplicate();
 
-		redisSub.on("message", (channel, message) => {
-			if (handlers.has(channel)) {
-				handlers[channel](message);
-			}
+		redisSub.on("message", (channel: Buffer, message: Buffer) => {
+            const strchan = channel.toString('utf8');
+            console.log('redismsg', strchan);
+			if (handlers.has(strchan)) {
+				handlers.get(strchan)(message);
+			} else {
+                console.error('No handler');
+            }
 		});
 	}
 }
@@ -36,10 +40,14 @@ export function redisPublish(channel: string, data: unknown): Promise<boolean> {
 
 export function redisSubscribe(channel: string, cb: Function): Promise<boolean> {
 	initRedis();
+    console.log('Subscribe to', channel);
 	// Subscribe to redis
-	handlers[channel] = cb;
+	handlers.set(channel, cb);
 	return new Promise(resolve => {
 		redisSub.subscribe(channel, (err, reply) => {
+            if (err) {
+                console.error('Subscribe error', err);
+            }
 			resolve(!err);
 		});
 	});

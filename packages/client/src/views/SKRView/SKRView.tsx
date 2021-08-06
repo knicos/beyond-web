@@ -1,6 +1,8 @@
 import React from 'react';
 import styled from 'styled-components';
-import {FTLPlayer} from '@ftl/player';
+import {ReactPlayer} from '@ftl/player';
+import {useRecoilValue} from 'recoil';
+import {currentStream} from '../../recoil/atoms';
 
 const Main = styled.section`
     padding: 1rem;
@@ -40,6 +42,8 @@ const VideoContainer = styled.div`
 `;
 
 export function SKRView() {
+    const stream = useRecoilValue(currentStream);
+
     return <Main>
         <Card className="menu">
             SKR Menu Bar
@@ -47,7 +51,7 @@ export function SKRView() {
         <Card className="main">
             <PlayerContainer>
                 <VideoContainer>
-                    <FTLPlayer />
+                    <ReactPlayer stream={stream} />
                 </VideoContainer>
             </PlayerContainer>
         </Card>

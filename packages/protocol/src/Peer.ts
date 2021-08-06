@@ -1,7 +1,7 @@
 import msgpack from 'msgpack5';
 const {encode, decode} = msgpack();
 import {v4 as uuidv4} from 'uuid';
-const uuidParser = require('./utils/uuidParser');
+import uuidParser from './utils/uuidParser';
 import {connection, w3cwebsocket} from 'websocket';
 import WebSocket from 'ws';
 
@@ -52,6 +52,7 @@ export class Peer {
 
 	constructor(ws: WebSocketConnection) {
 		this.sock = ws;
+
 		let message = (raw) => {
 			//Gets right data for client
 			if(isw3c(this.sock)){
@@ -104,28 +105,30 @@ export class Peer {
 			this.sock.on("error", error);
 		}
 	
-		this.bind("__handshake__", (magic, version, id) => {
-			if (magic == kMagic) {
-				console.log("Handshake received");
-				this.status = kConnected;
-				this.id = id.buffer;
-				this.string_id  = id.toString('hex');
-				this._notify("connect", this);
-				// if(this.sock.on === undefined){
-				// 	this.send("__handshake__", kMagic, kVersion, [my_uuid]);
-				// }
-			} else {
-				console.log("Magic does not match");
-				this.close();
-			}
-		});
+		this.bind("__handshake__", (magic, version, id) => this._handshake(magic, version, id));
 		this.send("__handshake__", kMagic, kVersion, [my_uuid]);
 	}
+
+    private _handshake(magic, version, id) {
+        if (magic == kMagic) {
+            console.log("Handshake received");
+            this.status = kConnected;
+            this.id = id.buffer;
+            this.string_id  = id.toString('hex');
+            this._notify("connect", this);
+            // if(this.sock.on === undefined){
+            // 	this.send("__handshake__", kMagic, kVersion, [my_uuid]);
+            // }
+        } else {
+            console.log("Magic does not match");
+            this.close();
+        }
+    }
 
 	private _dispatchNotification(name: string, args: unknown[]) {
 		if (this.bindings.hasOwnProperty(name)) {
 			//console.log("Notification for: ", name);
-			this.bindings[name].apply(this, args);
+			this.bindings[name](...args);
 		} else {
 			console.log("Missing handler for: ", name);
 		}

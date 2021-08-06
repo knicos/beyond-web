@@ -1,10 +1,12 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import {ThemeProvider, createGlobalStyle} from 'styled-components';
 import theme from './theme';
 import {BrowserRouter} from 'react-router-dom';
 import {PageHeader} from './components/PageHeader';
 import {Router} from './router';
-import {RecoilRoot} from 'recoil';
+import {RecoilRoot, useRecoilSnapshot} from 'recoil';
+import {PeerRoot} from './services/PeerRoot';
+import {StreamWatcher} from './services/StreamWatcher';
 
 const GlobalStyle = createGlobalStyle`
   body {
@@ -15,16 +17,33 @@ const GlobalStyle = createGlobalStyle`
   }
 `;
 
+function DebugObserver(): React.ReactElement {
+    const snapshot = useRecoilSnapshot();
+    useEffect(() => {
+      console.log('The following atoms were modified:');
+      for (const node of snapshot.getNodes_UNSTABLE({isModified: true})) {
+        console.log(node.key, snapshot.getLoadable(node));
+      }
+    }, [snapshot]);
+  
+    return null;
+  }
+
 export default function App() {
 	return (
         <ThemeProvider theme={theme}>
             <GlobalStyle />
-            <RecoilRoot>
-                <BrowserRouter>
-                    <PageHeader />
-                    <Router />
-                </BrowserRouter>
-            </RecoilRoot>
+            <React.Suspense fallback="Loading...">
+                <RecoilRoot>
+                    <DebugObserver />
+                    <PeerRoot />
+                    <StreamWatcher />
+                    <BrowserRouter>
+                        <PageHeader />
+                        <Router />
+                    </BrowserRouter>
+                </RecoilRoot>
+            </React.Suspense>
         </ThemeProvider>
     );
 }

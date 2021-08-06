@@ -5,6 +5,7 @@
   "scripts": {
     "build:client": "webpack",
     "build:client:watch": "webpack --watch",
+    "dev": "webpack serve --open",
     "start": "node ./dist/index.js",
     "start:dev": "ts-node-dev --respawn --transpile-only --watch src --ignore-watch node_modules src/index.ts"
   },
@@ -19,16 +20,22 @@
     "ts-loader": "^9.2.4",
     "typescript": "^4.3.5",
     "webpack": "^5.48.0",
-    "webpack-cli": "^4.7.2"
+    "webpack-cli": "^4.7.2",
+    "webpack-dev-server": "^3.11.2"
   },
   "dependencies": {
     "@ftl/player": "1.0.0",
     "@ftl/protocol": "1.0.0",
+    "@ftl/stream": "1.0.0",
+    "is-arguments": "^1.1.1",
+    "is-generator-function": "^1.0.9",
+    "is-typed-array": "^1.1.6",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-router": "^5.2.0",
     "react-router-dom": "^5.2.0",
     "recoil": "^0.4.0",
-    "styled-components": "^5.3.0"
+    "styled-components": "^5.3.0",
+    "which-typed-array": "^1.1.5"
   }
 }
