@@ -20,7 +20,17 @@ const output_streams = new Map<string, OutputStream>();
 }
 
 export async function getStreams(): Promise<string[]> {
-	return redisTopItems('streams');
+	const streams = await redisTopItems('streams');
+    const set = new Set<string>();
+    const result = [];
+    for (const s of streams.reverse()) {
+        const uri = s.split('?')[0];
+        if (!set.has(uri)) {
+            result.push(s);
+        }
+        set.add(uri);
+    }
+    return result;
 }
 
 export async function getActiveStreams(): Promise<string[]> {
@@ -69,6 +79,11 @@ export function checkStreams(peer: Peer) {
 }
 
 export function removeStreams(peer: Peer) {
+    if (output_streams.has(peer.string_id)) {
+        const os = output_streams.get(peer.string_id);
+        os.destroy();
+        output_streams.delete(peer.string_id);
+    }
 	const puris = peer_uris.get(peer.string_id);
 	if (puris) {
 		for (let i=0; i<puris.length; i++) {
@@ -91,7 +106,7 @@ export function createStream(peer: Peer, uri: string) {
 	uri_to_peer.set(parsedURI, peer);
 	input_streams.set(parsedURI, new InputStream(uri, peer));
 	//stream_list[uri] = true;
-	redisAddItem('streams', parsedURI, Date.now());
+	redisAddItem('streams', uri, Date.now());
     redisAddItem('activestreams', parsedURI, Date.now());
 
 	//broadcastExcept(p, "add_stream", uri);

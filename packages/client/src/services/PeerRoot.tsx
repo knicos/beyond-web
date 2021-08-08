@@ -1,10 +1,12 @@
 import React, {useEffect} from 'react';
 import {Peer} from '@ftl/protocol';
-import {peer} from '../recoil/atoms';
+import {peer, streamList} from '../recoil/atoms';
 import {useSetRecoilState} from 'recoil';
+import qs from 'query-string';
 
 export function PeerRoot(): React.ReactElement {
     const setPeer = useSetRecoilState(peer);
+    const setStreams = useSetRecoilState(streamList);
 
     useEffect(() => {
         console.log("HOST", location.host);
@@ -17,6 +19,26 @@ export function PeerRoot(): React.ReactElement {
 
         peer.bind('add_stream', (uri: string) => {
             console.log('ADD STREAM', uri);
+        });
+
+        peer.bind('__ping__', () => {
+            return Date.now();
+        });
+
+        peer.on('connect', () => {
+            peer.rpc('list_streams', (streams: string[]) => {
+                console.log('Stream list', streams);
+                const mapped = streams.map(s => {
+                    const split = s.split('?');
+                    const p = split.length > 1 ? qs.parse(split[1]) : {};
+                    return {
+                        name: s,
+                        ...p,
+                        uri: s,
+                    };
+                });
+                setStreams(old => [...old, ...mapped]);
+            });
         });
 
         setPeer(peer);

@@ -4,7 +4,7 @@ let redisClient: redis.RedisClient;
 let redisSub: redis.RedisClient;
 let redisPub: redis.RedisClient;
 
-const handlers = new Map<string, Function>();
+const handlers = new Map<string, Function[]>();
 
 const DAY = 1 * 24 * 60 * 60 * 1000;
 
@@ -20,7 +20,10 @@ function initRedis(): void {
             const strchan = channel.toString('utf8');
             console.log('redismsg', strchan);
 			if (handlers.has(strchan)) {
-				handlers.get(strchan)(message);
+				const hs = handlers.get(strchan);
+                for (const h of hs) {
+                    h(message);
+                }
 			} else {
                 console.error('No handler');
             }
@@ -41,16 +44,50 @@ export function redisPublish(channel: string, data: unknown): Promise<boolean> {
 export function redisSubscribe(channel: string, cb: Function): Promise<boolean> {
 	initRedis();
     console.log('Subscribe to', channel);
+    const hasChannel = handlers.has(channel);
 	// Subscribe to redis
-	handlers.set(channel, cb);
+    if (hasChannel) {
+	    handlers.get(channel).push(cb);
+    } else {
+        handlers.set(channel, [cb]);
+    }
 	return new Promise(resolve => {
-		redisSub.subscribe(channel, (err, reply) => {
+        if (!hasChannel) {
+            redisSub.subscribe(channel, (err, reply) => {
+                if (err) {
+                    console.error('Subscribe error', err);
+                }
+                resolve(!err);
+            });
+        } else {
+            return true;
+        }
+	});
+}
+
+export function redisUnsubscribe(channel: string, cb: Function) {
+    if (!handlers.has(channel)) {
+        return;
+    }
+
+    const hs = handlers.get(channel);
+    const filtered = hs.filter(f => f !== cb);
+
+    if (filtered.length === 0) {
+        handlers.delete(channel);
+    } else {
+        handlers.set(channel, filtered);
+    }
+
+    if (filtered.length === 0) {
+        redisSub.unsubscribe(channel, (err, reply) => {
             if (err) {
                 console.error('Subscribe error', err);
+            } else {
+                console.log('Remove redis subscription', channel);
             }
-			resolve(!err);
-		});
-	});
+        });
+    }
 }
 
 export function redisAddItem(key: string, item: string, time: number): Promise<boolean> {

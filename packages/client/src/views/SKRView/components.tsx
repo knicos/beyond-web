@@ -1,23 +1,26 @@
 import React, {useState, useEffect} from 'react';
 import styled from 'styled-components';
 
-const Item = styled.div`
-    border-top: 1px solid black;
-    display: flex;
-    justify-content: space-between;
+const Name = styled.div`
     font-size: 0.9rem;
     padding: 0.2rem 0.5rem;
-    align-items: center;
+    background: white;
+`;
 
-    > span.number {
+const Value = styled.div`
+    font-size: 0.9rem;
+    padding: 0.2rem 0.5rem;
+    background: white;
+
+    &.number {
         color: blue;
     }
 
-    > span.boolean {
+    &.boolean {
         color: green;
     }
 
-    > span.string {
+    &.string {
         color: red;
     }
 `;
@@ -32,10 +35,10 @@ function DataItem({name, value}: {name: string, value: string | number | boolean
 
     const element = type === 'object' ? value : `${value}`;
 
-    return <Item>
-        <span>{name}</span>
-        <span className={type} >{element}</span>
-    </Item>
+    return <>
+        <Name>{name}</Name>
+        <Value className={type} >{element}</Value>
+    </>
 }
 
 function Calibration({data}: {data: number[][]}) {

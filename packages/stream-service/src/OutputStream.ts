@@ -1,5 +1,5 @@
 import {Peer} from "@ftl/protocol";
-import {redisPublish, redisSubscribe} from "@ftl/common";
+import {redisPublish, redisSubscribe, redisUnsubscribe} from "@ftl/common";
 const msgpack = require('msgpack5')()
   , encode  = msgpack.encode
   , decode  = msgpack.decode;
@@ -12,6 +12,7 @@ export class OutputStream {
 	rxcount = 10;
 	rxmax = 10;
 	data = {};
+    private onMessage: Function;
 
 	constructor(uri, peer) {
 		this.peer = peer;
@@ -28,12 +29,15 @@ export class OutputStream {
 			this.pushFrame(latency, spacket, packet);
 		});
 
-		redisSubscribe(`stream-in:${this.base_uri}`, message => {
+        const onMessage = message => {
 			// Return data...
             //console.log('SOURCE DATA', message);
             const args = decode(message);
             this.peer.send(this.base_uri, ...args);
-		});
+		};
+        this.onMessage = onMessage;
+
+		redisSubscribe(`stream-in:${this.base_uri}`, onMessage);
 	
 		// console.log("Sending request");
 		// this.peer.send(this.base_uri, 0, [1,255,255,74,1],[7,0,1,255,0,new Uint8Array(0)]);
@@ -49,4 +53,8 @@ export class OutputStream {
 	private pushFrame(latency: number, spacket: unknown, packet: unknown) {
 		redisPublish(`stream-out:${this.base_uri}`, encode([latency, spacket, packet]));
 	}
+
+    destroy() {
+        redisUnsubscribe(`stream-in:${this.base_uri}`, this.onMessage);
+    }
 }

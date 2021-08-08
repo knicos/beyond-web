@@ -5,6 +5,18 @@ const peer_data = [];
 const peer_uris = {};
 const peer_by_id = {};
 
+setInterval(() => {
+	for (const x in peer_by_id) {
+		const p = peer_by_id[x];
+		const start = (new Date()).getMilliseconds();
+		p.rpc("__ping__", (ts: number) => {
+			const end = (new Date()).getMilliseconds();
+			p.latency = (end-start) / 2;
+			console.log("Ping: ", p.latency, ts);
+		});
+	}
+}, 20000);
+
 export function createSource(ws) {
 	const p = new Peer(ws);
 	peer_data.push(p);

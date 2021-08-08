@@ -29,7 +29,6 @@ export class FTLMSE {
 
 		this.remux.on('data', (data) => {
 			if (this.sourceBuffer.updating) {
-                console.log('QUEUE');
 				this.queue.push(data);
 			} else {
 				//console.log("Direct append: ", data);
@@ -78,7 +77,6 @@ export class FTLMSE {
 				if (this.queue.length > 0 && !this.sourceBuffer.updating) {
 					let s = this.queue[0];
 					this.queue.shift();
-					console.log("Append", s);
 
 					try {
 						this.sourceBuffer.appendBuffer(s);
@@ -96,12 +94,13 @@ export class FTLMSE {
 		this.first_ts = 0;
 	}
 
-	push(spkt: IStreamPacket, pkt) {
-		if (this.first_ts == 0) this.first_ts = spkt[0];
+	push(spkt: number[], pkt: number[]) {
+        const [timestamp, fs, frame, channel] = spkt;
+		if (this.first_ts == 0) this.first_ts = timestamp;
 	
 		// Skip first 200ms, use to analyse the stream contents
-		if (spkt[0] < this.first_ts + 200) {
-			if (spkt[3] == 32 || spkt[3] == 33) this.has_audio = true;
+		if (timestamp < this.first_ts + 200) {
+			if (channel == 32 || channel == 33) this.has_audio = true;
 		} else {
 			if (!this.mime) {
 				if (this.has_audio) {

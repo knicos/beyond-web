@@ -21,7 +21,7 @@ export class InputStream {
 
 		// Add RPC handler to receive frames from the source
 		peer.bind(this.base_uri, (latency, spacket, packet) => {
-            console.log('INPUT DATA', spacket);
+            // console.log('INPUT DATA', spacket);
 			// Extract useful data
 			this.parseFrame(spacket, packet);
 			// Forward frames to redis
@@ -31,12 +31,12 @@ export class InputStream {
 		redisSubscribe(`stream-out:${this.base_uri}`, message => {
 			// Return data...
             const args = decode(message);
-            console.log('RETURN DATA', args);
+            console.log('RETURN DATA', ...args);
             this.peer.send(this.base_uri, ...args);
             //this.peer.send(this.base_uri, 0, [1,255,255,74,1],[7,0,30,255,0,new Uint8Array(0)]);
 		});
 	
-		console.log("Sending request");
+		//console.log("Sending request");
 		this.peer.send(this.base_uri, 0, [1,255,255,74,1],[7,0,1,255,0,new Uint8Array(0)]);
 	}
 

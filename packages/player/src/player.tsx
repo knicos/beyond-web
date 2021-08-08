@@ -25,6 +25,8 @@ export class FTLPlayer {
     mesh: THREE.Mesh;
     renderer: THREE.WebGLRenderer;
     mse: FTLMSE;
+    lastRender = 0;
+    fps = 30;
 
     constructor(element: HTMLElement) {
         this.outer = element;
@@ -80,6 +82,13 @@ export class FTLPlayer {
             /*me.lat = Math.max( - 85, Math.min( 85, me.lat ) );
             let phi = THREE.MathUtils.degToRad( 90 - me.lat );
             let theta = THREE.MathUtils.degToRad( me.lon );*/
+
+            const now = Date.now();
+            if (now < this.lastRender + (1000 / this.fps)) {
+                return;
+            }
+
+            this.lastRender = now;
     
             this.camera.position.x = 0;
             this.camera.position.y = 0;
@@ -88,7 +97,6 @@ export class FTLPlayer {
             this.camera.lookAt(0, 0, 0);
     
             this.renderer.render( this.scene, this.camera );
-    
         }
     
         function animate() {
@@ -104,7 +112,6 @@ export class FTLPlayer {
     }
 
     push(spkt, pkt) {
-        console.log('MSE PUSH', spkt[0], spkt[3]);
         this.mse.push(spkt, pkt);
     }
 

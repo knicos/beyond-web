@@ -9,6 +9,13 @@ const Title = styled.h1`
     font-size: 1.2rem;
 `;
 
+const Table = styled.div`
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    grid-template-rows: repeat(auto-fit, minmax(1rem, 1fr));
+    grid-gap: 2px;
+`;
+
 function renderData(data: Map<number, any>): JSX.Element[] {
     const nodes: JSX.Element[] = [];
     data.forEach((value, key) => {
@@ -29,6 +36,8 @@ interface Props {
 export function DataListing({stream, time}: Props) {
     return <>
         <Title>Data</Title>
-        {renderData(stream.data)}
+        <Table>
+            {renderData(stream.data)}
+        </Table>
     </>;
 }

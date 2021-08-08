@@ -1,8 +1,8 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import styled from 'styled-components';
 import {ReactPlayer} from '@ftl/player';
-import {useRecoilValue} from 'recoil';
-import {currentStream, frameTime} from '../../recoil/atoms';
+import {useRecoilValue, useSetRecoilState} from 'recoil';
+import {currentStream, frameTime, pageTitle} from '../../recoil/atoms';
 import {DataListing} from './DataListing';
 
 const Main = styled.section`
@@ -51,6 +51,11 @@ export function SKRView() {
     const stream = useRecoilValue(currentStream);
     const time = useRecoilValue(frameTime);
     const seconds = stream ? ((time - stream.startTimestamp) / 1000).toFixed(1) : 0;
+    const setTitle = useSetRecoilState(pageTitle);
+
+    useEffect(() => {
+        setTitle(`SKR [${stream?.uri.split('?')[0] || ''}]`);
+    }, []);
 
     return <Main>
         <Card className="menu">
