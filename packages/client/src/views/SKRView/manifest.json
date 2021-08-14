@@ -14,5 +14,13 @@
     "72": {
         "label": "Capabilities",
         "component": "Capabilities"
+    },
+    "1024": {
+        "label": "Test Value",
+        "component": "RawValue"
+    },
+    "default": {
+        "label": "Unknown",
+        "component": "RawValue"
     }
 }

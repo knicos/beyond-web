@@ -7,7 +7,7 @@ export function Router() {
     return (
         <Switch>
             <Route exact path="/apps" component={Listing} />
-            <Route path="/apps/skr" component={SKRView} />
+            <Route path={`/apps/skr`} component={SKRView} />
         </Switch>
     )
 }

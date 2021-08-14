@@ -115,6 +115,10 @@ export class FTLPlayer {
         this.mse.push(spkt, pkt);
     }
 
+    select(frameset: number, frame: number, channel: number) {
+        this.mse.select(frameset, frame, channel);
+    }
+
 	//this.elements_ = {};
 	//this.converters_ = {};
 

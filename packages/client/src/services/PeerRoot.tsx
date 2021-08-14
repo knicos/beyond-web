@@ -1,14 +1,15 @@
 import React, {useEffect} from 'react';
 import {Peer} from '@ftl/protocol';
-import {peer, streamList} from '../recoil/atoms';
+import {currentStream, peer, streamList} from '../recoil/atoms';
 import {useSetRecoilState} from 'recoil';
 import qs from 'query-string';
 
 export function PeerRoot(): React.ReactElement {
     const setPeer = useSetRecoilState(peer);
     const setStreams = useSetRecoilState(streamList);
+    const setStream = useSetRecoilState(currentStream);
 
-    useEffect(() => {
+    const createPeer = () => {
         console.log("HOST", location.host);
         const ws = new WebSocket(`ws://${location.host}/v1/stream`);
         ws.binaryType = "arraybuffer";
@@ -26,6 +27,7 @@ export function PeerRoot(): React.ReactElement {
         });
 
         peer.on('connect', () => {
+            setPeer(peer);
             peer.rpc('list_streams', (streams: string[]) => {
                 console.log('Stream list', streams);
                 const mapped = streams.map(s => {
@@ -41,8 +43,14 @@ export function PeerRoot(): React.ReactElement {
             });
         });
 
-        setPeer(peer);
-    }, []);
+        peer.on('disconnect', () => {
+            setPeer(null);
+            setStream(null);
+            setTimeout(createPeer, 1000);
+        });
+    }
+
+    useEffect(createPeer, []);
 
     return null;
 }

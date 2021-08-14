@@ -18,10 +18,11 @@ function StreamCard({name, uri}: {name: string, uri: string}) {
 
     return <SelectableCard onClick={async () => {
         if (p) {
-            const s = new FTLStream(p, uri.split('?')[0]);
-            s.enableVideo(0, 0, 0);
+            const baseURI = uri.split('?')[0];
+            const s = new FTLStream(p, baseURI);
+            s.enableVideo(0, 0, 21);
             setStream(s);
-            history.push('/apps');
+            history.push(`/apps?s=${encodeURIComponent(baseURI)}`);
         }
     }} selected={isCurrent}>
         {name}

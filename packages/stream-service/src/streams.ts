@@ -91,6 +91,7 @@ export function removeStreams(peer: Peer) {
             redisRemoveItem('activestreams', puris[i]);
 			uri_to_peer.delete(puris[i]);
 			if (input_streams.has(puris[i])) {
+                input_streams.get(puris[i]).destroy();
 				input_streams.delete(puris[i]);
 			}
 			//p.unbind(pu)

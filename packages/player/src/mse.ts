@@ -19,6 +19,9 @@ export class FTLMSE {
 	mediaSource: MediaSource;
 	has_audio: boolean;
 	first_ts: number;
+    frameset = 0;
+    frameNumber = 0;
+    channel = 0;
 
 	constructor(video: HTMLVideoElement) {
 		this.video = video;
@@ -57,7 +60,7 @@ export class FTLMSE {
 		this.video.addEventListener('play', (e) => {
 			console.log("Play");
 			this.active = true;
-			this.remux.select(0,0,0);
+			this.remux.select(this.frameset, this.frameNumber, this.channel);
 		});
 
 		this.mediaSource.addEventListener('sourceopen', (e) => {
@@ -119,6 +122,9 @@ export class FTLMSE {
 	}
 	
 	select(frameset: number, source: number, channel: number) {
+        this.frameset = frameset;
+        this.frameNumber = source;
+        this.channel = channel;
 		this.remux.select(frameset, source, channel);
 	}
 }

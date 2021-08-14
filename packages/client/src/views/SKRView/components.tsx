@@ -2,13 +2,13 @@ import React, {useState, useEffect} from 'react';
 import styled from 'styled-components';
 
 const Name = styled.div`
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     padding: 0.2rem 0.5rem;
-    background: white;
+    background: #efefef;
 `;
 
 const Value = styled.div`
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     padding: 0.2rem 0.5rem;
     background: white;
 
@@ -94,9 +94,15 @@ function Capabilities({data}: {data: number[]}) {
     </>;
 }
 
+function RawValue({data, config}: {data: unknown, config: IManifest}) {
+    const str = typeof data === 'object' ? JSON.stringify(data) : data;
+    return <DataItem name={config.label} value={str} />;
+}
+
 export const components: Record<string, React.FunctionComponent<{data: unknown, config?: IManifest}>> = {
     Calibration,
     Metadata,
     Image,
     Capabilities,
+    RawValue,
 };

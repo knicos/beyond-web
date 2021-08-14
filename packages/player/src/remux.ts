@@ -270,7 +270,9 @@ export class FTLRemux {
 	
 					this.ts = spkt[0];
 				}
-			}
+			} else {
+                console.warn('Unmatched packet received', this.channel, spkt[3]);
+            }
 		} else {
             console.error('Unsupported codec', pkt[0]);
         }
