@@ -2,7 +2,7 @@ import React from 'react';
 import styled from 'styled-components';
 import manifest from './manifest.json';
 import { FTLStream } from '@ftl/stream';
-import {components} from './components';
+import {components, DataItem} from './components';
 
 const Title = styled.h1`
     margin: 0.5rem;
@@ -10,7 +10,6 @@ const Title = styled.h1`
 `;
 
 const Container = styled.div`
-    border: 1px solid #aaa;
     flex-grow: 2;
     overflow-y: scroll;
 `;
@@ -20,16 +19,15 @@ const Table = styled.div`
     grid-template-columns: 1fr 2fr;
     grid-template-rows: repeat(auto-fit, minmax(1rem, 1fr));
     grid-gap: 1px;
-    background: ${props => props.theme.border.green};
 `;
 
-function renderData(data: Map<number, any>): JSX.Element[] {
+function renderData(data: Map<number, any>, onChange: (channel: number, value: unknown) => void): JSX.Element[] {
     const nodes: JSX.Element[] = [];
     data.forEach((value, key) => {
         const manEntry = (manifest as any)[`${key}`] || (manifest as any).default;
         if (manEntry) {
             const Comp = components[manEntry.component];
-            nodes.push(<Comp key={key} data={value} config={manEntry} />);
+            nodes.push(<Comp key={key} channel={key} data={value} config={manEntry} onChange={onChange} />);
         }
     });
     return nodes;
@@ -45,7 +43,10 @@ export function DataListing({stream, time}: Props) {
         <Title>Data</Title>
         <Container>
             <Table>
-                {renderData(stream.data)}
+                <DataItem name="Channels" value={JSON.stringify(Array.from(stream.availableChannels))} />
+                {renderData(stream.data, (channel: number, value: unknown) => {
+                    stream.set(channel, value);
+                })}
             </Table>
         </Container>
     </>;

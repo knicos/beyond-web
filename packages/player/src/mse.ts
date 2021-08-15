@@ -1,4 +1,4 @@
-import ee from 'event-emitter';
+import ee, {Emitter} from 'event-emitter';
 import {FTLRemux} from './remux';
 
 interface IStreamPacket {
@@ -7,6 +7,8 @@ interface IStreamPacket {
 	2: number,
 	3: number,
 };
+
+export interface FTLMSE extends Emitter {};
 
 export class FTLMSE {
 	video: HTMLVideoElement;
@@ -30,7 +32,14 @@ export class FTLMSE {
 		this.paused = false;
 		this.active = false;
 
+        this.remux.on('reset', () => {
+            this.emit('reset');
+        });
+
 		this.remux.on('data', (data) => {
+            if (!this.sourceBuffer) {
+                return;
+            }
 			if (this.sourceBuffer.updating) {
 				this.queue.push(data);
 			} else {
@@ -46,11 +55,6 @@ export class FTLMSE {
 
 		// TODO: Generate
 		//this.mime = 'video/mp4; codecs="avc1.640028, opus"';
-		this.mime = null;
-		
-		this.mediaSource = new MediaSource();
-		//this.element.play();
-		this.sourceBuffer = null;
 
 		this.video.addEventListener('pause', (e) => {
 			console.log("pause");
@@ -63,7 +67,15 @@ export class FTLMSE {
 			this.remux.select(this.frameset, this.frameNumber, this.channel);
 		});
 
-		this.mediaSource.addEventListener('sourceopen', (e) => {
+		this.createMediaSource();
+	}
+
+    createMediaSource() {
+        this.mediaSource = new MediaSource();
+		this.sourceBuffer = null;
+        this.mime = null;
+
+        this.mediaSource.addEventListener('sourceopen', (e) => {
 			console.log("Source Open", e);
 			URL.revokeObjectURL(this.video.src);
 			console.log(this.mediaSource.readyState);
@@ -90,12 +102,11 @@ export class FTLMSE {
 			});
 		});
 
-		this.queue = [];
+        this.queue = [];
 		//this.video.src = URL.createObjectURL(this.mediaSource);
-
 		this.has_audio = false;
 		this.first_ts = 0;
-	}
+    }
 
 	push(spkt: number[], pkt: number[]) {
         const [timestamp, fs, frame, channel] = spkt;
@@ -115,9 +126,11 @@ export class FTLMSE {
 					this.mime = 'video/mp4; codecs="avc1.640028"';
 					this.remux.has_audio = false;
 				}
-				this.video.src = URL.createObjectURL(this.mediaSource);			
+				this.video.src = URL.createObjectURL(this.mediaSource);
+                console.log('Opened video source', this.mime);
+                this.emit('reset');	
 			}
-			this.remux.push(spkt,pkt);
+            this.remux.push(spkt,pkt);
 		}
 	}
 	
@@ -126,6 +139,7 @@ export class FTLMSE {
         this.frameNumber = source;
         this.channel = channel;
 		this.remux.select(frameset, source, channel);
+        // this.createMediaSource();
 	}
 }
 

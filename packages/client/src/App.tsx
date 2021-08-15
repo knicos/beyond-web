@@ -35,7 +35,6 @@ export default function App() {
             <GlobalStyle />
             <React.Suspense fallback="Loading...">
                 <RecoilRoot>
-                    <DebugObserver />
                     <PeerRoot />
                     <StreamWatcher />
                     <BrowserRouter>

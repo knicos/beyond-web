@@ -101,7 +101,7 @@ export function SKRView() {
                         stream.set(1026, [Math.floor(x), Math.floor(y)]);
                     }
                 }}>
-                    <ReactPlayer stream={stream} channel={21} />
+                    <ReactPlayer stream={stream} channel={21} size={800} />
                 </VideoContainer>
                 <StatsBar>
                     {`Time: ${formatTime(seconds)}`}

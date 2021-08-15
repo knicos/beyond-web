@@ -17,6 +17,7 @@ export class FTLStream {
     uri: string;
     paused = false;
     active = true;
+    availableChannels = new Set<number>();
     enabledChannels = new Map<string, IVideoState>();
     found = false;
     lastTimestamp = 0;
@@ -64,6 +65,7 @@ export class FTLStream {
                 }
                 this.emit('packet', streampckg, pckg);
             } else {
+                this.availableChannels.add(channel);
                 const id = `id-${fs}-${frame}-${channel}`;
     
                 if (this.enabledChannels.has(id)) {
@@ -75,8 +77,6 @@ export class FTLStream {
                     }*/
 
                     this.emit('packet', streampckg, pckg);
-                } else {
-                    console.log('Channel disabled', id);
                 }
             }
         });
@@ -128,6 +128,7 @@ export class FTLStream {
                 }
                 console.log('Stream connected');
                 this.found = true;
+                this.emit('started');
                 this.peer.send(this.uri, 0, [1,fs,255,channel, 5],[255,7,35,0,0,Buffer.alloc(0)]);
             }, this.uri, true);
         }

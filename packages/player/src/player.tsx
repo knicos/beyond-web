@@ -56,23 +56,6 @@ export class FTLPlayer {
     
         this.scene = new THREE.Scene();
 
-        let geometry: any;
-	
-        if (false) {
-            geometry = new THREE.SphereBufferGeometry( 500, 60, 40 );
-        } else {
-            geometry = new THREE.PlaneGeometry(width, height, 32);
-        }
-        // invert the geometry on the x-axis so that all of the faces point inward
-        geometry.scale( - 1, 1, 1 );
-
-        const texture = new THREE.VideoTexture( this.element );
-        const material = new THREE.MeshBasicMaterial( { map: texture } );
-
-        this.mesh = new THREE.Mesh( geometry, material );
-
-        this.scene.add( this.mesh );
-
         this.renderer = new THREE.WebGLRenderer();
         this.renderer.setPixelRatio( window.devicePixelRatio );
         this.renderer.setSize( width, height );
@@ -111,8 +94,52 @@ export class FTLPlayer {
         this.element.play();
     }
 
+    pause() {
+        this.element.pause();
+    }
+
+    paused(): boolean {
+        return this.element.paused;
+    }
+
     push(spkt, pkt) {
+        if (this.paused()) {
+            return;
+        }
         this.mse.push(spkt, pkt);
+
+        if (!this.mesh && this.element.videoWidth) {
+            let geometry: any;
+
+            const width = this.element.videoWidth;
+            const height = this.element.videoHeight;
+	
+            if (false) {
+                geometry = new THREE.SphereBufferGeometry( 500, 60, 40 );
+            } else {
+                geometry = new THREE.PlaneGeometry(width, height, 32);
+            }
+            // invert the geometry on the x-axis so that all of the faces point inward
+            geometry.scale( - 1, 1, 1 );
+
+            const texture = new THREE.VideoTexture( this.element );
+            const material = new THREE.MeshBasicMaterial( { map: texture } );
+
+            this.mesh = new THREE.Mesh( geometry, material );
+
+            const isWide = height / width <= 9 / 16;
+            if (isWide) {
+                const nWidth = width;
+                const nHeight = width * (9 / 16);
+                this.camera = new THREE.OrthographicCamera(nWidth/-2, nWidth/2, nHeight/2, nHeight/-2, 1, 4);
+            } else {
+                const nWidth = height * (16 / 9);
+                const nHeight = height;
+                this.camera = new THREE.OrthographicCamera(nWidth/-2, nWidth/2, nHeight/2, nHeight/-2, 1, 4);
+            }
+
+            this.scene.add( this.mesh );
+        }
     }
 
     select(frameset: number, frame: number, channel: number) {

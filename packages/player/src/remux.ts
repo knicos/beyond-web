@@ -269,7 +269,9 @@ export class FTLRemux {
 					this.track.baseMediaDecodeTime += delta;
 	
 					this.ts = spkt[0];
-				}
+				} else {
+                    this.emit('reset');
+                }
 			} else {
                 console.warn('Unmatched packet received', this.channel, spkt[3]);
             }

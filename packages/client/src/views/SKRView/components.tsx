@@ -1,16 +1,19 @@
 import React, {useState, useEffect} from 'react';
 import styled from 'styled-components';
+import pupa from 'pupa';
 
 const Name = styled.div`
     font-size: 0.8rem;
     padding: 0.2rem 0.5rem;
-    background: #efefef;
+    background: #e5e5e5;
+    border-radius: 3px;
 `;
 
 const Value = styled.div`
     font-size: 0.8rem;
     padding: 0.2rem 0.5rem;
-    background: white;
+    background: #f4f4f4;
+    border-radius: 3px;
 
     &.number {
         color: blue;
@@ -25,12 +28,18 @@ const Value = styled.div`
     }
 `;
 
+interface IManifestOption {
+    label: string;
+    value: string;
+}
+
 interface IManifest {
     label: string;
     component: string;
+    options?: IManifestOption[];
 }
 
-function DataItem({name, value}: {name: string, value: string | number | boolean | React.ReactNode}) {
+export function DataItem({name, value}: {name: string, value: string | number | boolean | React.ReactNode}) {
     const type = typeof value;
 
     const element = type === 'object' ? value : `${value}`;
@@ -94,15 +103,53 @@ function Capabilities({data}: {data: number[]}) {
     </>;
 }
 
-function RawValue({data, config}: {data: unknown, config: IManifest}) {
+function RawValue({data, config, channel}: IDataComponentProps) {
     const str = typeof data === 'object' ? JSON.stringify(data) : data;
-    return <DataItem name={config.label} value={str} />;
+    return <DataItem name={pupa(config.label, {channel})} value={str} />;
 }
 
-export const components: Record<string, React.FunctionComponent<{data: unknown, config?: IManifest}>> = {
+function EditableValue({data, config, channel, onChange}: IDataComponentProps) {
+    const [value, setValue] = useState(JSON.stringify(data));
+
+    useEffect(() => {
+        setValue(JSON.stringify(data));
+    }, [data]);
+
+    const input = <input type="text" value={value} onChange={e=> setValue(e.target.value)} onBlur={e => {
+        // setValue(e.target.value);
+        try {
+            const newValue = JSON.parse(e.target.value);
+            onChange(channel, newValue);
+        } catch (e) {
+
+        }
+    }} />;
+    return <DataItem name={pupa(config.label, {channel})} value={input} />;
+}
+
+function Enumerated({data, config, channel, onChange}: IDataComponentProps) {
+    if (typeof data !== 'string') {
+        return null;
+    }
+    const input = <select value={data} onChange={e => onChange && onChange(channel, e.target.value)}>
+        {config.options.map((option, key) => <option key={key} value={option.value}>{option.label}</option>)}
+    </select>;
+    return <DataItem name={pupa(config.label, {channel})} value={input} />;
+}
+
+interface IDataComponentProps {
+    data: unknown;
+    config?: IManifest;
+    channel?: number;
+    onChange?: (channel: number, value: unknown) => void;
+}
+
+export const components: Record<string, React.FunctionComponent<IDataComponentProps>> = {
     Calibration,
     Metadata,
     Image,
     Capabilities,
     RawValue,
+    Enumerated,
+    EditableValue,
 };
