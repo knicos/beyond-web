@@ -246,7 +246,7 @@ export class FTLRemux {
 					this.h264.push({
 						type: 'video',
 						dts: this.dts,
-						pts: spkt[0],
+						pts: this.dts, //spkt[0],
 						data: pkt[5],
 						trackId: 0
 					});
@@ -255,7 +255,7 @@ export class FTLRemux {
 					let sample = this.track.samples[0];
 					concatNals(sample);
 					let delta = (spkt[0]-this.ts)*90;
-					sample.duration = (delta > 0) ? delta : 1000;
+					sample.duration = (delta > 0) ? delta : 10;
 	
 					let moof = MP4.moof(this.sequenceNo++, [this.track]);
 					let mdat = MP4.mdat(sample.data);
@@ -292,8 +292,8 @@ export class FTLRemux {
 		this.init_seg = false;
 		this.seen_keyframe = false;
 		this.ts = 0;
-		this.track.baseMediaDecodeTime = 0;
-		this.sequenceNo = 0;
+		//this.track.baseMediaDecodeTime = 0;
+		//this.sequenceNo = 0;
 		this.active = true;
 	}
 };

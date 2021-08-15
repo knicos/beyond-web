@@ -75,7 +75,7 @@ export function ReactPlayer({stream, channel, size}: Props) {
                 state.player.select(0, 0, channel || 0);
                 //stream.enableVideo(0, 0, channel || 0);
                 stream.start(0, 0, channel || 0);
-                setMode('paused');
+                setMode(state.player.mse.active ? 'playing' : 'paused');
             });
             stream.enableVideo(0, 0, channel || 0);
             stream.start(0, 0, channel || 0);
