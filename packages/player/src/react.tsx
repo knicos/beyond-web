@@ -8,15 +8,18 @@ const Container = styled.div`
     position: relative;
 `;
 
-const ControlBar = styled.div`
+const ControlBox = styled.div`
     position: absolute;
     bottom: 0;
     left: 0;
     right: 0;
-    height: 2rem;
+    top: 0;
     color: white;
-    font-size: 1.5rem;
-    padding: 0.5rem 1rem;
+    font-size: 3rem;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    background: #00000050;
 `;
 
 const Spinner = styled(FaSpinner)`
@@ -86,38 +89,41 @@ export function ReactPlayer({stream, channel, size}: Props) {
 
     // console.log('MODE', mode);
 
-    let button = <Spinner />;
+    let button: JSX.Element = null; //<Spinner />;
     switch(mode) {
         case 'paused':
-            button = <FaPlay onClick={() => {
+            button = <FaPlay onClick={async () => {
                 if (state.player) {
-                    //stream.enableVideo(0, 0, channel || 0);
+                    stream.enableVideo(0, 0, channel || 0);
                     state.player.select(0, 0, channel || 0);
-                    state.player.play();
-                    //stream.start(0, 0, channel || 0);
+                    await state.player.play();
+                    stream.start(0, 0, channel || 0);
                     setMode('playing');
                     console.log('PLAY');
                 }
             }} />;
             break;
-        case 'playing':
+        /*case 'playing':
             button = <FaPause onClick={() => {
                 if (state.player) {
                     console.log('PAUSE');
                     //state.player.pause();
-                    //stream.disableVideo(0, 0, channel || 0);
+                    stream.disableVideo(0, 0, channel || 0);
                     setMode('paused');
                 }
             }} />;
+            break;*/
+        case 'waiting':
+            button = <Spinner />;
             break;
     }
 
     return (
         <Container>
             <div style={{width: `${size}px`, height: `${Math.floor(size * aspect)}px`}} ref={ref} />
-            <ControlBar>
+            {button && <ControlBox>
                 {button}
-            </ControlBar>
+            </ControlBox>}
         </Container>
     );
 }

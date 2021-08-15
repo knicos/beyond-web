@@ -76,7 +76,7 @@ export class FTLMSE {
         this.mime = null;
 
         this.mediaSource.addEventListener('sourceopen', (e) => {
-			console.log("Source Open", e);
+			console.log("Source Open", e, this.mime);
 			URL.revokeObjectURL(this.video.src);
 			console.log(this.mediaSource.readyState);
 			this.sourceBuffer = this.mediaSource.addSourceBuffer(this.mime);
@@ -130,7 +130,9 @@ export class FTLMSE {
                 console.log('Opened video source', this.mime);
                 this.emit('reset');	
 			}
-            this.remux.push(spkt,pkt);
+            if (this.sourceBuffer) {
+                this.remux.push(spkt,pkt);
+            }
 		}
 	}
 	
