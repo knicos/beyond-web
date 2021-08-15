@@ -45,7 +45,7 @@ export class FTLPlayer {
         this.mse.select(0, 0, 0);
 
         const width = element.clientWidth;
-        const height = element.clientHeight;
+        const height = width * (9 / 16); //element.clientHeight;
 
         if (false) {
             this.camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 1100 );
@@ -53,6 +53,13 @@ export class FTLPlayer {
             this.camera = new THREE.OrthographicCamera(width/-2, width/2, height/2, height/-2, 1, 4);
         }
         //this.camera.target = new THREE.Vector3( 0, 0, 0 );
+
+        window.addEventListener('resize', () => {
+            const width = element.clientWidth;
+            const height = width * (9 / 16);
+            //this.camera = new THREE.OrthographicCamera(width/-2, width/2, height/2, height/-2, 1, 4);
+            this.renderer.setSize( width, height );
+        });
     
         this.scene = new THREE.Scene();
 

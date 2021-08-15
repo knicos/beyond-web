@@ -6,6 +6,7 @@ import {FaPause, FaPlay, FaSpinner} from 'react-icons/fa';
 
 const Container = styled.div`
     position: relative;
+    width: 100%;
 `;
 
 const ControlBox = styled.div`
@@ -120,7 +121,7 @@ export function ReactPlayer({stream, channel, size}: Props) {
 
     return (
         <Container>
-            <div style={{width: `${size}px`, height: `${Math.floor(size * aspect)}px`}} ref={ref} />
+            <div style={{width: '100%'}} ref={ref} />
             {button && <ControlBox>
                 {button}
             </ControlBox>}

@@ -44,6 +44,7 @@ const VideoContainer = styled.div`
     background: black;
     border-radius: 3px;
     box-shadow: 2px 2px 5px #aaa;
+    width: 100%;
 `;
 
 const StatsBar = styled.div`
