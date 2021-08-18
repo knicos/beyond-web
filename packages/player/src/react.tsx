@@ -41,13 +41,15 @@ interface Props {
     stream: FTLStream;
     channel: number;
     size: number;
+    onSelectPoint?: (x: number, y: number) => void;
+    points?: [number, number][];
 }
 
 type PlayerMode = 'waiting' | 'paused' | 'playing';
 
 type ModeState = [PlayerMode, (mode: PlayerMode) => void];
 
-export function ReactPlayer({stream, channel, size}: Props) {
+export function ReactPlayer({stream, channel, size, onSelectPoint, points}: Props) {
     const ref = useRef();
     const [state] = useState({player: null});
     const [mode, setMode]: ModeState = useState<PlayerMode>('waiting');
@@ -60,7 +62,18 @@ export function ReactPlayer({stream, channel, size}: Props) {
             console.log('RESET');
             stream.start(0, 0, channel || 0);
         });
+        state.player.on('select', (x: number, y: number) => {
+            if (onSelectPoint) {
+                onSelectPoint(x, y);
+            }
+        })
     }, []);
+
+    useEffect(() => {
+        if (points && state.player) {
+            state.player.setPoints(points);
+        }
+    }, [points, state.player]);
 
     useEffect(() => {
         if (stream) {

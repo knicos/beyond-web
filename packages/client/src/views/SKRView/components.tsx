@@ -2,12 +2,17 @@ import React, {useState, useEffect} from 'react';
 import styled from 'styled-components';
 import pupa from 'pupa';
 import Plotly from 'plotly.js-dist-min';
+import {useRecoilState} from 'recoil';
+import {pinnedData} from '../../recoil/atoms';
+import {FaMapPin} from 'react-icons/fa';
 
 const Name = styled.div`
     font-size: 0.8rem;
     padding: 0.2rem 0.5rem;
     background: #e5e5e5;
     border-radius: 5px;
+    display: flex;
+    justify-content: space-between;
 `;
 
 const Value = styled.div`
@@ -29,6 +34,14 @@ const Value = styled.div`
     }
 `;
 
+const Pin = styled(FaMapPin)`
+    color: silver;
+    &.pinned {
+        color: gold;
+    }
+    cursor: pointer;
+`;
+
 interface IManifestOption {
     label: string;
     value: string;
@@ -40,13 +53,32 @@ interface IManifest {
     options?: IManifestOption[];
 }
 
-export function DataItem({name, value}: {name: string, value: string | number | boolean | React.ReactNode}) {
+interface DataItemProps {
+    name: string;
+    value: string | number | boolean | React.ReactNode;
+    channel?: number;
+}
+
+export function DataItem({name, value, channel}: DataItemProps) {
+    const [pinned, setPinned] = useRecoilState<Set<number>>(pinnedData);
     const type = typeof value;
 
     const element = type === 'object' ? value : `${value}`;
 
     return <>
-        <Name>{name}</Name>
+        <Name>
+            {name}
+            {channel !== undefined && <Pin className={pinned.has(channel) ? 'pinned' : ''} onClick={() => {
+                if (channel) {
+                    if (pinned.has(channel)) {
+                        pinned.delete(channel);
+                    } else {
+                        pinned.add(channel);
+                    }
+                    setPinned(pinned);
+                }
+            }}/>}
+        </Name>
         <Value className={type} >{element}</Value>
     </>
 }
@@ -106,14 +138,14 @@ function Capabilities({data}: {data: number[]}) {
 
 function RawValue({data, config, channel}: IDataComponentProps) {
     const str = typeof data === 'object' ? JSON.stringify(data) : data;
-    return <DataItem name={pupa(config.label, {channel})} value={str} />;
+    return <DataItem channel={channel} name={pupa(config.label, {channel})} value={str} />;
 }
 
 function Histogram({data, config, channel}: IDataComponentProps) {
     const [history, setHistory] = useState([]);
 
     useEffect(() => {
-        Plotly.newPlot('plotly', [{z: history, type: 'heatmap'}]);
+        Plotly.react('plotly', [{z: history, type: 'heatmap'}], {margin: {t: 40, l: 30, r: 30, b: 40}});
     }, [history]);
 
     useEffect(() => {
@@ -122,7 +154,7 @@ function Histogram({data, config, channel}: IDataComponentProps) {
         }
     }, [data]);
 
-    return <DataItem name={pupa(config.label, {channel})} value={<div id="plotly"></div>} />;
+    return <DataItem channel={channel} name={pupa(config.label, {channel})} value={<div id="plotly"></div>} />;
 }
 
 function EditableValue({data, config, channel, onChange}: IDataComponentProps) {
@@ -141,7 +173,7 @@ function EditableValue({data, config, channel, onChange}: IDataComponentProps) {
 
         }
     }} />;
-    return <DataItem name={pupa(config.label, {channel})} value={input} />;
+    return <DataItem channel={channel} name={pupa(config.label, {channel})} value={input} />;
 }
 
 function Enumerated({data, config, channel, onChange}: IDataComponentProps) {
@@ -151,7 +183,7 @@ function Enumerated({data, config, channel, onChange}: IDataComponentProps) {
     const input = <select value={data} onChange={e => onChange && onChange(channel, e.target.value)}>
         {config.options.map((option, key) => <option key={key} value={option.value}>{option.label}</option>)}
     </select>;
-    return <DataItem name={pupa(config.label, {channel})} value={input} />;
+    return <DataItem channel={channel} name={pupa(config.label, {channel})} value={input} />;
 }
 
 interface IDataComponentProps {

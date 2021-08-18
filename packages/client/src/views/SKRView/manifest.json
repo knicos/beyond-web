@@ -39,7 +39,8 @@
             {"label": "Right", "value": "right"},
             {"label": "Stereo", "value": "stereo"},
             {"label": "Disparity", "value": "disparity"},
-            {"label": "Confidence", "value": "confidence"}
+            {"label": "Confidence", "value": "confidence"},
+            {"label": "Groundtruth", "value": "groundtruth"}
         ]
     },
     "1028": {

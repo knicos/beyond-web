@@ -26,3 +26,8 @@ export const frameTime = atom({
     key: 'frameTime',
     default: 0,
 });
+
+export const pinnedData = atom({
+    key: 'pinnedData',
+    default: new Set<number>(),
+});

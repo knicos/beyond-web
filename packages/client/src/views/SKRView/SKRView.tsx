@@ -24,6 +24,7 @@ const Card = styled.div`
 
     &.menu {
         grid-column: span 6;
+        padding: 0.5rem;
     }
 
     &.main {
@@ -89,22 +90,19 @@ export function SKRView() {
         return null;
     }
 
+    const focalPoint = stream.data.get(1026);
+
     return <Main>
         <Card className="menu">
             <MenuBar stream={stream} />
         </Card>
         <Card className="main">
             <PlayerContainer>
-                <VideoContainer onClick={e => {
-                    console.log(e);
-                    if (stream) {
-                        const target = e.target as any;
-                        const x = (e.clientX - target.offsetLeft) / target.clientWidth * stream.getWidth();
-                        const y = (e.clientY - target.offsetTop) / target.clientHeight * stream.getHeight();
-                        stream.set(1026, [Math.floor(x), Math.floor(y)]);
-                    }
-                }}>
-                    <ReactPlayer stream={stream} channel={21} size={800} />
+                <VideoContainer>
+                    <ReactPlayer stream={stream} channel={21} size={800} onSelectPoint={(x, y) => {
+                        console.log('Point select', x, y);
+                        stream.set(1026, [x, y]);
+                    }} points={focalPoint?.length === 2 && focalPoint[0] && [focalPoint]} />
                 </VideoContainer>
                 <StatsBar>
                     {`Time: ${formatTime(seconds)}`}
@@ -113,7 +111,6 @@ export function SKRView() {
         </Card>
         <Card className="side">
             <DataListing stream={stream} time={time} />
-            <button onClick={() => stream.set(69, "reset")}>Restart</button>
         </Card>
     </Main>;
 }

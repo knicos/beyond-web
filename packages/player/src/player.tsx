@@ -1,6 +1,9 @@
 import * as THREE from 'three';
 import {FTLStream} from '@ftl/stream';
 import {FTLMSE} from './mse';
+import ee, {Emitter} from 'event-emitter';
+
+const MAX_POINTS = 100;
 
 class FTLFrameset {
 	id: number;
@@ -10,6 +13,8 @@ class FTLFrameset {
         this.id = id;
     }
 }
+
+export interface FTLPlayer extends Emitter {};
 
 export class FTLPlayer {
     current = "";
@@ -29,6 +34,10 @@ export class FTLPlayer {
     fps = 30;
     videoWidth = 0;
     videoHeight = 0;
+    frameWidth = 0;
+    frameHeight = 0;
+
+    pointsBuffer: THREE.BufferGeometry;
 
     constructor(element: HTMLElement) {
         this.outer = element;
@@ -70,6 +79,25 @@ export class FTLPlayer {
         this.renderer.setSize( width, height );
         this.outer.appendChild( this.renderer.domElement );
 
+        this.renderer.domElement.addEventListener('click', e => {
+            const target = e.target as any;
+            const width = target.clientWidth;
+            const height = target.clientHeight;
+            const offX = ((this.frameWidth - this.videoWidth) / this.frameWidth * width) / 2.0;
+            const offY = ((this.frameHeight - this.videoHeight) / this.frameHeight * height) / 2.0;
+            const x = Math.max(0, Math.min(1, (e.offsetX - offX) / (width - 2 * offX)));
+            const y = Math.max(0, Math.min(1, (e.offsetY - offY) / (height - 2 * offY)));
+            this.emit('select', Math.floor(x * this.videoWidth), Math.floor(y * this.videoHeight));
+        });
+
+        this.pointsBuffer = new THREE.BufferGeometry();
+        this.pointsBuffer.setDrawRange( 0, 0 );
+        const positions = new Float32Array( MAX_POINTS * 3 );
+        this.pointsBuffer.setAttribute( 'position', new THREE.BufferAttribute( positions, 3 ) );
+        const pointMaterial = new THREE.PointsMaterial( { color: 0xff0000, size: 5, sizeAttenuation: false } );
+        const pointCloud = new THREE.Points(this.pointsBuffer, pointMaterial);
+        this.scene.add(pointCloud);
+
         const update = () => {
             /*me.lat = Math.max( - 85, Math.min( 85, me.lat ) );
             let phi = THREE.MathUtils.degToRad( 90 - me.lat );
@@ -97,6 +125,20 @@ export class FTLPlayer {
         }
     
         animate();
+    }
+
+    setPoints(points: [number, number][]) {
+        const positions = this.pointsBuffer.attributes.position.array as number[];
+
+        let ix = 0;
+        for (const point of points) {
+            positions[ix++] = -(-this.videoWidth / 2 + point[0]);
+            positions[ix++] = this.videoHeight / 2 - point[1];
+            positions[ix++] = -1;
+        }
+
+        this.pointsBuffer.attributes.position.needsUpdate = true;   
+        this.pointsBuffer.setDrawRange( 0, points.length );
     }
 
     play() {
@@ -129,10 +171,14 @@ export class FTLPlayer {
             if (isWide) {
                 const nWidth = width;
                 const nHeight = width * (9 / 16);
+                this.frameWidth = nWidth;
+                this.frameHeight = nHeight;
                 this.camera = new THREE.OrthographicCamera(nWidth/-2, nWidth/2, nHeight/2, nHeight/-2, 1, 4);
             } else {
                 const nWidth = height * (16 / 9);
                 const nHeight = height;
+                this.frameWidth = nWidth;
+                this.frameHeight = nHeight;
                 this.camera = new THREE.OrthographicCamera(nWidth/-2, nWidth/2, nHeight/2, nHeight/-2, 1, 4);
             }
         }
@@ -162,10 +208,14 @@ export class FTLPlayer {
             if (isWide) {
                 const nWidth = width;
                 const nHeight = width * (9 / 16);
+                this.frameWidth = nWidth;
+                this.frameHeight = nHeight;
                 this.camera = new THREE.OrthographicCamera(nWidth/-2, nWidth/2, nHeight/2, nHeight/-2, 1, 4);
             } else {
                 const nWidth = height * (16 / 9);
                 const nHeight = height;
+                this.frameWidth = nWidth;
+                this.frameHeight = nHeight;
                 this.camera = new THREE.OrthographicCamera(nWidth/-2, nWidth/2, nHeight/2, nHeight/-2, 1, 4);
             }
 
@@ -351,3 +401,5 @@ FTLStream.prototype.start = function(fs, source, channel) {
 		}, this.uri);
 	}
 }*/
+
+ee(FTLPlayer.prototype);
