@@ -5,6 +5,7 @@ WORKDIR /usr/src/app
 RUN mkdir ./packages
 
 COPY ./package.json ./yarn.lock ./lerna.json ./
+COPY ./packages/stream/package.json ./packages/stream/
 COPY ./packages/player/package.json ./packages/player/
 COPY ./packages/protocol/package.json ./packages/protocol/
 COPY ./packages/common/package.json ./packages/common/

@@ -11,7 +11,8 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "lerna run build"
+    "build": "lerna run build",
+    "build:client": "lerna run build:client"
   },
   "author": "",
   "devDependencies": {

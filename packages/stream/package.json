@@ -14,6 +14,7 @@
     "test": "jest"
   },
   "dependencies": {
+    "@ftl/protocol": "1.0.0",
     "event-emitter": "^0.3.5"
   }
 }
