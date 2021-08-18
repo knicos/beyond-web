@@ -1615,6 +1615,11 @@
   dependencies:
     "@types/node" "*"
 
+"@types/d3@^3":
+  version "3.5.45"
+  resolved "https://registry.yarnpkg.com/@types/d3/-/d3-3.5.45.tgz#cceb1cd8f468b0ed1c96546ddefff3408d7463a7"
+  integrity sha512-wLICfMtjDEoAJie1MF6OuksAzOapRXgJy+l5HQVpyC1yMAlvHz2QKrrasUHru8xD6cbgQNGeO+CeyjOlKtly2A==
+
 "@types/eslint-scope@^3.7.0":
   version "3.7.1"
   resolved "https://registry.yarnpkg.com/@types/eslint-scope/-/eslint-scope-3.7.1.tgz#8dc390a7b4f9dd9f1284629efce982e41612116e"
@@ -1782,6 +1787,20 @@
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/@types/parse-json/-/parse-json-4.0.0.tgz#2f8bb441434d163b35fb8ffdccd7138927ffb8c0"
   integrity sha512-//oorEZjL6sbPcKUaCdIGlIUeH26mgzimjBB77G6XRgnDl/L5wOnpyBGRe/Mmf5CVW3PwEBE1NjiMZ/ssFh4wA==
+
+"@types/plotly.js-dist-min@^2.3.0":
+  version "2.3.0"
+  resolved "https://registry.yarnpkg.com/@types/plotly.js-dist-min/-/plotly.js-dist-min-2.3.0.tgz#b1b86b94b86e4628d97beca95cc7dd26c2f30758"
+  integrity sha512-MPvZbG2RA3zuU+AYgsVysJvNLyf3bvi1nt3ywHARwMW2TB38VQuYhQFD1pTRzBuqiV5ieYif7mLY5bHWGUVZqw==
+  dependencies:
+    "@types/plotly.js" "*"
+
+"@types/plotly.js@*", "@types/plotly.js@^1.54.14":
+  version "1.54.14"
+  resolved "https://registry.yarnpkg.com/@types/plotly.js/-/plotly.js-1.54.14.tgz#738f3507f49a707c03aae4fd5d568571ddf8bf31"
+  integrity sha512-vYevenBloZ3B4i831i+ccS9u782JSnkJpBG/c/qPRJNDW6s25udnrmoHkFhbBl7jkzBy8pO2lPNhpMrQJV7ETA==
+  dependencies:
+    "@types/d3" "^3"
 
 "@types/prettier@^2.1.5":
   version "2.3.2"
@@ -7583,6 +7602,11 @@ pkg-dir@^4.2.0:
   integrity sha512-HRDzbaKjC+AOWVXxAU/x54COGeIv9eb+6CkDSQoNTt4XyWoIJvuPsXizxu/Fr23EiekbtZwmh1IcIG/l/a10GQ==
   dependencies:
     find-up "^4.0.0"
+
+plotly.js-dist-min@^2.3.1:
+  version "2.3.1"
+  resolved "https://registry.yarnpkg.com/plotly.js-dist-min/-/plotly.js-dist-min-2.3.1.tgz#b8ddd7ddd3abf4ec06b7686d493d07c564de2241"
+  integrity sha512-Y5srb2izG/TO3KcWb2soAL6IP5/KZ3VS+hIr8skUgCVqtAK9CYzxjNS1fIzn4Y6OdcxoK3dbjqqPjmESOQga2g==
 
 portfinder@^1.0.26:
   version "1.0.28"

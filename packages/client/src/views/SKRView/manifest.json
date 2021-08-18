@@ -3,6 +3,10 @@
         "label": "Calibration",
         "component": "Calibration"
     },
+    "66": {
+        "label": "Pose",
+        "component": "RawValue"
+    },
     "71": {
         "label": "Metadata",
         "component": "Metadata"
@@ -17,6 +21,14 @@
     },
     "1024": {
         "label": "Test Value",
+        "component": "RawValue"
+    },
+    "1025": {
+        "label": "Focal Disparity",
+        "component": "RawValue"
+    },
+    "1026": {
+        "label": "Focal Point",
         "component": "RawValue"
     },
     "1027": {
@@ -39,6 +51,10 @@
         "label": "Offset",
         "component": "EditableValue",
         "type": "array"
+    },
+    "1030": {
+        "label": "Histogram",
+        "component": "Histogram"
     },
     "default": {
         "label": "Unknown ({channel})",

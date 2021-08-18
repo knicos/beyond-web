@@ -11,14 +11,13 @@ const Title = styled.h1`
 
 const Container = styled.div`
     flex-grow: 2;
-    overflow-y: scroll;
 `;
 
 const Table = styled.div`
     display: grid;
-    grid-template-columns: 1fr 2fr;
+    grid-template-columns: 1fr 3fr;
     grid-template-rows: repeat(auto-fit, minmax(1rem, 1fr));
-    grid-gap: 1px;
+    grid-gap: 2px;
 `;
 
 function renderData(data: Map<number, any>, onChange: (channel: number, value: unknown) => void): JSX.Element[] {
@@ -43,7 +42,9 @@ export function DataListing({stream, time}: Props) {
         <Title>Data</Title>
         <Container>
             <Table>
-                <DataItem name="Channels" value={JSON.stringify(Array.from(stream.availableChannels))} />
+                <DataItem name="Channels" value={Array.from(stream.availableChannels).join(',')} />
+                <DataItem name="Sets" value={Array.from(stream.availableSets).join(',')} />
+                <DataItem name="Sources" value={Array.from(stream.availableSources).join(',')} />
                 {renderData(stream.data, (channel: number, value: unknown) => {
                     stream.set(channel, value);
                 })}

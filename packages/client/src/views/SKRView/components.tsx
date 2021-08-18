@@ -1,12 +1,13 @@
 import React, {useState, useEffect} from 'react';
 import styled from 'styled-components';
 import pupa from 'pupa';
+import Plotly from 'plotly.js-dist-min';
 
 const Name = styled.div`
     font-size: 0.8rem;
     padding: 0.2rem 0.5rem;
     background: #e5e5e5;
-    border-radius: 3px;
+    border-radius: 5px;
 `;
 
 const Value = styled.div`
@@ -108,6 +109,22 @@ function RawValue({data, config, channel}: IDataComponentProps) {
     return <DataItem name={pupa(config.label, {channel})} value={str} />;
 }
 
+function Histogram({data, config, channel}: IDataComponentProps) {
+    const [history, setHistory] = useState([]);
+
+    useEffect(() => {
+        Plotly.newPlot('plotly', [{z: history, type: 'heatmap'}]);
+    }, [history]);
+
+    useEffect(() => {
+        if (Array.isArray(data)) {
+            setHistory(old => [...old, data.slice(0, 300)].slice(Math.max(0, old.length - 20)));
+        }
+    }, [data]);
+
+    return <DataItem name={pupa(config.label, {channel})} value={<div id="plotly"></div>} />;
+}
+
 function EditableValue({data, config, channel, onChange}: IDataComponentProps) {
     const [value, setValue] = useState(JSON.stringify(data));
 
@@ -152,4 +169,5 @@ export const components: Record<string, React.FunctionComponent<IDataComponentPr
     RawValue,
     Enumerated,
     EditableValue,
+    Histogram,
 };

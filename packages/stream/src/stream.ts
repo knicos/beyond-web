@@ -18,6 +18,8 @@ export class FTLStream {
     paused = false;
     active = true;
     availableChannels = new Set<number>();
+    availableSets = new Set<number>();
+    availableSources = new Set<number>();
     enabledChannels = new Map<string, IVideoState>();
     found = false;
     lastTimestamp = 0;
@@ -66,6 +68,8 @@ export class FTLStream {
                 this.emit('packet', streampckg, pckg);
             } else {
                 this.availableChannels.add(channel);
+                this.availableSets.add(fs);
+                this.availableSources.add(frame);
                 const id = `id-${fs}-${frame}-${channel}`;
     
                 if (this.enabledChannels.has(id)) {

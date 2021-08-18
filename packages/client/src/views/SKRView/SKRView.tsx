@@ -8,6 +8,7 @@ import {useLocation} from 'react-router';
 import qs from 'query-string';
 import {FTLStream} from '@ftl/stream';
 import {Peer} from '@ftl/protocol';
+import {MenuBar} from './MenuBar';
 
 const Main = styled.section`
     padding: 1rem;
@@ -26,11 +27,12 @@ const Card = styled.div`
     }
 
     &.main {
-        grid-column: span 4;
+        grid-column: span 3;
+        background: none;
     }
 
     &.side {
-        grid-column: span 2;
+        grid-column: span 3;
     }
 `;
 
@@ -43,7 +45,7 @@ const PlayerContainer = styled.div`
 const VideoContainer = styled.div`
     background: black;
     border-radius: 3px;
-    box-shadow: 2px 2px 5px #aaa;
+    box-shadow: 2px 2px 8px #666;
     width: 100%;
 `;
 
@@ -89,7 +91,7 @@ export function SKRView() {
 
     return <Main>
         <Card className="menu">
-            SKR Menu Bar
+            <MenuBar stream={stream} />
         </Card>
         <Card className="main">
             <PlayerContainer>
@@ -111,7 +113,7 @@ export function SKRView() {
         </Card>
         <Card className="side">
             <DataListing stream={stream} time={time} />
-            <button onClick={() => stream.set(1027, "right")}>Test</button>
+            <button onClick={() => stream.set(69, "reset")}>Restart</button>
         </Card>
     </Main>;
 }

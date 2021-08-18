@@ -27,6 +27,8 @@ export class FTLPlayer {
     mse: FTLMSE;
     lastRender = 0;
     fps = 30;
+    videoWidth = 0;
+    videoHeight = 0;
 
     constructor(element: HTMLElement) {
         this.outer = element;
@@ -115,11 +117,33 @@ export class FTLPlayer {
         }
         this.mse.push(spkt, pkt);
 
+        if (this.mesh && this.videoWidth !== this.element.videoWidth) {
+            const width = this.element.videoWidth;
+            const height = this.element.videoHeight;
+            this.videoWidth = width;
+            this.videoHeight = height;
+            this.mesh.geometry = new THREE.PlaneGeometry(width, height, 32);
+            this.mesh.geometry.scale( - 1, 1, 1 );
+
+            const isWide = height / width <= 9 / 16;
+            if (isWide) {
+                const nWidth = width;
+                const nHeight = width * (9 / 16);
+                this.camera = new THREE.OrthographicCamera(nWidth/-2, nWidth/2, nHeight/2, nHeight/-2, 1, 4);
+            } else {
+                const nWidth = height * (16 / 9);
+                const nHeight = height;
+                this.camera = new THREE.OrthographicCamera(nWidth/-2, nWidth/2, nHeight/2, nHeight/-2, 1, 4);
+            }
+        }
+
         if (!this.mesh && this.element.videoWidth) {
             let geometry: any;
 
             const width = this.element.videoWidth;
             const height = this.element.videoHeight;
+            this.videoWidth = width;
+            this.videoHeight = height;
 	
             if (false) {
                 geometry = new THREE.SphereBufferGeometry( 500, 60, 40 );
