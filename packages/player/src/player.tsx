@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import {FTLStream} from '@ftl/stream';
 import {FTLMSE} from './mse';
 import ee, {Emitter} from 'event-emitter';
+import {createCircleTexture} from './texture';
 
 const MAX_POINTS = 100;
 
@@ -25,7 +26,7 @@ export class FTLPlayer {
     handlers = {};
     outer: HTMLElement;
     element: HTMLVideoElement;
-    camera: THREE.Camera;
+    camera: THREE.OrthographicCamera;
     scene: THREE.Scene;
     mesh: THREE.Mesh;
     renderer: THREE.WebGLRenderer;
@@ -59,7 +60,7 @@ export class FTLPlayer {
         const height = width * (9 / 16); //element.clientHeight;
 
         if (false) {
-            this.camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 1100 );
+            //this.camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 1100 );
         } else {
             this.camera = new THREE.OrthographicCamera(width/-2, width/2, height/2, height/-2, 1, 4);
         }
@@ -90,11 +91,24 @@ export class FTLPlayer {
             this.emit('select', Math.floor(x * this.videoWidth), Math.floor(y * this.videoHeight));
         });
 
+        this.renderer.domElement.addEventListener('wheel', e => {
+            this.camera.zoom -= 0.01 * e.deltaY;
+            this.camera.zoom = Math.max(0.2, Math.min(5, this.camera.zoom));
+            this.camera.updateProjectionMatrix();
+            e.preventDefault();
+        });
+
         this.pointsBuffer = new THREE.BufferGeometry();
         this.pointsBuffer.setDrawRange( 0, 0 );
         const positions = new Float32Array( MAX_POINTS * 3 );
         this.pointsBuffer.setAttribute( 'position', new THREE.BufferAttribute( positions, 3 ) );
-        const pointMaterial = new THREE.PointsMaterial( { color: 0xff0000, size: 5, sizeAttenuation: false } );
+        const pointMaterial = new THREE.PointsMaterial({
+            map: createCircleTexture(new THREE.Color(0xff0000)),
+            size: 5,
+            sizeAttenuation: false,
+            depthTest: false,
+            transparent: true,
+        });
         const pointCloud = new THREE.Points(this.pointsBuffer, pointMaterial);
         this.scene.add(pointCloud);
 

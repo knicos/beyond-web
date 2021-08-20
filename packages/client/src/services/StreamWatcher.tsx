@@ -9,7 +9,7 @@ export function StreamWatcher(): React.ReactElement {
     useEffect(() => {
         if (stream) {
             stream.on('frameStart', (ts: number) => {
-                setFrameTime(ts);
+                setFrameTime(cur => ts - cur > 200 ? ts : cur);
             });
             setFrameTime(0);
         }

@@ -28,12 +28,12 @@ const Card = styled.div`
     }
 
     &.main {
-        grid-column: span 3;
+        grid-column: span 4;
         background: none;
     }
 
     &.side {
-        grid-column: span 3;
+        grid-column: span 2;
     }
 `;
 
@@ -60,6 +60,19 @@ function formatTime(seconds: number): string {
     const minutes = Math.floor((seconds - hours * 60 * 60) / 60);
     const s = seconds - hours * 60 * 60 - minutes * 60;
     return `${hours}:${minutes}:${s.toFixed(1)}`;
+}
+
+function generatePoints(stream: FTLStream): [number, number][] {
+    const focalPoint = stream.data.get(1026);
+
+    if (focalPoint?.length === 2 && focalPoint[0]) {
+        const disparity = stream.data.get(1025);
+        if (disparity) {
+            return [focalPoint, [focalPoint[0] - disparity + stream.getWidth(), focalPoint[1]]];
+        } else {
+            return [focalPoint];
+        }
+    }
 }
 
 export function SKRView() {
@@ -90,7 +103,7 @@ export function SKRView() {
         return null;
     }
 
-    const focalPoint = stream.data.get(1026);
+    const points = generatePoints(stream);
 
     return <Main>
         <Card className="menu">
@@ -102,7 +115,7 @@ export function SKRView() {
                     <ReactPlayer stream={stream} channel={21} size={800} onSelectPoint={(x, y) => {
                         console.log('Point select', x, y);
                         stream.set(1026, [x, y]);
-                    }} points={focalPoint?.length === 2 && focalPoint[0] && [focalPoint]} />
+                    }} points={points} />
                 </VideoContainer>
                 <StatsBar>
                     {`Time: ${formatTime(seconds)}`}

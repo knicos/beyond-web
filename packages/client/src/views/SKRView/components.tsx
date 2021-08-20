@@ -141,20 +141,30 @@ function RawValue({data, config, channel}: IDataComponentProps) {
     return <DataItem channel={channel} name={pupa(config.label, {channel})} value={str} />;
 }
 
-function Histogram({data, config, channel}: IDataComponentProps) {
+function TemporalHistogram({data, config, channel}: IDataComponentProps) {
     const [history, setHistory] = useState([]);
 
     useEffect(() => {
-        Plotly.react('plotly', [{z: history, type: 'heatmap'}], {margin: {t: 40, l: 30, r: 30, b: 40}});
+        Plotly.react(`plotly${channel}`, [{z: history, type: 'heatmap'}], {margin: {t: 40, l: 30, r: 30, b: 40}});
     }, [history]);
 
     useEffect(() => {
         if (Array.isArray(data)) {
-            setHistory(old => [...old, data.slice(0, 300)].slice(Math.max(0, old.length - 20)));
+            setHistory(old => [...old, data].slice(Math.max(0, old.length - 20)));
         }
     }, [data]);
 
-    return <DataItem channel={channel} name={pupa(config.label, {channel})} value={<div id="plotly"></div>} />;
+    return <DataItem channel={channel} name={pupa(config.label, {channel})} value={<div id={`plotly${channel}`}></div>} />;
+}
+
+function Histogram({data, config, channel}: IDataComponentProps) {
+    useEffect(() => {
+        if (Array.isArray(data)) {
+            Plotly.react(`plotly${channel}`, [{y: data, type: 'bar'}], {margin: {t: 40, l: 30, r: 30, b: 40}});
+        }
+    }, [data]);
+
+    return <DataItem channel={channel} name={pupa(config.label, {channel})} value={<div id={`plotly${channel}`}></div>} />;
 }
 
 function EditableValue({data, config, channel, onChange}: IDataComponentProps) {
@@ -202,4 +212,5 @@ export const components: Record<string, React.FunctionComponent<IDataComponentPr
     Enumerated,
     EditableValue,
     Histogram,
+    TemporalHistogram,
 };

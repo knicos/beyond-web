@@ -40,7 +40,8 @@
             {"label": "Stereo", "value": "stereo"},
             {"label": "Disparity", "value": "disparity"},
             {"label": "Confidence", "value": "confidence"},
-            {"label": "Groundtruth", "value": "groundtruth"}
+            {"label": "Groundtruth", "value": "groundtruth"},
+            {"label": "Error", "value": "error"}
         ]
     },
     "1028": {
@@ -55,6 +56,20 @@
     },
     "1030": {
         "label": "Histogram",
+        "component": "Histogram"
+    },
+    "1032": {
+        "label": "Expected Disp",
+        "component": "RawValue",
+        "type": "number"
+    },
+    "1033": {
+        "label": "Radius",
+        "component": "EditableValue",
+        "type": "number"
+    },
+    "1034": {
+        "label": "Features",
         "component": "Histogram"
     },
     "default": {
