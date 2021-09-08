@@ -41,7 +41,14 @@
             {"label": "Disparity", "value": "disparity"},
             {"label": "Confidence", "value": "confidence"},
             {"label": "Groundtruth", "value": "groundtruth"},
-            {"label": "Error", "value": "error"}
+            {"label": "Error", "value": "error"},
+            {"label": "Selection", "value": "selection"},
+            {"label": "Hash Left", "value": "hash_left"},
+            {"label": "Hash Right", "value": "hash_right"},
+            {"label": "Feature Right", "value": "feature_right"},
+            {"label": "Mask", "value": "mask"},
+            {"label": "Gradient Left", "value": "gradient_left"},
+            {"label": "Gradient Right", "value": "gradient_right"}
         ]
     },
     "1028": {
@@ -69,8 +76,20 @@
         "type": "number"
     },
     "1034": {
-        "label": "Features",
-        "component": "Histogram"
+        "label": "Histogram Select",
+        "component": "Enumerated",
+        "options": [
+            {"label": "Disparity", "value": "disparity"},
+            {"label": "Left Bucket", "value": "left_bucket"},
+            {"label": "Left Intensity", "value": "left_intensity"}
+        ]
+    },
+    "1035": {
+        "label": "Selection View",
+        "component": "Enumerated",
+        "options": [
+            {"label": "Left Bucket", "value": "left_bucket"}
+        ]
     },
     "default": {
         "label": "Unknown ({channel})",
