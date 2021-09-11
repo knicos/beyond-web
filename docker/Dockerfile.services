@@ -12,7 +12,7 @@ COPY ./packages/common/package.json ./packages/common/
 COPY ./packages/stream-service/package.json ./packages/stream-service/
 COPY ./packages/index-service/package.json ./packages/index-service/
 
-RUN yarn install
+RUN yarn install && yarn cache clean
 
 COPY ./packages ./packages
 

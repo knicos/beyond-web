@@ -11,7 +11,7 @@ COPY ./packages/stream/package.json ./packages/stream/
 COPY ./packages/protocol/package.json ./packages/protocol/
 COPY ./packages/player/package.json ./packages/player/
 
-RUN yarn install
+RUN yarn install && yarn cache clean
 
 COPY ./packages/client/ ./packages/client/
 COPY ./packages/stream/ ./packages/stream/
