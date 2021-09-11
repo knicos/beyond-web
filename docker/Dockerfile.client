@@ -17,7 +17,7 @@ COPY ./packages/client/ ./packages/client/
 COPY ./packages/stream/ ./packages/stream/
 COPY ./packages/protocol/ ./packages/protocol/
 COPY ./packages/player/ ./packages/player/
-RUN yarn build:client
+RUN yarn build && yarn build:client
 
 FROM nginx:latest
 COPY --from=build /usr/src/app/packages/client/dist /usr/share/nginx/html/
