@@ -16,12 +16,11 @@ app_build:
     - docker
     - git
   script:
-    - docker-compose build --build-arg ASSET_PATH=/lab/
     - docker build -t webapp-service --target build -f ./docker/Dockerfile.services .
-    - docker build -t webapp-client --target build -f ./docker/Dockerfile.client .
+    - docker build -t webapp-client --build-arg ASSET_PATH=/lab/ --target build -f ./docker/Dockerfile.client .
     - mkdir image
-    - docker save webapp-service > image/service.tar
-    - docker save webapp-client > image/client.tar
+    - docker save webapp-service | gzip > image/service.tar.gz
+    - docker save webapp-client | gzip > image/client.tar.gz
   artifacts:
     paths:
       - image
@@ -32,8 +31,8 @@ app_test:
     - docker
     - git
   script:
-    - docker load -i image/service.tar
-    - docker load -i image/client.tar
+    - docker load -i image/service.tar.gz
+    - docker load -i image/client.tar.gz
     - docker run webapp-service yarn test
     - docker run webapp-client yarn test
 
@@ -45,5 +44,8 @@ app_deploy:
     DOCKER_USER: $DOCKER_USER
     DOCKER_PASSWORD: $DOCKER_PASSWORD
   script:
-    - docker login -u $DOCKER_USER -p $DOCKER_PASSWORD ftlab.utu.fi
+    - docker load -i image/service.tar.gz
+    - docker load -i image/client.tar.gz
+    - docker-compose build --build-arg ASSET_PATH=/lab/
+    - echo "$DOCKER_PASSWORD" | docker login -u $DOCKER_USER --password-stdin ftlab.utu.fi
     - docker-compose push
