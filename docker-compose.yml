@@ -1,7 +1,7 @@
 version: "3.4"
 services:
   client:
-    image: ftlab.utu.fi/app-client
+    image: ftlab.utu.fi/app-client:${TAG:-latest}
     build:
       context: ./
       dockerfile: ./docker/Dockerfile.client
@@ -14,7 +14,7 @@ services:
     volumes:
       - ./packages/client/dist:/usr/share/nginx/html
   streamservice:
-    image: ftlab.utu.fi/app-streamservice
+    image: ftlab.utu.fi/app-streamservice:${TAG:-latest}
     build:
       context: ./
       dockerfile: ./docker/Dockerfile.services

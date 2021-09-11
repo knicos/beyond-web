@@ -47,11 +47,21 @@ service_test:
     - docker load -i image/service.tar.gz
     - docker run webapp-service yarn test
 
-app_deploy:
+client_test:
+  stage: test
+  tags:
+    - docker
+    - git
+  needs: ["client_build"]
+  script:
+    - docker load -i image/client.tar.gz
+    - docker run webapp-client yarn test
+
+latest_deploy:
   stage: deploy
   only:
     - master
-  needs: ["service_build","service_test","client_build"]
+  needs: ["service_build","client_build"]
   variables:
     DOCKER_USER: $DOCKER_USER
     DOCKER_PASSWORD: $DOCKER_PASSWORD
@@ -59,5 +69,20 @@ app_deploy:
     - docker load -i image/service.tar.gz
     - docker load -i image/client.tar.gz
     - COMPOSE_DOCKER_CLI_BUILD=1 docker-compose build --build-arg ASSET_PATH=/lab/
+    - echo "$DOCKER_PASSWORD" | docker login -u $DOCKER_USER --password-stdin ftlab.utu.fi
+    - docker-compose push
+
+tag_deploy:
+  stage: deploy
+  only:
+    - tags
+  needs: ["service_build","client_build"]
+  variables:
+    DOCKER_USER: $DOCKER_USER
+    DOCKER_PASSWORD: $DOCKER_PASSWORD
+  script:
+    - docker load -i image/service.tar.gz
+    - docker load -i image/client.tar.gz
+    - TAG="$CI_COMMIT_TAG" COMPOSE_DOCKER_CLI_BUILD=1 docker-compose build --build-arg ASSET_PATH=/lab/
     - echo "$DOCKER_PASSWORD" | docker login -u $DOCKER_USER --password-stdin ftlab.utu.fi
     - docker-compose push
