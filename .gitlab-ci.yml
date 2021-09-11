@@ -1,0 +1,16 @@
+stages:
+  - build
+
+image:
+  name: docker/compose
+  entrypoint: [""]
+
+services:
+  - docker:dind
+
+build:
+  tags:
+    - docker
+    - git
+  script:
+    - docker-compose build
