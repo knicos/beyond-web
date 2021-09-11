@@ -2,6 +2,8 @@ const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const webpack = require('webpack');
 
+const ASSET_PATH = process.env.ASSET_PATH || '/';
+
 module.exports = {
   context: process.cwd(),
   devtool: "source-map",
@@ -33,6 +35,10 @@ module.exports = {
     new webpack.ProvidePlugin({
         Buffer: ['buffer', 'Buffer'],
     }),
+
+    new webpack.DefinePlugin({
+        'process.env.ASSET_PATH': JSON.stringify(process.env.ASSET_PATH || '/')
+    }),
   ],
   resolve: {
     extensions: ['.tsx', '.ts', '.js'],
@@ -45,7 +51,7 @@ module.exports = {
     filename: '[contenthash].bundle.js',
     path: path.resolve(__dirname, 'dist'),
 	clean: true,
-    publicPath: '/',
+    publicPath: ASSET_PATH,
   },
   optimization: {
     runtimeChunk: true,

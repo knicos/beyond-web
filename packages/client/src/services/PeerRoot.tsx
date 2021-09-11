@@ -11,7 +11,8 @@ export function PeerRoot(): React.ReactElement {
 
     const createPeer = () => {
         console.log("HOST", location.host);
-        const ws = new WebSocket(`ws://${location.host}/v1/stream`);
+        const protocol = location.protocol === 'https:' ? 'wss' : 'ws';
+        const ws = new WebSocket(`${protocol}://${location.host}${process.env.ASSET_PATH}v1/stream`);
         ws.binaryType = "arraybuffer";
         const peer = new Peer(ws as any);
         peer.bind('node_details', () => {

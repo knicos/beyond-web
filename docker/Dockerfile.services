@@ -21,3 +21,29 @@ RUN yarn build
 EXPOSE 8080
 
 USER node
+
+FROM node:16-alpine AS streamservice
+
+RUN mkdir ./packages ./packages/stream ./packages/player ./packages/protocol ./packages/common ./packages/stream-service
+COPY ./package.json ./yarn.lock ./lerna.json ./
+COPY ./packages/stream/package.json ./packages/stream/
+COPY ./packages/player/package.json ./packages/player/
+COPY ./packages/protocol/package.json ./packages/protocol/
+COPY ./packages/common/package.json ./packages/common/
+COPY ./packages/stream-service/package.json ./packages/stream-service/
+
+RUN yarn install --production \
+  && yarn cache clean \
+  && yarn autoclean --init \
+  && yarn autoclean --force
+
+# RUN mkdir ./packages/stream/dist ./packages/player/dist ./packages/protocol/dist ./packages/common/dist ./packages/stream-service/dist
+COPY --from=build /usr/src/app/packages/stream/dist/ ./packages/stream/dist/
+COPY --from=build /usr/src/app/packages/player/dist/ ./packages/player/dist/
+COPY --from=build /usr/src/app/packages/protocol/dist/ ./packages/protocol/dist/
+COPY --from=build /usr/src/app/packages/common/dist/ ./packages/common/dist/
+COPY --from=build /usr/src/app/packages/stream-service/dist/ ./packages/stream-service/dist/
+
+USER node
+
+CMD ["yarn", "workspace", "@ftl/stream-service", "run", "start"]

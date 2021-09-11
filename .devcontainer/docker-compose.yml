@@ -1,5 +1,12 @@
 version: '3.4'
 services:
+  streamservice:
+    build:
+      context: ./
+      dockerfile: ./docker/Dockerfile.services
+      target: build
+    command: ["yarn", "workspace", "@ftl/stream-service", "run", "start:dev"]
+
   # Update this to the name of the service you want to work with in your docker-compose.yml file
   devservice:
     # If you want add a non-root user to your Dockerfile, you can use the "remoteUser"

@@ -2,28 +2,25 @@ version: "3.4"
 services:
   client:
     image: ftlab.utu.fi/app-client
-    build:
-      context: ./
-      dockerfile: ./docker/Dockerfile.client
     ports:
       - "8080:8080"
     environment:
       FTL_STREAM_SERVICE: streamservice:8080
+      ASSET_PATH: /lab/
     depends_on:
       - streamservice
-    volumes:
-      - ./packages/client/dist:/usr/share/nginx/html
   streamservice:
     image: ftlab.utu.fi/app-streamservice
-    build:
-      context: ./
-      dockerfile: ./docker/Dockerfile.services
-      target: streamservice
     environment:
-      NODE_ENV: development
+      NODE_ENV: production
       REDIS_HOST: redis
-    volumes:
-      - ./packages:/usr/src/app/packages
   redis:
     image: redis:alpine
     command: redis-server --maxmemory 200mb --save "" --appendonly no
+#  registry:
+#    restart: always
+#    image: registry:2
+#    ports:
+#      - 5000:5000
+#    volumes:
+#      - /media/ftl-data/docker-registry:/var/lib/registry
