@@ -10,36 +10,48 @@ stages:
 services:
   - docker:dind
 
-app_build:
+client_build:
+  stage: build
+  tags:
+    - docker
+    - git
+  script:
+    - docker build -t webapp-client --build-arg ASSET_PATH=/lab/ --target build -f ./docker/Dockerfile.client .
+    - mkdir image
+    - docker save webapp-client | gzip > image/client.tar.gz
+  artifacts:
+    paths:
+      - image
+
+service_build:
   stage: build
   tags:
     - docker
     - git
   script:
     - docker build -t webapp-service --target build -f ./docker/Dockerfile.services .
-    - docker build -t webapp-client --build-arg ASSET_PATH=/lab/ --target build -f ./docker/Dockerfile.client .
     - mkdir image
     - docker save webapp-service | gzip > image/service.tar.gz
-    - docker save webapp-client | gzip > image/client.tar.gz
+    
   artifacts:
     paths:
       - image
 
-app_test:
+service_test:
   stage: test
   tags:
     - docker
     - git
+  needs: ["service_build"]
   script:
     - docker load -i image/service.tar.gz
-    - docker load -i image/client.tar.gz
     - docker run webapp-service yarn test
-    - docker run webapp-client yarn test
 
 app_deploy:
   stage: deploy
   only:
     - master
+  needs: ["service_test","client_build"]
   variables:
     DOCKER_USER: $DOCKER_USER
     DOCKER_PASSWORD: $DOCKER_PASSWORD
