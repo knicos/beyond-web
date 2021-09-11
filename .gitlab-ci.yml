@@ -51,7 +51,7 @@ app_deploy:
   stage: deploy
   only:
     - master
-  needs: ["service_test","client_build"]
+  needs: ["service_build","service_test","client_build"]
   variables:
     DOCKER_USER: $DOCKER_USER
     DOCKER_PASSWORD: $DOCKER_PASSWORD
