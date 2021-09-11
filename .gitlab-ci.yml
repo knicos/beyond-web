@@ -17,6 +17,14 @@ app_build:
     - git
   script:
     - docker-compose build --build-arg ASSET_PATH=/lab/
+    - docker build -t webapp-service --target build -f ./docker/Dockerfile.services .
+    - docker build -t webapp-client --target build -f ./docker/Dockerfile.client .
+    - mkdir image
+    - docker save webapp-service > image/service.tar
+    - docker save webapp-client > image/client.tar
+  artifacts:
+    paths:
+      - image
 
 app_test:
   stage: test
@@ -24,8 +32,8 @@ app_test:
     - docker
     - git
   script:
-    - docker build -t webapp-service --target build -f ./docker/Dockerfile.services .
-    - docker build -t webapp-client --target build -f ./docker/Dockerfile.client .
+    - docker load -i image/service.tar
+    - docker load -i image/client.tar
     - docker run webapp-service yarn test
     - docker run webapp-client yarn test
 
