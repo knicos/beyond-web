@@ -58,6 +58,6 @@ app_deploy:
   script:
     - docker load -i image/service.tar.gz
     - docker load -i image/client.tar.gz
-    - docker-compose build --build-arg ASSET_PATH=/lab/
+    - COMPOSE_DOCKER_CLI_BUILD=1 docker-compose build --build-arg ASSET_PATH=/lab/
     - echo "$DOCKER_PASSWORD" | docker login -u $DOCKER_USER --password-stdin ftlab.utu.fi
     - docker-compose push
