@@ -2,12 +2,40 @@ image:
   name: docker/compose
   entrypoint: [""]
 
+stages:
+  - build
+  - test
+  - deploy
+
 services:
   - docker:dind
 
-build:
+app_build:
+  stage: build
   tags:
     - docker
     - git
   script:
-    - docker-compose build
+    - docker-compose build --build-arg ASSET_PATH=/lab/
+
+app_test:
+  stage: test
+  tags:
+    - docker
+    - git
+  script:
+    - docker build -t webapp-service --target build -f ./docker/Dockerfile.services .
+    - docker build -t webapp-client --target build -f ./docker/Dockerfile.client .
+    - docker run webapp-service yarn test
+    - docker run webapp-client yarn test
+
+app_deploy:
+  stage: deploy
+  only:
+    - master
+  variables:
+    DOCKER_USER: $DOCKER_USER
+    DOCKER_PASSWORD: $DOCKER_PASSWORD
+  script:
+    - docker login -u $DOCKER_USER -p $DOCKER_PASSWORD ftlab.utu.fi
+    - docker-compose push
