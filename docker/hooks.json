@@ -1,0 +1,32 @@
+[
+    {
+        "id": "redeploy",
+        "execute-command": "/srv/ftl/hooks/redeploy.sh",
+        "command-working-directory": "/srv/ftl/webapp",
+        "response-message": "Deploying FTL App",
+        "trigger-rule": {
+            "and": [    
+                {
+                    "match": {
+                        "type": "value",
+                        "value": "<YOUR-GENERATED-TOKEN>",
+                        "parameter": {
+                            "source": "header",
+                            "name": "X-Gitlab-Token"
+                        }
+                    }
+                },
+                {
+                    "match": {
+                        "type": "value",
+                        "value": "success",
+                        "parameter": {
+                            "source": "payload",
+                            "name": "object_attributes.status"
+                        }
+                    }
+                }
+            ]
+        }
+    }
+]

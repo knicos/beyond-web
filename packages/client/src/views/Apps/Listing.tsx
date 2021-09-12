@@ -13,6 +13,11 @@ export function Listing() {
             }} selected={false}>
                 SKR
             </SelectableCard>
+            <SelectableCard onClick={() => {
+                history.push(`/apps/viewer${location.search}`)
+            }} selected={false}>
+                Viewer
+            </SelectableCard>
         </Grid>
     );
 }
