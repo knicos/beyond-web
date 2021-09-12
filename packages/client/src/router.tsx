@@ -4,10 +4,12 @@ import {Apps} from './views/Apps';
 import {StreamIndex} from './views/StreamIndex';
 
 export function Router() {
+    const path = process.env.ASSET_PATH;
+
     return (
         <Switch>
-            <Route exact path="/" component={StreamIndex} />
-            <Route path="/apps" component={Apps} />
+            <Route exact path={`${path}`} component={StreamIndex} />
+            <Route path={`${path}apps`} component={Apps} />
         </Switch>
     )
 }

@@ -3,18 +3,19 @@ import {SelectableCard, Grid} from '../../components/SelectableCard/SelectableCa
 import {useHistory, useLocation} from 'react-router';
 
 export function Listing() {
+    const path = process.env.ASSET_PATH;
     const history = useHistory();
     const location = useLocation();
-    console.log('QUERY', location)
+
     return (
         <Grid>
             <SelectableCard onClick={() => {
-                history.push(`/apps/skr${location.search}`)
+                history.push(`${path}apps/skr${location.search}`)
             }} selected={false}>
                 SKR
             </SelectableCard>
             <SelectableCard onClick={() => {
-                history.push(`/apps/viewer${location.search}`)
+                history.push(`${path}apps/viewer${location.search}`)
             }} selected={false}>
                 Viewer
             </SelectableCard>

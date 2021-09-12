@@ -4,10 +4,11 @@ import {SKRView} from '../SKRView';
 import {Listing} from './Listing';
 
 export function Router() {
+    const path = process.env.ASSET_PATH;
     return (
         <Switch>
-            <Route exact path="/apps" component={Listing} />
-            <Route path={`/apps/skr`} component={SKRView} />
+            <Route exact path={`${path}apps`} component={Listing} />
+            <Route path={`${path}apps/skr`} component={SKRView} />
         </Switch>
     )
 }
