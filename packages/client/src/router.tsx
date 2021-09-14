@@ -5,6 +5,7 @@ import {StreamIndex} from './views/StreamIndex';
 
 export function Router() {
     const path = process.env.ASSET_PATH;
+    console.log('PATH', path);
 
     return (
         <Switch>
