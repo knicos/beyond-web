@@ -70,6 +70,13 @@ export function ReactPlayer({stream, channel, size, onSelectPoint, points}: Prop
     }, []);
 
     useEffect(() => {
+        if (state.player) {
+            state.player.select(0, 0, channel || 0);
+            console.log('Select channel', channel || 0);
+        }
+    }, [channel]);
+
+    useEffect(() => {
         if (points && state.player) {
             state.player.setPoints(points);
         }

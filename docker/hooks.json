@@ -25,6 +25,16 @@
                             "name": "object_attributes.status"
                         }
                     }
+                },
+                {
+                    "match": {
+                        "type": "value",
+                        "value": "master",
+                        "parameter": {
+                            "source": "payload",
+                            "name": "object_attributes.ref"
+                        }
+                    }
                 }
             ]
         }

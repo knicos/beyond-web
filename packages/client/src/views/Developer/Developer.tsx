@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import styled from 'styled-components';
 import {ReactPlayer} from '@ftl/player';
 import {useRecoilValue, useSetRecoilState, useRecoilState} from 'recoil';
@@ -75,16 +75,17 @@ function generatePoints(stream: FTLStream): [number, number][] {
     }
 }
 
-export function SKRView() {
+export function DeveloperView() {
     const p: Peer = useRecoilValue(peer);
     const [stream, setStream] = useRecoilState(currentStream);
     const time = useRecoilValue(frameTime);
     const seconds = stream ? ((time - stream.startTimestamp) / 1000) : 0;
     const setTitle = useSetRecoilState(pageTitle);
     const params = qs.parse(useLocation().search);
+    const [channel, setChannel] = useState(0);
 
     useEffect(() => {
-        setTitle(`SKR [${stream?.uri.split('?')[0] || ''}]`);
+        setTitle(`Dev [${stream?.uri.split('?')[0] || ''}]`);
     }, []);
 
     useEffect(() => {
@@ -94,7 +95,7 @@ export function SKRView() {
         if (stream?.uri !== params.s) {
             console.error('Stream is not correct', params);
             const s = new FTLStream(p, params.s as string);
-            s.enableVideo(0, 0, 21);
+            s.enableVideo(0, 0, 0);
             setStream(s);
         }
     }, [stream, p]);
@@ -112,12 +113,22 @@ export function SKRView() {
         <Card className="main">
             <PlayerContainer>
                 <VideoContainer>
-                    <ReactPlayer stream={stream} channel={21} size={800} onSelectPoint={(x, y) => {
-                        console.log('Point select', x, y);
+                    <ReactPlayer stream={stream} channel={channel} size={800} onSelectPoint={(x, y) => {
                         stream.set(1026, [x, y]);
                     }} points={points} />
                 </VideoContainer>
                 <StatsBar>
+                    <select onChange={e => {
+                        const newChannel = parseInt(e.target.value);
+                        stream.disableVideo(0, 0, channel);
+                        stream.enableVideo(0, 0, newChannel);
+                        setChannel(newChannel);
+                    }}>
+                        <option value={0}>Colour</option>
+                        <option value={1}>Depth</option>
+                        <option value={2}>Right</option>
+                        <option value={21}>Overlay</option>
+                    </select>
                     {`Time: ${formatTime(seconds)}`}
                 </StatsBar>
             </PlayerContainer>

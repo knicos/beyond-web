@@ -15,9 +15,9 @@ export function Listing() {
                 SKR
             </SelectableCard>
             <SelectableCard onClick={() => {
-                history.push(`${path}apps/viewer${location.search}`)
+                history.push(`${path}apps/developer${location.search}`)
             }} selected={false}>
-                Viewer
+                Developer
             </SelectableCard>
         </Grid>
     );
