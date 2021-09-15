@@ -26,4 +26,6 @@ services:
       - ./packages:/usr/src/app/packages
   redis:
     image: redis:alpine
-    command: redis-server --maxmemory 200mb --save "" --appendonly no
+    volumes:
+      - ./.data:/data
+    command: redis-server --maxmemory 200mb --save "300 1" --appendonly no

@@ -80,6 +80,7 @@
         "component": "Enumerated",
         "options": [
             {"label": "Disparity", "value": "disparity"},
+            {"label": "Weight Disparity", "value": "weighted"},
             {"label": "Left Bucket", "value": "left_bucket"},
             {"label": "Left Intensity", "value": "left_intensity"}
         ]

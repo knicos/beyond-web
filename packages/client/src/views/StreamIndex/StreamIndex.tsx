@@ -11,6 +11,7 @@ function StreamCard({name, uri}: {name: string, uri: string}) {
     const p = useRecoilValue(peer);
     const [stream, setStream] = useRecoilState(currentStream);
     const isCurrent = stream?.uri === uri;
+    const path = process.env.ASSET_PATH;
 
     useEffect(() => {
         setTitle('Select Stream');
@@ -22,7 +23,7 @@ function StreamCard({name, uri}: {name: string, uri: string}) {
             const s = new FTLStream(p, baseURI);
             s.enableVideo(0, 0, 21);
             setStream(s);
-            history.push(`/apps?s=${encodeURIComponent(baseURI)}`);
+            history.push(`${path}apps?s=${encodeURIComponent(baseURI)}`);
         }
     }} selected={isCurrent}>
         {name}

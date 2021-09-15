@@ -112,7 +112,7 @@ export function SKRView() {
         <Card className="main">
             <PlayerContainer>
                 <VideoContainer>
-                    <ReactPlayer stream={stream} channel={21} size={800} onSelectPoint={(x, y) => {
+                    <ReactPlayer stream={stream} channel={0} size={800} onSelectPoint={(x, y) => {
                         console.log('Point select', x, y);
                         stream.set(1026, [x, y]);
                     }} points={points} />

@@ -11,12 +11,15 @@ services:
       - streamservice
   streamservice:
     image: ftlab.utu.fi/app-streamservice
+    restart: on-failure
     environment:
       NODE_ENV: production
       REDIS_HOST: redis
   redis:
     image: redis:alpine
-    command: redis-server --maxmemory 200mb --save "" --appendonly no
+    volumes:
+      - /media/ftl-data/redis:/data
+    command: redis-server --maxmemory 200mb --save "300 1" --appendonly no
 #  registry:
 #    restart: always
 #    image: registry:2
