@@ -7,6 +7,14 @@ services:
       target: build
     command: ["yarn", "workspace", "@ftl/stream-service", "run", "start:dev"]
 
+  watchservice:
+    image: node:16-alpine
+    volumes:
+      - .:/home/node:cached
+    working_dir: /home/node
+    command: ["yarn", "watch"]
+
+
   # Update this to the name of the service you want to work with in your docker-compose.yml file
   devservice:
     # If you want add a non-root user to your Dockerfile, you can use the "remoteUser"

@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build:client": "webpack",
-    "build:client:watch": "webpack --watch",
+    "watch": "webpack --watch",
     "dev": "webpack serve --open",
     "start": "node ./dist/index.js",
     "start:dev": "ts-node-dev --respawn --transpile-only --watch src --ignore-watch node_modules src/index.ts"

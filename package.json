@@ -12,7 +12,8 @@
   "scripts": {
     "test": "echo \"No tests yet\"",
     "build": "lerna run build",
-    "build:client": "lerna run build:client"
+    "build:client": "lerna run build:client",
+    "watch": "lerna run --parallel watch"
   },
   "author": "",
   "devDependencies": {
