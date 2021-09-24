@@ -48,7 +48,10 @@
             {"label": "Feature Right", "value": "feature_right"},
             {"label": "Mask", "value": "mask"},
             {"label": "Gradient Left", "value": "gradient_left"},
-            {"label": "Gradient Right", "value": "gradient_right"}
+            {"label": "Gradient Right", "value": "gradient_right"},
+            {"label": "Intensity Heatmap", "value": "intensity_heat"},
+            {"label": "Distance Heatmap", "value": "distance_heat"},
+            {"label": "Angle Heatmap", "value": "angle_heat"}
         ]
     },
     "1028": {
@@ -82,7 +85,9 @@
             {"label": "Disparity", "value": "disparity"},
             {"label": "Weight Disparity", "value": "weighted"},
             {"label": "Left Bucket", "value": "left_bucket"},
-            {"label": "Left Intensity", "value": "left_intensity"}
+            {"label": "Left Intensity", "value": "left_intensity"},
+            {"label": "Intensity Candidates", "value": "intensity_candidate"},
+            {"label": "Distance Candidates", "value": "distance_candidate"}
         ]
     },
     "1035": {
