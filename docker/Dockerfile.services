@@ -28,12 +28,13 @@ FROM node:16-alpine AS streamservice
 
 WORKDIR /usr/src/app
 
-RUN mkdir ./packages ./packages/stream ./packages/player ./packages/protocol ./packages/common ./packages/stream-service
+RUN mkdir ./packages ./packages/stream ./packages/player ./packages/protocol ./packages/common ./packages/stream-service ./packages/types
 COPY ./package.json ./yarn.lock ./lerna.json ./
 COPY ./packages/stream/package.json ./packages/stream/
 COPY ./packages/player/package.json ./packages/player/
 COPY ./packages/protocol/package.json ./packages/protocol/
 COPY ./packages/common/package.json ./packages/common/
+COPY ./packages/types/package.json ./packages/types/
 COPY ./packages/stream-service/package.json ./packages/stream-service/
 
 RUN yarn install --production \
@@ -46,6 +47,7 @@ COPY --from=build /usr/src/app/packages/stream/dist/ ./packages/stream/dist/
 COPY --from=build /usr/src/app/packages/player/dist/ ./packages/player/dist/
 COPY --from=build /usr/src/app/packages/protocol/dist/ ./packages/protocol/dist/
 COPY --from=build /usr/src/app/packages/common/dist/ ./packages/common/dist/
+COPY --from=build /usr/src/app/packages/types/dist/ ./packages/types/dist/
 COPY --from=build /usr/src/app/packages/stream-service/dist/ ./packages/stream-service/dist/
 
 USER node
@@ -59,6 +61,7 @@ WORKDIR /usr/src/app
 RUN mkdir ./packages ./packages/auth-service ./packages/common
 COPY ./package.json ./yarn.lock ./lerna.json ./
 COPY ./packages/common/package.json ./packages/common/
+COPY ./packages/types/package.json ./packages/types/
 COPY ./packages/auth-service/package.json ./packages/auth-service/
 
 RUN yarn install --production \
@@ -67,6 +70,7 @@ RUN yarn install --production \
   && yarn autoclean --force
 
 COPY --from=build /usr/src/app/packages/common/dist/ ./packages/common/dist/
+COPY --from=build /usr/src/app/packages/types/dist/ ./packages/types/dist/
 COPY --from=build /usr/src/app/packages/auth-service/dist/ ./packages/auth-service/dist/
 
 USER node
