@@ -1,0 +1,66 @@
+import { Form as FormikForm } from 'formik';
+import styled from 'styled-components';
+
+export const Form = styled(FormikForm)`
+  input {
+    border: 2px solid ${props => props.theme.border.green};
+    border-radius: 5px;
+    box-sizing: border-box;
+    padding: 0.5rem;
+    margin: 0.5rem;
+    font-family: 'Open Sans',Helvetica,Sans-Serif;
+    appearance: none;
+    outline: none;
+
+    &:focus {
+      border: 2px solid ${props => props.theme.border.purple};
+    }
+
+    &:active {
+      border: 2px solid ${props => props.theme.border.purple};
+    }
+  }
+
+  fieldset {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    border: none;
+    padding: 0;
+
+    legend {
+      font-weight: bold;
+    }
+  }
+
+  button {
+    background: ${props => props.theme.background.purple};
+    appearance: none;
+    border: none;
+    border-radius: 5px;
+    padding: 0.5rem 1rem;
+    color: white;
+    font-family: 'Open Sans',Helvetica,Sans-Serif;
+    cursor: pointer;
+
+    &.primary {
+      background: ${props => props.theme.background.purple};
+      font-weight: bold;
+    }
+
+    &:disabled {
+      background: ${props => props.theme.background.disabled}
+    }
+  }
+
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+`;
+
+export const ButtonBar = styled.div`
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-top: 1rem;
+`;

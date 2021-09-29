@@ -10,6 +10,7 @@
     ]
   },
   "scripts": {
+    "clean": "lerna run clean && rm -rf ./node_modules",
     "test": "echo \"No tests yet\"",
     "build": "lerna run build",
     "build:client": "lerna run build:client",
