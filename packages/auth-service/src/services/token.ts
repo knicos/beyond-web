@@ -17,8 +17,8 @@ export default class TokenService {
 
     async create(client: Client, user: User, ttl: number): Promise<AccessToken> {
       const groupIds = [
-        ...user?.groups?.map((g) => g.toString()) || [],
-        ...client?.groups?.map((g) => g.toString()) || [],
+        ...user?.groups?.filter((g) => g).map((g) => g.toString()) || [],
+        ...client?.groups?.filter((g) => g).map((g) => g.toString()) || [],
       ]
       const groups = await this.groupService.getAllRecursive(groupIds);
 
