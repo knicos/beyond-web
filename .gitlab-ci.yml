@@ -89,6 +89,6 @@ tag_deploy:
   script:
     - docker load -i image/service.tar.gz
     - docker load -i image/client.tar.gz
-    - TAG="$CI_COMMIT_TAG" COMPOSE_DOCKER_CLI_BUILD=1 docker-compose build --build-arg ASSET_PATH=/lab/
+    - TAG="$CI_COMMIT_TAG" COMPOSE_DOCKER_CLI_BUILD=1 docker-compose build --build-arg ASSET_PATH=/lab/ --build-arg CLIENT_ID=615417781b5701158c4997ba --build-arg CLIENT_SECRET=l7FNrUMa3ILzi3qiyo5J44wVGC40YTBx
     - echo "$DOCKER_PASSWORD" | docker login -u $DOCKER_USER --password-stdin ftlab.utu.fi
     - docker-compose push
