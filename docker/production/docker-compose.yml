@@ -2,6 +2,7 @@ version: "3.4"
 services:
   client:
     image: ftlab.utu.fi/app-client
+    restart: unless-stopped
     ports:
       - "8080:8080"
     environment:
@@ -13,31 +14,33 @@ services:
       - authservice
   streamservice:
     image: ftlab.utu.fi/app-streamservice
-    restart: on-failure
+    restart: unless-stopped
     environment:
       NODE_ENV: production
       REDIS_HOST: redis
   authservice:
     image: ftlab.utu.fi/app-authservice:${TAG:-latest}
+    restart: unless-stopped
     environment:
       NODE_ENV: development
       REDIS_HOST: redis
       MONGO_HOST: authmongo
   redis:
     image: redis:alpine
-    restart: always
+    restart: unless-stopped
     volumes:
       - /srv/ftl/webapp/data/redis:/data
     command: redis-server --maxmemory 200mb --save "300 1" --appendonly no
   authmongo:
     image: mongo:4.2
-    restart: always
+    restart: unless-stopped
     volumes:
       - /srv/ftl/webapp/data/authmongo:/data/db
     ports:
       - "27017:27017"
   insight:
     image: redislabs/redisinsight:latest
+    restart: unless-stopped
     ports:
       - "8001:8001"
 #  registry:

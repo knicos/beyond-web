@@ -2,6 +2,7 @@
 import { OAuthTokenResponse, OAuthTokenRequest, OAuthPasswordGrant } from '@ftl/types';
 import { Service, Inject } from '@tsed/common';
 import { MongooseModel } from '@tsed/mongoose';
+import { $log } from '@tsed/logger';
 import Client from '../models/client';
 import User from '../models/user';
 import UserService from './user';
@@ -29,9 +30,12 @@ export default class GrantService {
         const newClient = new this.clients({
           name: 'WebApp',
           grantTypes: ['password'],
-          secret: 'none',
+          secret: 'l7FNrUMa3ILzi3qiyo5J44wVGC40YTBx',
         });
-        await newClient.save();
+        const result = await newClient.save();
+        $log.info('Client token id', result.id);
+      } else {
+        $log.info('Client token id', client.id);
       }
     }
 

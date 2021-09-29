@@ -5,10 +5,11 @@ import { useHistory } from 'react-router-dom';
 import { refreshSession } from '../../recoil/selectors';
 import { Form, ButtonBar } from '../../components/Form';
 import { LoginContainer } from './styledComponents';
+import { OAUTH2_TOKEN } from '../../api';
 
 async function login(username: string, password: string) {
   try {
-    const res = await axios.post('/v1/oauth2/token', {
+    const res = await axios.post(OAUTH2_TOKEN, {
       username,
       password,
       grant_type: 'password',
