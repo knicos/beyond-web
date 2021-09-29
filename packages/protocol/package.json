@@ -2,6 +2,7 @@
   "name": "@ftl/protocol",
   "version": "1.0.0",
   "scripts": {
+    "clean": "rm -rf ./dist && rm -rf ./node_modules",
     "build": "tsc"
   },
   "main": "./dist/index.js",

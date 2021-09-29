@@ -6,20 +6,40 @@ services:
       - "8080:8080"
     environment:
       FTL_STREAM_SERVICE: streamservice:8080
+      FTL_AUTH_SERVICE: authservice:8080
       ASSET_PATH: /lab/
     depends_on:
       - streamservice
+      - authservice
   streamservice:
     image: ftlab.utu.fi/app-streamservice
     restart: on-failure
     environment:
       NODE_ENV: production
       REDIS_HOST: redis
+  authservice:
+    image: ftlab.utu.fi/app-authservice:${TAG:-latest}
+    environment:
+      NODE_ENV: development
+      REDIS_HOST: redis
+      MONGO_HOST: authmongo
   redis:
     image: redis:alpine
+    restart: always
     volumes:
-      - /media/ftl-data/redis:/data
+      - /srv/ftl/webapp/data/redis:/data
     command: redis-server --maxmemory 200mb --save "300 1" --appendonly no
+  authmongo:
+    image: mongo:4.2
+    restart: always
+    volumes:
+      - /srv/ftl/webapp/data/authmongo:/data/db
+    ports:
+      - "27017:27017"
+  insight:
+    image: redislabs/redisinsight:latest
+    ports:
+      - "8001:8001"
 #  registry:
 #    restart: always
 #    image: registry:2

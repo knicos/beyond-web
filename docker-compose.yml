@@ -9,6 +9,7 @@ services:
       - "8080:8080"
     environment:
       FTL_STREAM_SERVICE: streamservice:8080
+      FTL_AUTH_SERVICE: authservice:8080
     depends_on:
       - streamservice
     volumes:
@@ -23,9 +24,28 @@ services:
       NODE_ENV: development
       REDIS_HOST: redis
     volumes:
-      - ./packages:/usr/src/app/packages
+      - ./:/usr/src/app
+  authservice:
+    image: ftlab.utu.fi/app-authservice:${TAG:-latest}
+    build:
+      context: ./
+      dockerfile: ./docker/Dockerfile.services
+      target: authservice
+    environment:
+      NODE_ENV: development
+      REDIS_HOST: redis
+      MONGO_HOST: authmongo
+    volumes:
+      - ./:/usr/src/app
+  authmongo:
+    image: mongo:4.2
+    restart: always
+    ports:
+      - "27017:27017"
+
   redis:
     image: redis:alpine
+    restart: always
     volumes:
       - ./.data:/data
     command: redis-server --maxmemory 200mb --save "300 1" --appendonly no

@@ -7,12 +7,24 @@ services:
       target: build
     command: ["yarn", "workspace", "@ftl/stream-service", "run", "start:dev"]
 
+  authservice:
+    build:
+      context: ./
+      dockerfile: ./docker/Dockerfile.services
+      target: build
+    command: ["yarn", "workspace", "@ftl/auth-service", "run", "start:dev"]
+
   watchservice:
     image: node:16-alpine
     volumes:
       - .:/home/node:cached
     working_dir: /home/node
     command: ["yarn", "watch"]
+
+  insight:
+    image: redislabs/redisinsight:latest
+    ports:
+      - "8001:8001"
 
 
   # Update this to the name of the service you want to work with in your docker-compose.yml file
