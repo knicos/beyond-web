@@ -16,7 +16,7 @@ client_build:
     - docker
     - git
   script:
-    - docker build -t webapp-client --build-arg ASSET_PATH=/lab/ --target build -f ./docker/Dockerfile.client .
+    - docker build -t webapp-client --build-arg ASSET_PATH=/lab/ --build-arg CLIENT_ID=615417781b5701158c4997ba --build-arg CLIENT_SECRET=l7FNrUMa3ILzi3qiyo5J44wVGC40YTBx --target build -f ./docker/Dockerfile.client .
     - mkdir image
     - docker save webapp-client | gzip > image/client.tar.gz
   artifacts:

@@ -1,6 +1,8 @@
 FROM node:16-alpine AS build
 
 ARG ASSET_PATH=/
+ARG CLIENT_ID=614d906bf0d4d418b719b9a8
+ARG CLIENT_SECRET=none
 
 WORKDIR /usr/src/app
 RUN mkdir ./packages
