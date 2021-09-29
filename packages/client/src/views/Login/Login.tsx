@@ -13,8 +13,8 @@ async function login(username: string, password: string) {
       username,
       password,
       grant_type: 'password',
-      client_id: '614d906bf0d4d418b719b9a8',
-      client_secret: 'none',
+      client_id: process.env.CLIENT_ID,
+      client_secret: process.env.CLIENT_SECRET,
     });
     console.log('RES', res);
   } catch(err) {

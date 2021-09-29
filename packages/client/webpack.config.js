@@ -37,7 +37,9 @@ module.exports = {
     }),
 
     new webpack.DefinePlugin({
-        'process.env.ASSET_PATH': JSON.stringify(process.env.ASSET_PATH || '/')
+        'process.env.ASSET_PATH': JSON.stringify(process.env.ASSET_PATH || '/'),
+        'process.env.CLIENT_ID': JSON.stringify(process.env.CLIENT_ID),
+        'process.env.CLIENT_SECRET': JSON.stringify(process.env.CLIENT_SECRET)
     }),
   ],
   resolve: {

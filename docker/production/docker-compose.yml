@@ -8,6 +8,8 @@ services:
     environment:
       FTL_STREAM_SERVICE: streamservice:8080
       FTL_AUTH_SERVICE: authservice:8080
+      CLIENT_ID: 615417781b5701158c4997ba
+      CLIENT_SECRET: l7FNrUMa3ILzi3qiyo5J44wVGC40YTBx
       ASSET_PATH: /lab/
     depends_on:
       - streamservice

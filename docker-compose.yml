@@ -10,6 +10,8 @@ services:
     environment:
       FTL_STREAM_SERVICE: streamservice:8080
       FTL_AUTH_SERVICE: authservice:8080
+      CLIENT_ID: 614d906bf0d4d418b719b9a8
+      CLIENT_SECRET: none
     depends_on:
       - streamservice
     volumes:
