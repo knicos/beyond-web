@@ -23,7 +23,7 @@ export default class TokenService {
       const groups = await this.groupService.getAllRecursive(groupIds);
 
       const scopes = new Set<string>();
-      groups.forEach((group) => {
+      groups?.forEach((group) => {
         group.scopes?.forEach((scope) => scopes.add(scope));
       });
 
