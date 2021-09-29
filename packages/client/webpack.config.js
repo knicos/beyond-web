@@ -38,8 +38,8 @@ module.exports = {
 
     new webpack.DefinePlugin({
         'process.env.ASSET_PATH': JSON.stringify(process.env.ASSET_PATH || '/'),
-        'process.env.CLIENT_ID': JSON.stringify(process.env.CLIENT_ID),
-        'process.env.CLIENT_SECRET': JSON.stringify(process.env.CLIENT_SECRET)
+        'process.env.CLIENT_ID': JSON.stringify(process.env.CLIENT_ID || '614d906bf0d4d418b719b9a8'),
+        'process.env.CLIENT_SECRET': JSON.stringify(process.env.CLIENT_SECRET || 'none')
     }),
   ],
   resolve: {

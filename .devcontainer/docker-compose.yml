@@ -26,6 +26,13 @@ services:
     ports:
       - "8001:8001"
 
+  mongoexpress:
+    image: mongo-express
+    ports:
+      - "8083:8081"
+    environment:
+      ME_CONFIG_MONGODB_SERVER: authmongo
+
 
   # Update this to the name of the service you want to work with in your docker-compose.yml file
   devservice:

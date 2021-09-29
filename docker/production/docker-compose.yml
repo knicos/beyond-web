@@ -43,6 +43,15 @@ services:
     restart: unless-stopped
     ports:
       - "8001:8001"
+  mongoexpress:
+    image: mongo-express
+    restart: unless-stopped
+    ports:
+      - "8083:8081"
+    environment:
+      ME_CONFIG_MONGODB_SERVER: authmongo
+      ME_CONFIG_SITE_BASEURL: /mongo/
+
 #  registry:
 #    restart: always
 #    image: registry:2

@@ -58,7 +58,10 @@ export default class UserService {
     }
 
     async update(id: string, user: Partial<User>, groups: string[]) {
-      await this.users.findOneAndUpdate({ _id: id, groups: { $in: groups } }, user);
+      await this.users.findOneAndUpdate({ _id: id, groups: { $in: groups } }, {
+        ...user,
+        ...(user.password && { password: bcrypt.hashSync(user.password, 8) }),
+      });
       return this.getInGroups(id, groups);
     }
 
