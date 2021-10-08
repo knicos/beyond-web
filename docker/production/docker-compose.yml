@@ -6,23 +6,30 @@ services:
     ports:
       - "8080:8080"
     environment:
-      FTL_STREAM_SERVICE: streamservice:8080
+      FTL_SOCKET_SERVICE: socketservice:8080
       FTL_AUTH_SERVICE: authservice:8080
       ASSET_PATH: /lab/
     depends_on:
-      - streamservice
+      - socketservice
       - authservice
-  streamservice:
-    image: ftlab.utu.fi/app-streamservice
+  socketservice:
+    image: ftlab.utu.fi/app-socketservice
     restart: unless-stopped
     environment:
       NODE_ENV: production
       REDIS_HOST: redis
+  nodeservice:
+    image: ftlab.utu.fi/app-nodeservice
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      REDIS_HOST: redis
+      MONGO_HOST: authmongo
   authservice:
     image: ftlab.utu.fi/app-authservice:${TAG:-latest}
     restart: unless-stopped
     environment:
-      NODE_ENV: development
+      NODE_ENV: production
       REDIS_HOST: redis
       MONGO_HOST: authmongo
   redis:

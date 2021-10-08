@@ -5,6 +5,7 @@ const app = expressWs(express()).app;
 import {createSource} from "./source";
 import {redisGet, redisSendCommand, redisReply } from '@ftl/common';
 import {$log} from '@tsed/logger';
+import {AccessToken} from '@ftl/types';
 
 app.use(cookieParser());
 
@@ -35,7 +36,9 @@ function extractBasic(token: string): [string, string] {
   }
 }
 
-async function authorizeWebsocket(req: express.Request): Promise<boolean> {
+async function authorizeWebsocket(req: express.Request): Promise<AccessToken> {
+  let tokenId: string = null;
+
   if (req.headers.authorization?.startsWith('Basic ')) {
     const [username, password] = extractBasic(req.headers.authorization);
     const result: any = await new Promise((resolve) => {
@@ -49,25 +52,34 @@ async function authorizeWebsocket(req: express.Request): Promise<boolean> {
 
     if (result.error || !result.access_token) {
       $log.warn('Bad websocket connection', result.error);
-      return false;
+      return null;
     }
+
+    tokenId = result.access_token;
   } else {
-    const tokenId = req.cookies?.ftl_session || req.query?.access_token || extractBearer(req.headers.authorization);
-    if (typeof tokenId !== 'string' || !(await redisGet(`token:${tokenId}`))) {
+    tokenId = req.cookies?.ftl_session || req.query?.access_token || extractBearer(req.headers.authorization);
+    if (typeof tokenId !== 'string') {
       $log.warn('Bad websocket connection');
-      return false;
+      return null;
     }
   }
-  return true;
+
+  if (!tokenId) {
+    $log.warn('Bad websocket connection');
+    return null;
+  }
+
+  return redisGet(`token:${tokenId}`)
 }
 
-app.ws('/v1/stream', async (ws, req) => {
-  if (!(await authorizeWebsocket(req))) {
+app.ws('/v1/socket', async (ws, req) => {
+  const token = await authorizeWebsocket(req);
+  if (!token) {
     $log.warn('Closing socket');
     ws.close(1008);
     return;
   }
-	createSource(ws);
+	createSource(ws, req.headers['x-forwarded-for'] as string, token, !!req.headers['user-agent']);
 });
 
 export default app;

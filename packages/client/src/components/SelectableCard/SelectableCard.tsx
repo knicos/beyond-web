@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 
-const Card = styled.div`
+export const Card = styled.div`
     background: white;
     border-radius: 3px;
     padding: 1rem;
@@ -11,6 +11,13 @@ const Card = styled.div`
     &.selected {
         background: ${props => props.theme.background.selection};
     }
+`;
+
+export const CardTitle = styled.h1`
+    font-size: 1.1rem;
+    font-weight: bold;
+    margin-top: 0;
+    margin-bottom: 0.5rem;
 `;
 
 export const Grid = styled.div`

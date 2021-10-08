@@ -1,5 +1,6 @@
 import redis from 'redis';
 import { v4 as uuidv4 } from 'uuid';
+import { $log } from '@tsed/logger';
 
 let redisClient: redis.RedisClient;
 let redisSub: redis.RedisClient;
@@ -55,7 +56,7 @@ export function redisSubscribe(channel: string, cb: Function): Promise<boolean> 
     if (!hasChannel) {
       redisSub.subscribe(channel, (err) => {
         if (err) {
-          console.error('Subscribe error', err);
+          $log.error('Subscribe error', err);
         }
         resolve(!err);
       });
@@ -81,9 +82,9 @@ export function redisUnsubscribe(channel: string, cb: Function) {
   if (filtered.length === 0) {
     redisSub.unsubscribe(channel, (err) => {
       if (err) {
-        console.error('Subscribe error', err);
+        $log.error('Subscribe error', err);
       } else {
-        console.log('Remove redis subscription', channel);
+        $log.info('Remove redis subscription', channel);
       }
     });
   }
@@ -183,7 +184,7 @@ export function redisSendCommand(service: string, request: string, cmd: string, 
     cmd, data, request, origin: originKey,
   }), (err) => {
     if (err) {
-      console.error('Redis command send error', err);
+      $log.error('Redis command send error', err);
     }
   });
 }
@@ -196,7 +197,7 @@ export function redisListen(service: string, cb: CommandCallback) {
   const key = `command:${service}`;
   redisBlockClient.blpop(key, 0, async (err, rep) => {
     if (err) {
-      console.error('Command error', err);
+      $log.error('Command error', err);
     } else {
       const data = JSON.parse(rep[1]);
       const result = await cb(data.cmd, data.data);
@@ -206,4 +207,180 @@ export function redisListen(service: string, cb: CommandCallback) {
     }
     redisListen(service, cb);
   });
+}
+
+function keysFromObject(obj: any): string[] {
+  const result: string[] = [];
+  // eslint-disable-next-line guard-for-in
+  for (const key in obj) {
+    const value = obj[key];
+
+    const type = typeof value;
+    let valueStr: string;
+    switch (type) {
+      case 'string':
+        valueStr = value;
+        break;
+      case 'number':
+        valueStr = `${value}`;
+        break;
+      case 'object':
+        valueStr = JSON.stringify(value);
+        break;
+      default:
+        break;
+    }
+
+    if (valueStr) {
+      result.push(key);
+      result.push(valueStr);
+    }
+  }
+  return result;
+}
+
+function objectFromKeys(keys: string[]): any {
+  const obj = {};
+  for (let i = 0; i < keys.length; i += 2) {
+    obj[keys[i]] = keys[i + 1];
+  }
+  return obj;
+}
+
+function objectFromValues(keys: string[], values: any[]): any {
+  const obj = {};
+  for (let i = 0; i < keys.length; i += 1) {
+    const v = values[i];
+    if (v !== null) {
+      obj[keys[i]] = values[i];
+    }
+  }
+  return obj;
+}
+
+export function redisHSet(key: string, data: any, ttl: number): Promise<boolean> {
+  initRedis();
+  const items = keysFromObject(data);
+  return new Promise((resolve) => {
+    redisClient.multi().hset(
+      key, ...items,
+    ).expire(key, ttl).exec((err) => resolve(!err))
+  });
+}
+
+export function redisHGetM(key: string, items: string[]): Promise<any> {
+  initRedis();
+  return new Promise((resolve) => {
+    redisClient.hmget(
+      key, ...items,
+      (err, rep) => {
+        if (err) {
+          $log.error('Redis hmget error', err);
+          resolve(null);
+        } else {
+          resolve(objectFromValues(items, rep));
+        }
+      },
+    )
+  });
+}
+
+export function redisSendEvent(key: string, event: any) {
+  initRedis();
+  const items = keysFromObject(event);
+  redisClient.xadd.apply(
+    redisClient,
+    [
+      key, 'MAXLEN', '~', '1000', '*',
+      ...items, (err) => {
+        if (err) {
+          $log.error('Redis event error', err);
+        }
+      },
+    ],
+  );
+}
+
+const streamKeys = new Set<string>();
+let streamListen = false;
+// eslint-disable-next-line no-unused-vars
+type StreamCallback = (key: string, data: unknown, id: string) => void;
+const streamCallbacks = new Map<string, StreamCallback>();
+let streamID = '0';
+let consumerGroup = null;
+
+export function redisSetGroup(group: string) {
+  consumerGroup = group;
+}
+
+export async function redisCreateGroup(stream: string): Promise<number> {
+  return new Promise((resolve) => {
+    redisClient.xgroup('CREATE', stream, consumerGroup, '$', 'MKSTREAM', (err, rep) => {
+      if (err) {
+        $log.error('Redis group error', err);
+        resolve(-1);
+      } else {
+        resolve(rep);
+      }
+    });
+  });
+}
+
+export function redisSetStreamCallback(key: string, cb: StreamCallback): Promise<number> {
+  streamCallbacks.set(key, cb);
+  streamKeys.add(key);
+  return redisCreateGroup(key);
+}
+
+export function redisStreamListen(name: string, newKeys?: string[]) {
+  initRedis();
+
+  if (Array.isArray(newKeys)) {
+    newKeys.forEach((k) => streamKeys.add(k));
+  }
+
+  if (streamListen) {
+    return;
+  }
+  streamListen = true;
+
+  const keys = Array.from(streamKeys);
+  const ids = keys.map(() => streamID);
+
+  if (keys.length === 0) {
+    return;
+  }
+
+  redisBlockClient.xreadgroup.apply(
+    redisBlockClient,
+    ['GROUP', consumerGroup, name, 'BLOCK', '60000', 'STREAMS', ...keys, ...ids, async (err, rep) => {
+      if (err) {
+        $log.error('Command error', err);
+      } else if (Array.isArray(rep)) {
+        for (const stream of rep) {
+          const [key, dataSet] = stream;
+          for (const data of dataSet) {
+            const [id, columns] = data;
+            streamID = id;
+            const obj = objectFromKeys(columns);
+            if (streamCallbacks.has(key)) {
+              try {
+                streamCallbacks.get(key)(key, obj, id);
+              } catch (e) {
+                $log.error('Stream callback error', e);
+              }
+            }
+            redisClient.xack(key, consumerGroup, id, (ackerr) => {
+              if (err) {
+                $log.error('ACK Error', ackerr);
+              }
+            });
+          }
+        }
+      }
+      streamListen = false;
+      streamID = '>';
+      redisStreamListen(name);
+    }],
+  )
 }

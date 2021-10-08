@@ -1,11 +1,11 @@
 version: '3.4'
 services:
-  streamservice:
+  socketservice:
     build:
       context: ./
       dockerfile: ./docker/Dockerfile.services
       target: build
-    command: ["yarn", "workspace", "@ftl/stream-service", "run", "start:dev"]
+    command: ["yarn", "workspace", "@ftl/socket-service", "run", "start:dev"]
 
   authservice:
     build:
@@ -13,6 +13,13 @@ services:
       dockerfile: ./docker/Dockerfile.services
       target: build
     command: ["yarn", "workspace", "@ftl/auth-service", "run", "start:dev"]
+
+  nodeservice:
+    build:
+      context: ./
+      dockerfile: ./docker/Dockerfile.services
+      target: build
+    command: ["yarn", "workspace", "@ftl/node-service", "run", "start:dev"]
 
   watchservice:
     image: node:16-alpine

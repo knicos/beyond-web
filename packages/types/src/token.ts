@@ -6,6 +6,11 @@ interface IUser {
     username: string;
 }
 
+interface IClient {
+  id: string;
+  name: string;
+}
+
 export interface AccessToken {
     id: string;
     user?: IUser;
@@ -13,4 +18,5 @@ export interface AccessToken {
     scopes: string[];
     bearer?: string;
     scope: string;
+    client?: IClient;
 }
