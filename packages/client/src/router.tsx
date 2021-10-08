@@ -2,7 +2,7 @@ import React from 'react';
 import { useRecoilValue } from 'recoil';
 import {Switch, Redirect, Route} from 'react-router';
 import {Apps} from './views/Apps';
-import {StreamIndex} from './views/StreamIndex';
+import {Dashboard} from './views/Dashboard';
 import {currentSession} from './recoil/selectors';
 import {Login} from './views/Login';
 
@@ -43,7 +43,7 @@ export function Router() {
               <Login />
             </Route>
             <PrivateRoute isPrivate={!!session}>
-              <Route exact path={`${path}`} component={StreamIndex} />
+              <Route exact path={`${path}`} component={Dashboard} />
               <Route path={`${path}apps`} component={Apps} />
             </PrivateRoute>
         </Switch>

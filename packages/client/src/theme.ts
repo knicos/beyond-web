@@ -10,4 +10,7 @@ export default {
         red: '#f8485e',
         purple: '#9063cd',
     },
+    text: {
+        dark: '#555',
+    },
 };

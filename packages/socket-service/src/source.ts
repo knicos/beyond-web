@@ -1,4 +1,7 @@
+import { redisSendEvent } from "@ftl/common";
 import {Peer} from "@ftl/protocol";
+import { AccessToken } from "@ftl/types";
+import { sendNodeUpdateEvent, sendNodeStatsEvent } from '@ftl/api';
 import {checkStreams, removeStreams, getStreams, bindToStream, createStream} from './streams';
 
 const peer_data = [];
@@ -12,17 +15,23 @@ setInterval(() => {
 		p.rpc("__ping__", (ts: number) => {
 			const end = (new Date()).getMilliseconds();
 			p.latency = (end-start) / 2;
-			console.log("Ping: ", p.latency, ts);
+      sendNodeStatsEvent({
+        event: 'ping',
+        id: p.uri,
+        latency: p.latency,
+        timestamp: ts,
+        clientId: p.clientId,
+      });
 		});
 	}
 }, 20000);
 
-export function createSource(ws) {
+export function createSource(ws, address: string, token: AccessToken, ephemeral: boolean) {
 	const p = new Peer(ws);
 	peer_data.push(p);
 
 	p.on("connect", (peer) => {
-		console.log("Node connected...");
+		console.log("Node connected...", token);
 		peer_uris[peer.string_id] = [];
 		peer_by_id[peer.string_id] = peer;
 
@@ -31,9 +40,21 @@ export function createSource(ws) {
 
 			peer.uri = obj.id;
 			peer.name = obj.title;
+      peer.clientId = token.client?.id,
 			peer.master = (obj.kind == "master");
 			console.log("Peer name = ", peer.name);
 			console.log("Details: ", details);
+      sendNodeUpdateEvent({
+        event: 'connect',
+        id: obj.id,
+        name: obj.title,
+        kind: obj.kind,
+        ip: address,
+        clientId: token.client?.id,
+        userId: token.user?.id,
+        ephemeral: ephemeral ? 'yes' : undefined,
+        groups: token.groups || [],
+      });
 			checkStreams(peer);
 		});
 	});
@@ -41,6 +62,11 @@ export function createSource(ws) {
 	p.on("disconnect", (peer) => {
 		console.log("DISCONNECT", peer.name);
 		// Remove all peer details and streams....
+
+    sendNodeUpdateEvent({
+      event: 'disconnect',
+      id: peer.uri,
+    });
 
 		if (peer.status != 2) return;
 

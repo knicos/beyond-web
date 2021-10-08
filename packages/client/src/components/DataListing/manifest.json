@@ -50,8 +50,10 @@
             {"label": "Gradient Left", "value": "gradient_left"},
             {"label": "Gradient Right", "value": "gradient_right"},
             {"label": "Intensity Heatmap", "value": "intensity_heat"},
-            {"label": "Distance Heatmap", "value": "distance_heat"},
-            {"label": "Angle Heatmap", "value": "angle_heat"}
+            {"label": "X Heatmap", "value": "x_heat"},
+            {"label": "Y Heatmap", "value": "y_heat"},
+            {"label": "Intensity Suppression", "value": "intensity_suppression"},
+            {"label": "Distance Suppression", "value": "distance_suppression"}
         ]
     },
     "1028": {

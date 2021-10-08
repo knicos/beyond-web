@@ -10,6 +10,11 @@ export const streamList = atom({
     default: [],
 });
 
+export const nodeList = atom({
+  key: 'nodeList',
+  default: [],
+});
+
 export const currentStream = atom({
     key: 'currentStream',
     default: null,

@@ -37,9 +37,17 @@ export default class TokenService {
         id: uuidv4(),
         ...(user && {
           user: {
-            id: user.id,
+            // eslint-disable-next-line no-underscore-dangle
+            id: user.id || user._id,
             name: `${user.firstName} ${user.lastName}`,
             username: user.username,
+          },
+        }),
+        ...(client && {
+          client: {
+            // eslint-disable-next-line no-underscore-dangle
+            id: client.id || client._id,
+            name: client.name,
           },
         }),
         groups: groupIds,

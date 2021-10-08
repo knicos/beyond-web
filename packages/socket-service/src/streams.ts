@@ -2,6 +2,7 @@ import {Peer} from "@ftl/protocol";
 import {InputStream} from "./InputStream";
 import {OutputStream} from "./OutputStream";
 import { redisAddItem, redisRemoveItem, redisTopItems } from "@ftl/common";
+import { sendStreamUpdateEvent } from '@ftl/api';
 
 const peer_uris = new Map<string, string[]>();
 const uri_to_peer = new Map<string, Peer>();
@@ -79,16 +80,22 @@ export function checkStreams(peer: Peer) {
 }
 
 export function removeStreams(peer: Peer) {
-    if (output_streams.has(peer.string_id)) {
-        const os = output_streams.get(peer.string_id);
-        os.destroy();
-        output_streams.delete(peer.string_id);
-    }
+  if (output_streams.has(peer.string_id)) {
+      const os = output_streams.get(peer.string_id);
+      os.destroy();
+      output_streams.delete(peer.string_id);
+  }
 	const puris = peer_uris.get(peer.string_id);
 	if (puris) {
 		for (let i=0; i<puris.length; i++) {
 			console.log("Removing stream: ", puris[i]);
-            redisRemoveItem('activestreams', puris[i]);
+      redisRemoveItem('activestreams', puris[i]);
+
+      sendStreamUpdateEvent({
+        event: 'stop',
+        id: puris[i],
+      });
+      
 			uri_to_peer.delete(puris[i]);
 			if (input_streams.has(puris[i])) {
                 input_streams.get(puris[i]).destroy();
@@ -110,5 +117,11 @@ export function createStream(peer: Peer, uri: string) {
 	redisAddItem('streams', uri, Date.now());
     redisAddItem('activestreams', parsedURI, Date.now());
 
+  sendStreamUpdateEvent({
+    event: 'start',
+    id: parsedURI,
+    name: parsedURI,
+    node: peer.uri,
+  });
 	//broadcastExcept(p, "add_stream", uri);
 }
