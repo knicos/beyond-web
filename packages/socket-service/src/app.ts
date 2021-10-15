@@ -1,15 +1,16 @@
-import express from "express";
-import expressWs from "express-ws";
+import express from 'express';
+import expressWs from 'express-ws';
 import cookieParser from 'cookie-parser';
-const app = expressWs(express()).app;
-import {createSource} from "./source";
-import {redisGet, redisSendCommand, redisReply } from '@ftl/common';
-import {$log} from '@tsed/logger';
-import {AccessToken} from '@ftl/types';
+import { redisGet, redisSendCommand, redisReply } from '@ftl/common';
+import { $log } from '@tsed/logger';
+import { AccessToken } from '@ftl/types';
+import { createSource } from './source';
+
+const { app } = expressWs(express());
 
 app.use(cookieParser());
 
-function extractBearer(token: string): string{
+function extractBearer(token: string): string {
   if (typeof token !== 'string') {
     return null;
   }
@@ -31,9 +32,8 @@ function extractBasic(token: string): [string, string] {
   const split2 = decode.split(':');
   if (split2.length === 2) {
     return [split2[0], split2[1]];
-  } else {
-    return [null, null];
   }
+  return [null, null];
 }
 
 async function authorizeWebsocket(req: express.Request): Promise<AccessToken> {
@@ -57,7 +57,9 @@ async function authorizeWebsocket(req: express.Request): Promise<AccessToken> {
 
     tokenId = result.access_token;
   } else {
-    tokenId = req.cookies?.ftl_session || req.query?.access_token || extractBearer(req.headers.authorization);
+    tokenId = req.cookies?.ftl_session
+      || req.query?.access_token
+      || extractBearer(req.headers.authorization);
     if (typeof tokenId !== 'string') {
       $log.warn('Bad websocket connection');
       return null;
@@ -79,7 +81,7 @@ app.ws('/v1/socket', async (ws, req) => {
     ws.close(1008);
     return;
   }
-	createSource(ws, req.headers['x-forwarded-for'] as string, token, !!req.headers['user-agent']);
+  createSource(ws, req.headers['x-forwarded-for'] as string, token, !!req.headers['user-agent']);
 });
 
 export default app;

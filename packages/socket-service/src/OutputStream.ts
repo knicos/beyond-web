@@ -1,60 +1,46 @@
-import {Peer} from "@ftl/protocol";
-import {redisPublish, redisSubscribe, redisUnsubscribe} from "@ftl/common";
-const msgpack = require('msgpack5')()
-  , encode  = msgpack.encode
-  , decode  = msgpack.decode;
+import { Peer } from '@ftl/protocol';
+import { redisPublish, redisSubscribe, redisUnsubscribe } from '@ftl/common';
 
-export class OutputStream {
-	uri: string;
-	base_uri: string;
-	peer: Peer;
-	title = "";
-	rxcount = 10;
-	rxmax = 10;
-	data = {};
-    private onMessage: Function;
+const { encode, decode } = require('msgpack5')();
 
-	constructor(uri, peer) {
-		this.peer = peer;
-		this.uri = uri;
-		let ix = uri.indexOf("?");
-		this.base_uri = (ix >= 0) ? uri.substring(0, ix) : uri;
+/**
+ * Allow connected nodes to receive stream data from other streams.
+ */
+export default class OutputStream {
+  private uri: string;
 
-		// Add RPC handler to receive frames from the source
-		peer.bind(this.base_uri, (latency, spacket, packet) => {
-			// Extract useful data
-			// this.parseFrame(spacket, packet);
-			// Forward frames to redis
-            console.log('REQUEST DATA', spacket);
-			this.pushFrame(latency, spacket, packet);
-		});
+  private baseUri: string;
 
-        const onMessage = message => {
-			// Return data...
-            //console.log('SOURCE DATA', message);
-            const args = decode(message);
-            this.peer.send(this.base_uri, ...args);
-		};
-        this.onMessage = onMessage;
+  private peer: Peer;
 
-		redisSubscribe(`stream-in:${this.base_uri}`, onMessage);
-	
-		// console.log("Sending request");
-		// this.peer.send(this.base_uri, 0, [1,255,255,74,1],[7,0,1,255,0,new Uint8Array(0)]);
-	}
+  private onMessage: Function;
 
-	private parseFrame(spacket: unknown, packet: unknown) {
-		if (spacket[3] >= 64 && packet[5].length > 0 && packet[0] == 103) {
-			this.data[spacket[3]] = decode(packet[5]);
-			//console.log('Got data: ', spacket[3], this.data[spacket[3]]);
-		}
-	}
+  constructor(uri, peer) {
+    this.peer = peer;
+    this.uri = uri;
+    const ix = uri.indexOf('?');
+    this.baseUri = (ix >= 0) ? uri.substring(0, ix) : uri;
 
-	private pushFrame(latency: number, spacket: unknown, packet: unknown) {
-		redisPublish(`stream-out:${this.base_uri}`, encode([latency, spacket, packet]));
-	}
+    // Add RPC handler to receive frames from the source
+    peer.bind(this.baseUri, (latency, spacket, packet) => {
+      // Forward frames to redis
+      this.pushFrame(latency, spacket, packet);
+    });
 
-    destroy() {
-        redisUnsubscribe(`stream-in:${this.base_uri}`, this.onMessage);
-    }
+    const onMessage = (message) => {
+      const args = decode(message);
+      this.peer.send(this.baseUri, ...args);
+    };
+    this.onMessage = onMessage;
+
+    redisSubscribe(`stream-in:${this.baseUri}`, onMessage);
+  }
+
+  private pushFrame(latency: number, spacket: unknown, packet: unknown) {
+    redisPublish(`stream-out:${this.baseUri}`, encode([latency, spacket, packet]));
+  }
+
+  destroy() {
+    redisUnsubscribe(`stream-in:${this.baseUri}`, this.onMessage);
+  }
 }

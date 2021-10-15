@@ -17,6 +17,8 @@ export interface StreamDataEvent extends BaseEvent {
   id: string;
   event: StreamDataEventType;
   data: Record<number, unknown>;
+  framesetId: number;
+  frameId: number;
 }
 
 export interface StreamStatsEvent extends BaseEvent {
