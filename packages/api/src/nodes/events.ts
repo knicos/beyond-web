@@ -4,6 +4,12 @@ import { BaseEvent } from '../events';
 export type NodeUpdateEventType = 'connect' | 'disconnect' | 'update' | 'error';
 export type NodeStatsEventType = 'ping';
 
+interface NodeDevice {
+  id: string;
+  name: string;
+  type: string;
+}
+
 export interface NodeUpdateEvent extends BaseEvent {
   id: string;
   event: NodeUpdateEventType;
@@ -15,6 +21,7 @@ export interface NodeUpdateEvent extends BaseEvent {
   ephemeral?: string,
   groups?: string[],
   message?: string;
+  devices?: NodeDevice[];
 }
 
 export interface NodeStatsEvent extends BaseEvent {

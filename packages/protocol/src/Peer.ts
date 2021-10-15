@@ -128,7 +128,7 @@ export class Peer {
           console.log("Handshake received");
           this.status = kConnected;
           this.id = id.buffer;
-          this.string_id  = id.toString('hex');
+          this.string_id = id.toString('hex');
           this._notify("connect", this);
           // if(this.sock.on === undefined){
           // 	this.send("__handshake__", kMagic, kVersion, [my_uuid]);
