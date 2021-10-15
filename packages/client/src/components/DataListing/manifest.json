@@ -39,6 +39,7 @@
             {"label": "Right", "value": "right"},
             {"label": "Stereo", "value": "stereo"},
             {"label": "Disparity", "value": "disparity"},
+            {"label": "Disparity Right", "value": "disparity_right"},
             {"label": "Confidence", "value": "confidence"},
             {"label": "Groundtruth", "value": "groundtruth"},
             {"label": "Error", "value": "error"},
@@ -52,8 +53,8 @@
             {"label": "Intensity Heatmap", "value": "intensity_heat"},
             {"label": "X Heatmap", "value": "x_heat"},
             {"label": "Y Heatmap", "value": "y_heat"},
-            {"label": "Intensity Suppression", "value": "intensity_suppression"},
-            {"label": "Distance Suppression", "value": "distance_suppression"}
+            {"label": "X Suppression", "value": "x_sup"},
+            {"label": "Y Suppression", "value": "y_sup"}
         ]
     },
     "1028": {
@@ -99,6 +100,11 @@
             {"label": "Left Bucket", "value": "left_bucket"}
         ]
     },
+    "1036": {
+      "label": "Iterations",
+      "component": "EditableValue",
+      "type": "number"
+  },
     "default": {
         "label": "Unknown ({channel})",
         "component": "RawValue"

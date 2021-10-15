@@ -48,6 +48,10 @@ export class Peer {
 	name = "unknown";
 	master = false;
 
+  txBytes = 0;
+  rxBytes = 0;
+  lastStatsCall = Date.now();
+
 	static uuid: string;
 
 	constructor(ws: WebSocketConnection) {
@@ -58,24 +62,25 @@ export class Peer {
 			if(isw3c(this.sock)){
 				raw = raw.data;
 			}
+      this.rxBytes += raw.length;
 			let msg = decode(raw);
 			// console.log('MSG', msg)
-			if (this.status == kConnecting) {
-				if (msg[1] != "__handshake__") {
+			if (this.status === kConnecting) {
+				if (msg[1] !== "__handshake__") {
 					console.log("Bad handshake", msg);
 					this.close();
 				}
 			}
-			if (msg[0] == 0) {
+			if (msg[0] === 0) {
 				// console.log("MSG...", msg[2]);
 				// Notification
-				if (msg.length == 3) {
+				if (msg.length === 3) {
 					this._dispatchNotification(msg[1], msg[2]);
 				// Call
 				} else {
 					this._dispatchCall(msg[2], msg[1], msg[3]);
 				}
-			} else if (msg[0] == 1) {
+			} else if (msg[0] === 1) {
 				this._dispatchResponse(msg[1], msg[3]);
 			}
 		}
@@ -109,21 +114,30 @@ export class Peer {
 		this.send("__handshake__", kMagic, kVersion, [my_uuid]);
 	}
 
-    private _handshake(magic, version, id) {
-        if (magic == kMagic) {
-            console.log("Handshake received");
-            this.status = kConnected;
-            this.id = id.buffer;
-            this.string_id  = id.toString('hex');
-            this._notify("connect", this);
-            // if(this.sock.on === undefined){
-            // 	this.send("__handshake__", kMagic, kVersion, [my_uuid]);
-            // }
-        } else {
-            console.log("Magic does not match");
-            this.close();
-        }
-    }
+  getStatistics() {
+    const time = Date.now();
+    const result = [time - this.lastStatsCall, this.rxBytes, 0];
+    this.rxBytes = 0;
+    this.txBytes = 0;
+    this.lastStatsCall = time;
+    return result;
+  }
+
+  private _handshake(magic, version, id) {
+      if (magic == kMagic) {
+          console.log("Handshake received");
+          this.status = kConnected;
+          this.id = id.buffer;
+          this.string_id  = id.toString('hex');
+          this._notify("connect", this);
+          // if(this.sock.on === undefined){
+          // 	this.send("__handshake__", kMagic, kVersion, [my_uuid]);
+          // }
+      } else {
+          console.log("Magic does not match");
+          this.close();
+      }
+  }
 
 	private _dispatchNotification(name: string, args: unknown[]) {
 		if (this.bindings.hasOwnProperty(name)) {

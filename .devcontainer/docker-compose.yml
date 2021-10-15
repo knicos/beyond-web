@@ -21,6 +21,13 @@ services:
       target: build
     command: ["yarn", "workspace", "@ftl/node-service", "run", "start:dev"]
 
+  configservice:
+    build:
+      context: ./
+      dockerfile: ./docker/Dockerfile.services
+      target: build
+    command: ["yarn", "workspace", "@ftl/config-service", "run", "start:dev"]
+
   watchservice:
     image: node:16-alpine
     volumes:

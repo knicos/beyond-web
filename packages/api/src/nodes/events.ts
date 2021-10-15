@@ -1,7 +1,7 @@
 import { redisSendEvent } from '@ftl/common';
 import { BaseEvent } from '../events';
 
-export type NodeUpdateEventType = 'connect' | 'disconnect' | 'update';
+export type NodeUpdateEventType = 'connect' | 'disconnect' | 'update' | 'error';
 export type NodeStatsEventType = 'ping';
 
 export interface NodeUpdateEvent extends BaseEvent {
@@ -14,14 +14,17 @@ export interface NodeUpdateEvent extends BaseEvent {
   userId?: string,
   ephemeral?: string,
   groups?: string[],
+  message?: string;
 }
 
 export interface NodeStatsEvent extends BaseEvent {
   id: string;
-  event: NodeStatsEventType,
-  latency?: number,
-  timestamp?: number,
-  clientId?: string,
+  event: NodeStatsEventType;
+  latency?: number;
+  timestamp?: number;
+  clientId?: string;
+  rxRate?: number;
+  txRate?: number;
 }
 
 export function sendNodeUpdateEvent(event: NodeUpdateEvent) {
