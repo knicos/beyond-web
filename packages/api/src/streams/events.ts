@@ -7,6 +7,8 @@ export type StreamStatsEventType = 'ping' | 'channels';
 
 export interface StreamUpdateEvent extends BaseEvent {
   id: string;
+  framesetId: number;
+  frameId: number;
   event: StreamUpdateEventType;
   name?: string;
   node?: string;

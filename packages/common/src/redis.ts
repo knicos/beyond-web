@@ -332,7 +332,7 @@ export function redisSetStreamCallback(key: string, cb: StreamCallback): Promise
   return redisCreateGroup(key);
 }
 
-export function redisStreamListen(name: string, newKeys?: string[]) {
+export function redisStreamListen(name?: string, newKeys?: string[]) {
   initRedis();
 
   if (Array.isArray(newKeys)) {
@@ -344,6 +344,10 @@ export function redisStreamListen(name: string, newKeys?: string[]) {
   }
   streamListen = true;
 
+  if ((!consumerGroup || !name) && streamID === '0') {
+    streamID = '$';
+  }
+
   const keys = Array.from(streamKeys);
   const ids = keys.map(() => streamID);
 
@@ -351,36 +355,65 @@ export function redisStreamListen(name: string, newKeys?: string[]) {
     return;
   }
 
-  redisBlockClient.xreadgroup.apply(
-    redisBlockClient,
-    ['GROUP', consumerGroup, name, 'BLOCK', '60000', 'STREAMS', ...keys, ...ids, async (err, rep) => {
-      if (err) {
-        $log.error('Command error', err);
-      } else if (Array.isArray(rep)) {
-        for (const stream of rep) {
-          const [key, dataSet] = stream;
-          for (const data of dataSet) {
-            const [id, columns] = data;
-            streamID = id;
-            const obj = objectFromKeys(columns);
-            if (streamCallbacks.has(key)) {
-              try {
-                streamCallbacks.get(key)(key, obj, id);
-              } catch (e) {
-                $log.error('Stream callback error', e);
+  if (!consumerGroup || !name) {
+    redisBlockClient.xread.apply(
+      redisBlockClient,
+      ['BLOCK', '60000', 'STREAMS', ...keys, ...ids, async (err, rep) => {
+        if (err) {
+          $log.error('Command error', err);
+        } else if (Array.isArray(rep)) {
+          for (const stream of rep) {
+            const [key, dataSet] = stream;
+            for (const data of dataSet) {
+              const [id, columns] = data;
+              streamID = id;
+              const obj = objectFromKeys(columns);
+              if (streamCallbacks.has(key)) {
+                try {
+                  streamCallbacks.get(key)(key, obj, id);
+                } catch (e) {
+                  $log.error('Stream callback error', e);
+                }
               }
             }
-            redisClient.xack(key, consumerGroup, id, (ackerr) => {
-              if (err) {
-                $log.error('ACK Error', ackerr);
-              }
-            });
           }
         }
-      }
-      streamListen = false;
-      streamID = '>';
-      redisStreamListen(name);
-    }],
-  )
+        streamListen = false;
+        redisStreamListen(name);
+      }],
+    );
+  } else {
+    redisBlockClient.xreadgroup.apply(
+      redisBlockClient,
+      ['GROUP', consumerGroup, name, 'BLOCK', '60000', 'STREAMS', ...keys, ...ids, async (err, rep) => {
+        if (err) {
+          $log.error('Command error', err);
+        } else if (Array.isArray(rep)) {
+          for (const stream of rep) {
+            const [key, dataSet] = stream;
+            for (const data of dataSet) {
+              const [id, columns] = data;
+              streamID = id;
+              const obj = objectFromKeys(columns);
+              if (streamCallbacks.has(key)) {
+                try {
+                  streamCallbacks.get(key)(key, obj, id);
+                } catch (e) {
+                  $log.error('Stream callback error', e);
+                }
+              }
+              redisClient.xack(key, consumerGroup, id, (ackerr) => {
+                if (err) {
+                  $log.error('ACK Error', ackerr);
+                }
+              });
+            }
+          }
+        }
+        streamListen = false;
+        streamID = '>';
+        redisStreamListen(name);
+      }],
+    );
+  }
 }

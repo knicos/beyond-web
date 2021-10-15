@@ -1,7 +1,9 @@
 import express from 'express';
 import expressWs from 'express-ws';
 import cookieParser from 'cookie-parser';
-import { redisGet, redisSendCommand, redisReply } from '@ftl/common';
+import {
+  redisGet, redisSendCommand, redisReply, redisStreamListen,
+} from '@ftl/common';
 import { $log } from '@tsed/logger';
 import { AccessToken } from '@ftl/types';
 import { createSource } from './source';
@@ -83,5 +85,7 @@ app.ws('/v1/socket', async (ws, req) => {
   }
   createSource(ws, req.headers['x-forwarded-for'] as string, token, !!req.headers['user-agent']);
 });
+
+redisStreamListen();
 
 export default app;

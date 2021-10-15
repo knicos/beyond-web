@@ -1,5 +1,7 @@
 import { Peer } from '@ftl/protocol';
-import { redisAddItem, redisRemoveItem, redisTopItems } from '@ftl/common';
+import {
+  redisAddItem, redisRemoveItem, redisTopItems,
+} from '@ftl/common';
 import { sendStreamUpdateEvent } from '@ftl/api';
 import InputStream from './InputStream';
 import OutputStream from './OutputStream';
@@ -46,7 +48,7 @@ export async function bindToStream(p: Peer, uri: string) {
 
     if (!p.isBound(parsedURI)) {
       console.log('Adding local stream binding: ', parsedURI);
-      outputStreams.set(p.string_id, new OutputStream(parsedURI, p));
+      outputStreams.set(p.uri, new OutputStream(parsedURI, p));
     }
 
     return [Peer.uuid];
@@ -57,12 +59,12 @@ export async function bindToStream(p: Peer, uri: string) {
 }
 
 export function removeStreams(peer: Peer) {
-  if (outputStreams.has(peer.string_id)) {
-    const os = outputStreams.get(peer.string_id);
+  if (outputStreams.has(peer.uri)) {
+    const os = outputStreams.get(peer.uri);
     os.destroy();
-    outputStreams.delete(peer.string_id);
+    outputStreams.delete(peer.uri);
   }
-  const puris = peerUris.get(peer.string_id);
+  const puris = peerUris.get(peer.uri);
   if (puris) {
     for (let i = 0; i < puris.length; i++) {
       console.log('Removing stream: ', puris[i]);
@@ -71,6 +73,8 @@ export function removeStreams(peer: Peer) {
       sendStreamUpdateEvent({
         event: 'stop',
         id: puris[i],
+        framesetId: 0, // TODO: Get these from somewhere
+        frameId: 0,
       });
 
       uriToPeer.delete(puris[i]);
@@ -79,37 +83,51 @@ export function removeStreams(peer: Peer) {
         inputStreams.delete(puris[i]);
       }
     }
-    peerUris.delete(peer.string_id);
+    peerUris.delete(peer.uri);
   }
 }
 
-export function createStream(peer: Peer, uri: string) {
+export function initStream(peer: Peer, uri: string): boolean {
   const parsedURI = removeQueryString(uri)
-  console.log('Adding stream: ', uri);
-  peerUris.get(peer.string_id).push(parsedURI);
+
+  if (inputStreams.has(uri)) {
+    console.warn('Stream already exists', uri);
+    return true;
+  }
+
+  console.log('Initiate stream: ', uri);
+  const nodeCreated = uriToPeer.has(parsedURI);
+  peerUris.get(peer.uri).push(parsedURI);
   uriToPeer.set(parsedURI, peer);
   inputStreams.set(parsedURI, new InputStream(uri, peer));
   redisAddItem('streams', uri, Date.now());
   redisAddItem('activestreams', parsedURI, Date.now());
+  return nodeCreated;
+}
 
+export function createStream(peer: Peer, uri: string, framesetId: number, frameId: number) {
+  const parsedURI = removeQueryString(uri);
+  uriToPeer.set(parsedURI, peer);
   sendStreamUpdateEvent({
     event: 'start',
     id: parsedURI,
     name: parsedURI,
     node: peer.uri,
+    framesetId,
+    frameId,
   });
 }
 
 export function checkStreams(peer: Peer) {
-  if (!peerUris.has(peer.string_id)) {
-    peerUris.set(peer.string_id, []);
+  if (!peerUris.has(peer.uri)) {
+    peerUris.set(peer.uri, []);
   }
 
   if (!peer.master) {
     setTimeout(() => {
       peer.rpc('list_streams', (streams: string[]) => {
         for (let i = 0; i < streams.length; i++) {
-          createStream(peer, streams[i]);
+          createStream(peer, streams[i], 0, 0);
         }
       });
     }, 500); // Give a delay to allow startup
