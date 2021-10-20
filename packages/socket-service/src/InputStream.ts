@@ -40,7 +40,9 @@ export default class InputStream {
       this.peer.send(this.baseUri, ...args);
     }
     redisSubscribe(`stream-out:${this.baseUri}`, this.onMessage);
+  }
 
+  startStream() {
     this.peer.send(this.baseUri, 0, [1, 255, 255, 74, 1], [7, 0, 1, 255, 0, new Uint8Array(0)]);
     this.sendEvent('started');
   }

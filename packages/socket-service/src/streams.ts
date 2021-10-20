@@ -97,12 +97,26 @@ export function initStream(peer: Peer, uri: string): boolean {
 
   console.log('Initiate stream: ', uri);
   const nodeCreated = uriToPeer.has(parsedURI);
+  if (!peerUris.has(peer.uri)) {
+    peerUris.set(peer.uri, []);
+  }
   peerUris.get(peer.uri).push(parsedURI);
   uriToPeer.set(parsedURI, peer);
   inputStreams.set(parsedURI, new InputStream(uri, peer));
   redisAddItem('streams', uri, Date.now());
   redisAddItem('activestreams', parsedURI, Date.now());
   return nodeCreated;
+}
+
+export function startStream(uri: string) {
+  const parsedURI = removeQueryString(uri)
+
+  if (!inputStreams.has(parsedURI)) {
+    console.warn('Stream does not exist', uri);
+    return;
+  }
+
+  inputStreams.get(parsedURI).startStream();
 }
 
 export function createStream(peer: Peer, uri: string, framesetId: number, frameId: number) {

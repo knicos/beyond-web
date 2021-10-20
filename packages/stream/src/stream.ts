@@ -122,7 +122,7 @@ export class FTLStream {
         if (this.found) {
             this.peer.send(this.uri, 0, [1,fs,255,channel, 5],[255,7,35,0,0,Buffer.alloc(0)]);
         } else {
-            this.peer.rpc("find_stream", res => {
+            this.peer.rpc("enable_stream", res => {
                 if (!res) {
                     console.error('Stream not found');
                     if (this.active) {

@@ -1,6 +1,6 @@
 export type TokenType = 'Basic' | 'Bearer' | 'Unknown';
 
-interface IUser {
+export interface IUser {
     id: string;
     name: string;
     username: string;

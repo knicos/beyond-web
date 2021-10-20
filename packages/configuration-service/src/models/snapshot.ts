@@ -1,8 +1,8 @@
 import {
-  Property, Required, Groups, DateTime, CollectionOf,
+  Property, Required, Groups, DateTime, CollectionOf, Default,
 } from '@tsed/schema';
 import {
-  Model, ObjectID, Indexed,
+  Model, ObjectID,
 } from '@tsed/mongoose';
 
 @Model()
@@ -13,16 +13,6 @@ export default class Snapshot {
     @Groups('!creation')
     _id?: string;
 
-    @Property()
-    @Indexed()
-    streamId?: string;
-
-    @Property()
-    framesetId?: number;
-
-    @Property()
-    frameId?: number;
-
     @Required()
     @DateTime()
     timestamp: Date;
@@ -30,4 +20,17 @@ export default class Snapshot {
     @CollectionOf(String)
     @Required()
     data: Map<string, string>;
+
+    @CollectionOf(String)
+    @Required()
+    @Default([])
+    tags: string[];
+
+    @Property()
+    owner?: string;
+
+    @CollectionOf(String)
+    @Required()
+    @Default([])
+    groups: string[];
 }
