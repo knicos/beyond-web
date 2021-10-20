@@ -3,7 +3,6 @@ import { MongooseModel } from '@tsed/mongoose';
 import {
   redisSetStreamCallback, redisHSet, redisAddItem, redisHGetM,
 } from '@ftl/common';
-import { sendStreamUpdateEvent } from '@ftl/api';
 import Node from '../models/node';
 
 const MINUIT = 60;
@@ -46,16 +45,6 @@ export default class NodeService {
         userId: data.userId,
       }, { upsert: true });
       this.updateStats(data);
-
-      // Create a default stream
-      sendStreamUpdateEvent({
-        event: 'start',
-        id: `ftl://ftlab.utu.fi/stream/${data.id}`,
-        name: 'Default Stream',
-        node: data.id,
-        framesetId: 0,
-        frameId: 0,
-      });
     }
 
     private async updateStats(data) {

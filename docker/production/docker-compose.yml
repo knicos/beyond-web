@@ -10,12 +10,14 @@ services:
       FTL_AUTH_SERVICE: authservice:8080
       FTL_CONFIG_SERVICE: configservice:8080
       FTL_NODE_SERVICE: nodeservice:8080
+      FTL_STREAM_SERVICE: streamservice:8080
       ASSET_PATH: /lab/
     depends_on:
       - socketservice
       - authservice
       - configservice
       - nodeservice
+      - streamservice
   socketservice:
     image: ftlab.utu.fi/app-socketservice
     restart: unless-stopped
@@ -24,6 +26,13 @@ services:
       REDIS_HOST: redis
   nodeservice:
     image: ftlab.utu.fi/app-nodeservice
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      REDIS_HOST: redis
+      MONGO_HOST: authmongo
+  streamservice:
+    image: ftlab.utu.fi/app-streamservice
     restart: unless-stopped
     environment:
       NODE_ENV: production

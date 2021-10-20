@@ -5,7 +5,7 @@ import { AccessToken } from '@ftl/types';
 import { redisSetStreamCallback } from '@ftl/common';
 import { sendNodeUpdateEvent, sendNodeStatsEvent } from '@ftl/api';
 import {
-  checkStreams, removeStreams, getStreams, bindToStream, createStream, initStream,
+  removeStreams, getStreams, bindToStream, createStream, initStream, startStream,
 } from './streams';
 
 const peerData = [];
@@ -66,7 +66,7 @@ export function createSource(ws, address: string, token: AccessToken, ephemeral:
         ephemeral: ephemeral ? 'yes' : undefined,
         groups: token.groups || [],
       });
-      checkStreams(peer);
+      // checkStreams(peer);
     });
   });
 
@@ -87,7 +87,7 @@ export function createSource(ws, address: string, token: AccessToken, ephemeral:
   });
 
   p.bind('new_peer', () => {
-    checkStreams(p);
+    // checkStreams(p);
   });
 
   // Used to sync clocks
@@ -106,7 +106,7 @@ export function createSource(ws, address: string, token: AccessToken, ephemeral:
   /** @deprecated */
   p.bind('find_stream', (uri: string, proxy) => {
     if (!proxy) return null;
-    return bindToStream(p, uri);
+    return null; // bindToStream(p, uri);
   });
 
   /** @deprecated */
@@ -117,8 +117,8 @@ export function createSource(ws, address: string, token: AccessToken, ephemeral:
 
   // Register a new stream
   /** @deprecated */
-  p.bind('add_stream', (uri) => {
-    createStream(p, uri, 0, 0);
+  p.bind('add_stream', () => {
+    // createStream(p, uri, 0, 0);
   });
 
   /** Allow this node to receive specific stream data */
@@ -145,15 +145,16 @@ export function createSource(ws, address: string, token: AccessToken, ephemeral:
 }
 
 redisSetStreamCallback('event:stream:update', (key: string, data: any) => {
+  console.log('CREATE STREAM', data);
   if (data.event === 'start' && peerSerial.has(data.node)) {
-    console.log('CREATE STREAM', data);
     const peer = peerSerial.get(data.node);
     const existing = initStream(peer, data.id);
     if (!existing) {
       console.log('SEND create_stream RPC');
       peer.rpc('create_stream', () => {
         console.log('Stream created on client');
-      }, data.id, data.framesetId, data.frameId);
+        startStream(data.id);
+      }, data.id, parseInt(data.framesetId, 10), parseInt(data.frameId, 10));
     }
   }
 });

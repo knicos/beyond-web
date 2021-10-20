@@ -21,6 +21,13 @@ services:
       target: build
     command: ["yarn", "workspace", "@ftl/node-service", "run", "start:dev"]
 
+  streamservice:
+    build:
+      context: ./
+      dockerfile: ./docker/Dockerfile.services
+      target: build
+    command: ["yarn", "workspace", "@ftl/stream-service", "run", "start:dev"]
+
   configservice:
     build:
       context: ./
