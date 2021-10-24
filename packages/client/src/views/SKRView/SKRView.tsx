@@ -1,13 +1,10 @@
-import React, {useEffect} from 'react';
+import React from 'react';
 import styled from 'styled-components';
 import {ReactPlayer} from '@ftl/player';
-import {useRecoilValue, useSetRecoilState, useRecoilState} from 'recoil';
-import {currentStream, frameTime, pageTitle, peer} from '../../recoil/atoms';
+import {useRecoilValue} from 'recoil';
+import {currentStream, frameTime} from '../../recoil/atoms';
 import {DataListing} from '../../components/DataListing';
-import {useLocation} from 'react-router';
-import qs from 'query-string';
 import {FTLStream} from '@ftl/stream';
-import {Peer} from '@ftl/protocol';
 import {MenuBar} from './MenuBar';
 
 const Main = styled.section`
@@ -76,28 +73,9 @@ function generatePoints(stream: FTLStream): [number, number][] {
 }
 
 export function SKRView() {
-    const p: Peer = useRecoilValue(peer);
-    const [stream, setStream] = useRecoilState(currentStream);
+    const stream = useRecoilValue(currentStream);
     const time = useRecoilValue(frameTime);
     const seconds = stream ? ((time - stream.startTimestamp) / 1000) : 0;
-    const setTitle = useSetRecoilState(pageTitle);
-    const params = qs.parse(useLocation().search);
-
-    useEffect(() => {
-        setTitle(`SKR [${stream?.uri.split('?')[0] || ''}]`);
-    }, []);
-
-    useEffect(() => {
-        if (!p) {
-            return;
-        }
-        if (stream?.uri !== params.s) {
-            console.error('Stream is not correct', params);
-            const s = new FTLStream(p, params.s as string);
-            s.enableVideo(0, 0, 21);
-            setStream(s);
-        }
-    }, [stream, p]);
 
     if (!stream) {
         return null;
@@ -112,10 +90,18 @@ export function SKRView() {
         <Card className="main">
             <PlayerContainer>
                 <VideoContainer>
-                    <ReactPlayer stream={stream} channel={21} size={800} onSelectPoint={(x, y) => {
+                    <ReactPlayer
+                      stream={stream}
+                      channel={21}
+                      size={800}
+                      onSelectPoint={(x, y) => {
                         console.log('Point select', x, y);
                         stream.set(1026, [x, y]);
-                    }} points={points} />
+                      }}
+                      points={points}
+                      frameset={0}
+                      frame={0}
+                    />
                 </VideoContainer>
                 <StatsBar>
                     {`Time: ${formatTime(seconds)}`}

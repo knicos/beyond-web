@@ -73,6 +73,16 @@ export default class InputStream {
           });
         }
       } else {
+        // Thumbnail
+        if (channel === 74) {
+          sendStreamDataEvent({
+            id: this.baseUri,
+            event: 'thumbnail',
+            data: decode(packet[5]).toString('base64'),
+            framesetId: fsId,
+            frameId: fId,
+          });
+        }
         this.data[channel] = decoded;
       }
     }

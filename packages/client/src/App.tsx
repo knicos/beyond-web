@@ -15,6 +15,16 @@ const GlobalStyle = createGlobalStyle`
     background: #efefef;
     font-family: 'Open Sans', Helvetica, Sans-Serif;
   }
+
+  div#root {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: 0;
+  }
 `;
 
 function DebugObserver(): React.ReactElement {

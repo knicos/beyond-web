@@ -4,6 +4,7 @@ import {
   redisSetStreamCallback, redisHSet, redisAddItem, redisHGetM,
 } from '@ftl/common';
 import Node from '../models/node';
+import NodeQuery from '../models/query';
 
 const MINUIT = 60;
 
@@ -22,6 +23,38 @@ export default class NodeService {
       redisSetStreamCallback('event:node:stats', async (key: string, data: any) => {
         this.updateStats(data);
       });
+      redisSetStreamCallback('event:stream:update', async (key: string, data: any) => {
+        if (data.node && data.name) {
+          const result = await this.nodes.findOneAndUpdate({
+            serial: data.node,
+            'streams.uri': data.id,
+          }, {
+            $set: {
+              'streams.$': {
+                uri: data.id,
+                name: data.name,
+                framesetId: data.framesetId,
+                frameId: data.frameId,
+              },
+            },
+          });
+
+          if (!result) {
+            await this.nodes.findOneAndUpdate({
+              serial: data.node,
+            }, {
+              $push: {
+                streams: {
+                  uri: data.id,
+                  name: data.name,
+                  framesetId: data.framesetId,
+                  frameId: data.frameId,
+                },
+              },
+            });
+          }
+        }
+      });
     }
 
     private async connectNode(data: any) {
@@ -32,18 +65,30 @@ export default class NodeService {
         return;
       }
 
-      await this.nodes.findOneAndUpdate({
+      const devs = data.devices ? JSON.parse(data.devices) : [];
+
+      const up = await this.nodes.findOneAndUpdate({
         serial: data.id,
         clientId: data.clientId,
       }, {
-        serial: data.id,
-        clientId: data.clientId,
-        name: data.name,
-        groups,
-        streams: [],
+        devices: devs.map((d) => ({ serial: d.id, type: d.type, name: d.name })),
         lastUpdate: new Date(),
         userId: data.userId,
-      }, { upsert: true });
+      });
+
+      if (!up) {
+        await this.nodes.create({
+          serial: data.id,
+          clientId: data.clientId,
+          name: data.name,
+          groups,
+          streams: [],
+          devices: devs.map((d) => ({ serial: d.id, type: d.type, name: d.name })),
+          lastUpdate: new Date(),
+          userId: data.userId,
+        });
+      }
+
       this.updateStats(data);
     }
 
@@ -59,9 +104,15 @@ export default class NodeService {
       return result;
     }
 
-    async findInGroups(groups: string[], offset: number, limit: number) {
+    async findInGroups(groups: string[], query: NodeQuery, offset: number, limit: number) {
+      const q = {
+        groups: { $in: groups },
+        ...(query.serial && { serial: query.serial }),
+        ...(query.name && { name: query.name }),
+      };
+
       const nodes = (
-        await this.nodes.find({ groups: { $in: groups } }).sort('-lastUpdate').skip(offset).limit(limit)
+        await this.nodes.find(q).sort('-lastUpdate').skip(offset).limit(limit)
       ).map((node) => node.toClass());
 
       const statsPromise = nodes.map((node) => this.getStats(node.serial));
@@ -71,9 +122,14 @@ export default class NodeService {
     }
 
     async getInGroups(id: string, groups: string[]) {
-      return (
-        await this.nodes.findOne({ _id: id, groups: { $in: groups } })
-      )?.toClass();
+      const node = await this.nodes.findOne({ _id: id, groups: { $in: groups } });
+
+      if (node) {
+        const stats = await this.getStats(node.serial);
+        return { ...node.toClass(), ...stats };
+      }
+
+      return null;
     }
 
     async update(id: string, node: Partial<Node>, groups: string[]) {

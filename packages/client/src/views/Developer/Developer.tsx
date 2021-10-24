@@ -84,22 +84,6 @@ export function DeveloperView() {
     const params = qs.parse(useLocation().search);
     const [channel, setChannel] = useState(0);
 
-    useEffect(() => {
-        setTitle(`Dev [${stream?.uri.split('?')[0] || ''}]`);
-    }, []);
-
-    useEffect(() => {
-        if (!p) {
-            return;
-        }
-        if (stream?.uri !== params.s) {
-            console.error('Stream is not correct', params);
-            const s = new FTLStream(p, params.s as string);
-            s.enableVideo(0, 0, 0);
-            setStream(s);
-        }
-    }, [stream, p]);
-
     if (!stream) {
         return null;
     }
@@ -113,9 +97,17 @@ export function DeveloperView() {
         <Card className="main">
             <PlayerContainer>
                 <VideoContainer>
-                    <ReactPlayer stream={stream} channel={channel} size={800} onSelectPoint={(x, y) => {
-                        stream.set(1026, [x, y]);
-                    }} points={points} />
+                    <ReactPlayer
+                      stream={stream}
+                      channel={channel}
+                      size={800}
+                      onSelectPoint={(x, y) => {
+                          stream.set(1026, [x, y]);
+                      }}
+                      points={points}
+                      frameset={0}
+                      frame={0}
+                    />
                 </VideoContainer>
                 <StatsBar>
                     <select onChange={e => {

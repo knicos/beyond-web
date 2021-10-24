@@ -11,19 +11,16 @@ interface IStreamPacket {
 export interface FTLMSE extends Emitter {};
 
 export class FTLMSE {
-	video: HTMLVideoElement;
-	remux: FTLRemux;
-	paused: boolean;
-	active: boolean;
-	sourceBuffer: any;
-	queue: any[];
-	mime: string | null;
-	mediaSource: MediaSource;
-	has_audio: boolean;
-	first_ts: number;
-    frameset = 0;
-    frameNumber = 0;
-    channel = 0;
+	private video: HTMLVideoElement;
+	private remux: FTLRemux;
+	private paused: boolean;
+	private active: boolean;
+	private sourceBuffer: SourceBuffer;
+	private queue: any[];
+	private mime: string | null;
+	private mediaSource: MediaSource;
+	private has_audio: boolean;
+	private first_ts: number;
 
 	constructor(video: HTMLVideoElement) {
 		this.video = video;
@@ -32,19 +29,19 @@ export class FTLMSE {
 		this.paused = false;
 		this.active = false;
 
-        this.remux.on('reset', () => {
-            this.emit('reset');
-        });
+    this.remux.on('reset', () => {
+        console.log('Remux reset');
+        this.emit('reset');
+    });
 
+    // When the remuxer is done, append to MSE SourceBuffer
 		this.remux.on('data', (data) => {
-            if (!this.sourceBuffer) {
-                return;
-            }
+      if (!this.sourceBuffer) {
+          return;
+      }
 			if (this.sourceBuffer.updating) {
 				this.queue.push(data);
 			} else {
-				//console.log("Direct append: ", data);
-
 				try {
 					this.sourceBuffer.appendBuffer(data);
 				} catch (e) {
@@ -53,63 +50,112 @@ export class FTLMSE {
 			}
 		});
 
-		// TODO: Generate
-		//this.mime = 'video/mp4; codecs="avc1.640028, opus"';
-
 		this.video.addEventListener('pause', (e) => {
 			console.log("pause");
 			this.active = false;
 		});
 
+    this.video.addEventListener('waiting', (e) => {
+			console.warn("Video waiting", e);
+		});
+
+    this.video.addEventListener('stalled', (e) => {
+			console.warn("Video stalled");
+		});
+
+    this.video.addEventListener('suspend', (e) => {
+			console.warn("Video suspended");
+		});
+
+    this.video.addEventListener('playing', (e) => {
+			console.info("Video playing", e);
+		});
+
+    this.video.addEventListener('abort', (e) => {
+			console.warn("Video abort");
+		});
+
+    this.video.addEventListener('seeked', (e) => {
+			console.warn("Video seeked");
+		});
+
+    this.video.addEventListener('ended', (e) => {
+			console.warn("Video ended");
+		});
+
+    this.video.addEventListener('durationchange', (e) => {
+			console.warn("Video duration changed", e);
+		});
+
+    this.video.addEventListener('error', (e) => {
+			console.error("Video Error", e);
+		});
+
 		this.video.addEventListener('play', (e) => {
 			console.log("Play");
 			this.active = true;
-			this.remux.select(this.frameset, this.frameNumber, this.channel);
+			this.remux.reset();
 		});
 
 		this.createMediaSource();
 	}
 
-    createMediaSource() {
-        this.mediaSource = new MediaSource();
-		this.sourceBuffer = null;
-        this.mime = null;
+  private createSourceBuffer() {
+    console.log(this.mediaSource.readyState);
+    this.sourceBuffer = this.mediaSource.addSourceBuffer(this.mime);
+    this.sourceBuffer.mode = 'sequence';
+    this.active = true;
 
-        this.mediaSource.addEventListener('sourceopen', (e) => {
-			console.log("Source Open", e, this.mime);
-			URL.revokeObjectURL(this.video.src);
-			console.log(this.mediaSource.readyState);
-			this.sourceBuffer = this.mediaSource.addSourceBuffer(this.mime);
-			//this.sourceBuffer.mode = 'sequence';
-			this.active = true;
+    this.sourceBuffer.addEventListener('error', (e) => {
+      console.error("SourceBuffer: ", e);
+      this.active = false;
+    });
 
-			this.sourceBuffer.addEventListener('error', (e) => {
-				console.error("SourceBuffer: ", e);
-				this.active = false;
-			});
+    this.sourceBuffer.addEventListener('abort', (e) => {
+      console.error("SourceBuffer Abort: ", e);
+      this.active = false;
+    });
 
-			this.sourceBuffer.addEventListener('updateend', () => {
-				if (this.queue.length > 0 && !this.sourceBuffer.updating) {
-					let s = this.queue[0];
-					this.queue.shift();
+    this.sourceBuffer.addEventListener('updateend', () => {
+      if (this.queue.length > 0 && !this.sourceBuffer.updating) {
+        let s = this.queue[0];
+        this.queue.shift();
 
-					try {
-						this.sourceBuffer.appendBuffer(s);
-					} catch(e) {
-						console.error("Failed to append buffer");
-					}
-				}
-			});
-		});
+        try {
+          this.sourceBuffer.appendBuffer(s);
+        } catch(e) {
+          console.error("Failed to append buffer");
+        }
+      }
+    });
+  }
 
-        this.queue = [];
-		//this.video.src = URL.createObjectURL(this.mediaSource);
-		this.has_audio = false;
-		this.first_ts = 0;
-    }
+  private createMediaSource() {
+    this.mediaSource = new MediaSource();
+    this.sourceBuffer = null;
+    this.mime = null;
+
+    this.mediaSource.addEventListener('sourceclose', () => {
+      console.warn('Source closed');
+    });
+
+    this.mediaSource.addEventListener('sourceended', () => {
+      console.warn('Source ended');
+    });
+
+    this.mediaSource.addEventListener('sourceopen', (e) => {
+      console.log("Source Open", e, this.mime);
+      URL.revokeObjectURL(this.video.src);
+      this.createSourceBuffer();
+    });
+
+    this.queue = [];
+    this.has_audio = false;
+    this.first_ts = 0;
+  }
 
 	push(spkt: number[], pkt: number[]) {
-        const [timestamp, fs, frame, channel] = spkt;
+    const [timestamp, fs, frame, channel] = spkt;
 		if (this.first_ts == 0) this.first_ts = timestamp;
 	
 		// Skip first 200ms, use to analyse the stream contents
@@ -127,22 +173,26 @@ export class FTLMSE {
 					this.remux.has_audio = false;
 				}
 				this.video.src = URL.createObjectURL(this.mediaSource);
-                console.log('Opened video source', this.mime);
-                this.emit('reset');	
+        console.log('Opened video source', this.mime);
+        this.emit('reset');	
 			}
-            if (this.sourceBuffer) {
-                this.remux.push(spkt,pkt);
-            }
+      if (this.sourceBuffer) {
+          this.remux.push(spkt,pkt);
+      }
 		}
 	}
-	
-	select(frameset: number, source: number, channel: number) {
-        this.frameset = frameset;
-        this.frameNumber = source;
-        this.channel = channel;
-		this.remux.select(frameset, source, channel);
-        // this.createMediaSource();
-	}
+
+  reset() {
+    this.remux.reset();
+  }
+
+  hardReset() {
+
+  }
+
+  isActive() {
+    return this.active;
+  }
 }
 
 ee(FTLMSE.prototype);

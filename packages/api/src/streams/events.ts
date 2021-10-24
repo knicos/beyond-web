@@ -2,7 +2,7 @@ import { redisSendEvent } from '@ftl/common';
 import { BaseEvent } from '../events';
 
 export type StreamUpdateEventType = 'start' | 'stop' | 'update' | 'create' | 'delete';
-export type StreamDataEventType = 'request' | 'auto';
+export type StreamDataEventType = 'request' | 'auto' | 'thumbnail';
 export type StreamStatsEventType = 'ping' | 'channels';
 
 export interface StreamUpdateEvent extends BaseEvent {

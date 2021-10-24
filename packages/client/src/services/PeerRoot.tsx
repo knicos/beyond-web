@@ -1,13 +1,13 @@
 import React, {useEffect} from 'react';
 import {Peer} from '@ftl/protocol';
-import {currentStream, peer, streamList} from '../recoil/atoms';
+import {currentStream, peer} from '../recoil/atoms';
 import {currentSession} from '../recoil/selectors';
 import {useSetRecoilState, useRecoilValue} from 'recoil';
-import qs from 'query-string';
+// import qs from 'query-string';
 
 export function PeerRoot(): React.ReactElement {
     const setPeer = useSetRecoilState(peer);
-    const setStreams = useSetRecoilState(streamList);
+    // const setStreams = useSetRecoilState(streamList);
     const setStream = useSetRecoilState(currentStream);
     const session = useRecoilValue(currentSession);
 
@@ -34,7 +34,7 @@ export function PeerRoot(): React.ReactElement {
 
         peer.on('connect', () => {
             setPeer(peer);
-            peer.rpc('list_streams', (streams: string[]) => {
+            /*peer.rpc('list_streams', (streams: string[]) => {
                 console.log('Stream list', streams);
                 const mapped = streams.map(s => {
                     const split = s.split('?');
@@ -46,7 +46,7 @@ export function PeerRoot(): React.ReactElement {
                     };
                 });
                 setStreams(old => [...old, ...mapped]);
-            });
+            });*/
         });
 
         peer.on('disconnect', () => {

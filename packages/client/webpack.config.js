@@ -17,6 +17,14 @@ module.exports = {
         use: [{loader: 'ts-loader', options: { transpileOnly: false }}],
         exclude: /node_modules/,
       },
+      {
+        test: /\.(png|jpe?g|gif)$/i,
+        use: [
+          {
+            loader: 'file-loader',
+          },
+        ],
+      },
     ],
   },
   devServer: {
@@ -28,10 +36,9 @@ module.exports = {
       },
   },
   plugins: [
-	new HtmlWebpackPlugin({
-	  title: 'FT-Lab',
-	}),
-    
+    new HtmlWebpackPlugin({
+      title: 'FT-Lab',
+    }), 
     new webpack.ProvidePlugin({
         Buffer: ['buffer', 'Buffer'],
     }),

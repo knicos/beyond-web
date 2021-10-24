@@ -7,6 +7,8 @@ import {FaPause, FaPlay, FaSpinner} from 'react-icons/fa';
 const Container = styled.div`
     position: relative;
     width: 100%;
+    height: 100%;
+    background-size: 100%;
 `;
 
 const ControlBox = styled.div`
@@ -43,36 +45,43 @@ interface Props {
     size: number;
     onSelectPoint?: (x: number, y: number) => void;
     points?: [number, number][];
+    movement?: boolean;
+    frameset: number;
+    frame: number;
+    image?: string;
+    title?: string;
 }
 
 type PlayerMode = 'waiting' | 'paused' | 'playing';
 
 type ModeState = [PlayerMode, (mode: PlayerMode) => void];
 
-export function ReactPlayer({stream, channel, size, onSelectPoint, points}: Props) {
+export function ReactPlayer({stream, channel, movement, onSelectPoint, points, image}: Props) {
     const ref = useRef();
-    const [state] = useState({player: null});
-    const [mode, setMode]: ModeState = useState<PlayerMode>('waiting');
+    const [state] = useState<{player: FTLPlayer}>({player: null});
+    const [mode, setMode]: ModeState = useState<PlayerMode>(stream?.found ? 'paused' : 'waiting');
 
     useEffect(() => {
         state.player = new FTLPlayer(ref.current);
-        state.player.select(0, 0, channel || 0);
-        console.log('Select channel', channel || 0);
-        state.player.mse.on('reset', () => {
-            console.log('RESET');
-            stream.start(0, 0, channel || 0);
+        state.player.on('reset', () => {
+            // Need to request a keyframe now
+            stream.keyframe();
         });
         state.player.on('select', (x: number, y: number) => {
             if (onSelectPoint) {
                 onSelectPoint(x, y);
             }
-        })
+        });
+        state.player.on('pose', (pose) => {
+          console.log('Got new pose', pose);
+        });
+
+        state.player.play();
     }, []);
 
     useEffect(() => {
         if (state.player) {
-            state.player.select(0, 0, channel || 0);
-            console.log('Select channel', channel || 0);
+            state.player.reset();
         }
     }, [channel]);
 
@@ -84,56 +93,45 @@ export function ReactPlayer({stream, channel, size, onSelectPoint, points}: Prop
 
     useEffect(() => {
         if (stream) {
+            // FIXME: What if the stream changes!!
             //stream.enableVideo(0, 0, channel || 0);
             stream.on('packet', (spkt, pkt) => {
-                if (state.player && spkt[3] < 34) {
+                const [_, fsid, fid, chan] = spkt;
+                if (state.player && fsid === 0 && fid === 0 && (chan === channel || (channel >= 32 && channel < 34))) {
                     state.player.push(spkt, pkt);
                 }
             });
             stream.on('stopped', () => {
-                //stream.disableVideo(0, 0, channel || 0);
-                //state.player.pause();
+                state.player.hardReset();
                 setMode('waiting');
             });
-            stream.on('started', () => {
-                state.player.select(0, 0, channel || 0);
-                //stream.enableVideo(0, 0, channel || 0);
-                stream.start(0, 0, channel || 0);
-                setMode(state.player.mse.active ? 'playing' : 'paused');
+            stream.on('ready', () => {
+                state.player.reset();
+                setMode(state.player.isActive() ? 'playing' : 'paused');
             });
             stream.enableVideo(0, 0, channel || 0);
             stream.start(0, 0, channel || 0);
         }
     }, [stream]);
 
-    const aspect = 9 / 16;
+    if (state.player) {
+      state.player.enableMovement = movement || false;
+    }
 
-    // console.log('MODE', mode);
-
-    let button: JSX.Element = null; //<Spinner />;
+    let button: JSX.Element = null;
     switch(mode) {
         case 'paused':
             button = <FaPlay onClick={async () => {
                 if (state.player) {
+                    state.player.reset();
                     stream.enableVideo(0, 0, channel || 0);
-                    state.player.select(0, 0, channel || 0);
-                    await state.player.play();
+                    state.player.play();
                     stream.start(0, 0, channel || 0);
                     setMode('playing');
                     console.log('PLAY');
                 }
             }} />;
             break;
-        /*case 'playing':
-            button = <FaPause onClick={() => {
-                if (state.player) {
-                    console.log('PAUSE');
-                    //state.player.pause();
-                    stream.disableVideo(0, 0, channel || 0);
-                    setMode('paused');
-                }
-            }} />;
-            break;*/
         case 'waiting':
             button = <Spinner />;
             break;

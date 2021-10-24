@@ -7,7 +7,6 @@ export const Form = styled(FormikForm)`
     border-radius: 5px;
     box-sizing: border-box;
     padding: 0.5rem;
-    margin: 0.5rem;
     font-family: 'Open Sans',Helvetica,Sans-Serif;
     appearance: none;
     outline: none;
@@ -19,6 +18,10 @@ export const Form = styled(FormikForm)`
     &:active {
       border: 2px solid ${props => props.theme.border.purple};
     }
+
+    &:disabled {
+      border: 2px solid ${props => props.theme.border.disabled};
+    }
   }
 
   fieldset {
@@ -27,14 +30,16 @@ export const Form = styled(FormikForm)`
     align-items: center;
     border: none;
     padding: 0;
+    gap: 0.5rem;
 
     legend {
       font-weight: bold;
+      margin-bottom: 0.8rem;
     }
   }
 
   button {
-    background: ${props => props.theme.background.purple};
+    background: ${props => props.theme.background.gray};
     appearance: none;
     border: none;
     border-radius: 5px;
