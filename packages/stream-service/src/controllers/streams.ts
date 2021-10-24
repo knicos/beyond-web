@@ -11,7 +11,7 @@ import StreamService from '../services/stream';
 import Stream from '../models/stream';
 import Pageable from '../models/pageable';
 
-const defaultThumb = fs.readFileSync('./src/resources/thumb.jpg');
+const defaultThumb = fs.readFileSync('./resources/thumb.jpg');
 
 @Controller('/streams')
 export default class Streams {

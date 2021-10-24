@@ -152,6 +152,7 @@ COPY --from=build /usr/src/app/packages/common/dist/ ./packages/common/dist/
 COPY --from=build /usr/src/app/packages/types/dist/ ./packages/types/dist/
 COPY --from=build /usr/src/app/packages/api/dist/ ./packages/api/dist/
 COPY --from=build /usr/src/app/packages/stream-service/dist/ ./packages/stream-service/dist/
+COPY --from=build /usr/src/app/packages/stream-service/resources/ ./packages/stream-service/resources/
 
 USER node
 
