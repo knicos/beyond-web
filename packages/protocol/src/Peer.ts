@@ -4,6 +4,7 @@ import {v4 as uuidv4} from 'uuid';
 import uuidParser from './utils/uuidParser';
 import {connection, w3cwebsocket} from 'websocket';
 import WebSocket from 'ws';
+import ee, {Emitter} from 'event-emitter';
 
 const kConnecting = 1;
 const kConnected = 2;
@@ -26,6 +27,7 @@ function isw3c(ws: WebSocketConnection): ws is w3cwebsocket {
 	return (ws as connection).on === undefined;
 }
 
+export interface Peer extends Emitter {};
 
 /**
  * Wrap a web socket with a MsgPack RCP protocol that works with our C++ version.
@@ -86,7 +88,7 @@ export class Peer {
 		}
 	
 		let close = () => {
-			this._notify("disconnect", this);
+			this.emit("disconnect", this);
 			this.status = kDisconnected;
 		}
 	
@@ -129,7 +131,7 @@ export class Peer {
           this.status = kConnected;
           this.id = id.buffer;
           this.string_id = id.toString('hex');
-          this._notify("connect", this);
+          this.emit("connect", this);
           // if(this.sock.on === undefined){
           // 	this.send("__handshake__", kMagic, kVersion, [my_uuid]);
           // }
@@ -208,6 +210,12 @@ export class Peer {
 		}
 	}
 
+  unbind(name: string) {
+    if (this.bindings.hasOwnProperty(name)) {
+      delete this.bindings[name];
+    }
+  }
+
 	isBound(name: string) {
 		return this.bindings.hasOwnProperty(name) || this.proxies.hasOwnProperty(name);
 	}
@@ -275,14 +283,14 @@ export class Peer {
 		this.status = kDisconnected;
 	}
 
-	private _notify(evt: string, ...args: unknown[]) {
+	/*private _notify(evt: string, ...args: unknown[]) {
 		if (this.events.hasOwnProperty(evt)) {
 			for (let i=0; i<this.events[evt].length; i++) {
 				let f = this.events[evt][i];
 				f.apply(this, args);
 			}
 		}
-	}
+	}*/
 
 	/**
 	 * Register a callback for socket events. Events include: 'connect',
@@ -291,17 +299,18 @@ export class Peer {
 	 * @param {string} evt Event name
 	 * @param {function} f Callback on event
 	 */
-	on(evt: string, f: Function) {
+	/*on(evt: string, f: Function) {
 		if (!this.events.hasOwnProperty(evt)) {
 			this.events[evt] = [];
 		}
 		this.events[evt].push(f);
-	}
+	}*/
 
 	getUuid(): string {
 		return uuid;
 	}
 }		
 
+ee(Peer.prototype);
 
 Peer.uuid = my_uuid;

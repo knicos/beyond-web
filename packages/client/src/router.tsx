@@ -1,7 +1,7 @@
 import React from 'react';
 import { useRecoilValue } from 'recoil';
 import {Switch, Redirect, Route} from 'react-router';
-import {Apps} from './views/Apps';
+import {Viewer} from './views/Viewer';
 import {Dashboard} from './views/Dashboard';
 import {currentSession} from './recoil/selectors';
 import {Login} from './views/Login';
@@ -15,21 +15,18 @@ function PrivateRoute({ isPrivate, children, ...rest }: PrivateProps) {
   const path = process.env.ASSET_PATH;
 
   return (
-    <Route
+    <Switch
       {...rest}
-      render={({ location }) =>
-        isPrivate ? (
+    >
+      {isPrivate ? (
           children
         ) : (
           <Redirect
-            to={{
-              pathname: `${path}login`,
-              state: { from: location }
-            }}
+            to={`${path}login`}
           />
         )
       }
-    />
+    </Switch>
   );
 }
 
@@ -43,8 +40,8 @@ export function Router() {
               <Login />
             </Route>
             <PrivateRoute isPrivate={!!session}>
-              <Route exact path={`${path}`} component={Dashboard} />
-              <Route path={`${path}apps`} component={Apps} />
+              <Route path={`${path}view`} component={Viewer} />
+              <Route path={`${path}`} component={Dashboard} />
             </PrivateRoute>
         </Switch>
     )

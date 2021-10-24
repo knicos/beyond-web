@@ -2,13 +2,16 @@
 import {
   BodyParams, Get, Inject, Put, PathParams, QueryParams, Post,
 } from '@tsed/common';
-import { Description, Groups } from '@tsed/schema';
+import { Description, Groups, Header } from '@tsed/schema';
 import { AccessToken } from '@ftl/types';
 import { Controller, UseToken } from '@ftl/common';
 import { NotFound } from '@tsed/exceptions';
+import fs from 'fs';
 import StreamService from '../services/stream';
 import Stream from '../models/stream';
 import Pageable from '../models/pageable';
+
+const defaultThumb = fs.readFileSync('./src/resources/thumb.jpg');
 
 @Controller('/streams')
 export default class Streams {
@@ -31,6 +34,18 @@ export default class Streams {
     const result = await this.streamService.update(id, stream, token.groups);
     if (!result) {
       throw new NotFound('stream_not_found');
+    }
+    return result;
+  }
+
+  @Get('/:id/thumbnail')
+  @Header({
+    'Content-Type': 'image/jpeg',
+  })
+  async getThumbnail(@PathParams('id') id: string, @UseToken() token: AccessToken): Promise<Buffer> {
+    const result = await this.streamService.getThumbnail(id, token.groups);
+    if (!result) {
+      return defaultThumb;
     }
     return result;
   }

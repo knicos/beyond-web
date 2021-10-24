@@ -5,6 +5,8 @@ import { MongooseDocument, MongooseModel } from '@tsed/mongoose';
 import { IUser } from '@ftl/types';
 import {
   redisSetStreamCallback,
+  redisGet,
+  redisSet,
 } from '@ftl/common';
 import { sendStreamUpdateEvent } from '@ftl/api';
 import Stream from '../models/stream';
@@ -37,6 +39,14 @@ export default class StreamService {
     private streams: MongooseModel<Stream>;
 
     async $onInit() {
+      redisSetStreamCallback('event:stream:data', async (key: string, data: any) => {
+        if (data.event === 'thumbnail') {
+          const stream = await this.streams.findOne({ uri: data.id });
+          if (stream) {
+            await redisSet(`stream:thumbnail:${stream.id}`, data.data);
+          }
+        }
+      });
       // Subscribe to node streams.
       redisSetStreamCallback('event:node:update', async (key: string, data: any) => {
         // Find a stream and perhaps start it.
@@ -113,6 +123,16 @@ export default class StreamService {
       return (
         await this.streams.findOne({ _id: id, groups: { $in: groups } })
       )?.toClass();
+    }
+
+    async getThumbnail(id: string, groups: string[]) {
+      const stream = await this.streams.findOne({ _id: id, groups: { $in: groups } });
+      if (stream) {
+        const thumb = await redisGet<string>(`stream:thumbnail:${id}`);
+        return thumb ? Buffer.from(thumb, 'base64') : null;
+      }
+
+      return null;
     }
 
     async update(id: string, stream: Partial<Stream>, groups: string[]) {

@@ -16,7 +16,7 @@ const StyledTable = styled.table`
   }
 
   th,td {
-    padding: 0.2rem 0.5rem;
+    padding: 0.2rem 1rem;
     border-bottom: 1px solid ${props => props.theme.border.purple};
     text-align: left;
   }
@@ -30,10 +30,11 @@ interface IColumn {
 interface Props {
   columns: IColumn[];
   data: any[];
+  onClick?: (data: any, ix: number) => void;
 }
 
 
-export function Table({data, columns}: Props) {
+export function Table({data, columns, onClick}: Props) {
   return (
     <StyledTable>
       <thead>
@@ -43,7 +44,11 @@ export function Table({data, columns}: Props) {
       </thead>
       <tbody>
         {data.map((d, ix) => (
-          <tr key={ix}>
+          <tr key={ix} onClick={() => {
+            if (onClick) {
+              onClick(d, ix);
+            }
+          }}>
             {columns.map((c, ix2) => (
               <td key={ix2}>{c.fn(d, ix)}</td>
             ))}

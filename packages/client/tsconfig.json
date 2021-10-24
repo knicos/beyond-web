@@ -13,5 +13,7 @@
       "sourceMap": true,
       "resolveJsonModule": true,
       "lib": ["es2015", "dom", "es5", "es6"]
-	}
-  }
+	},
+  "exclude": ["node_modules"],
+  "include": ["src", "index.d.ts"]
+}

@@ -115,22 +115,19 @@ export interface FTLRemux extends Emitter {};
  * 'data' events with a single argument containing the MP4 fragment.
  */
 export class FTLRemux {
-	frameset = 0;
-	source = 0;
-	channel = 0;
-	paused = false;
-	active = false;
-	sequenceNo = 0;
-	audioSequenceNo = 0;
-	seen_keyframe = false;
-	ts = 0;
-	dts = 0;
-	init_seg = false;
-	init_audio = false;
+	private paused = false;
+	private active = false;
+	private sequenceNo = 0;
+	private audioSequenceNo = 0;
+	private seen_keyframe = false;
+	private ts = 0;
+	private dts = 0;
+	private init_seg = false;
+	private init_audio = false;
 	has_audio = false;
-	track: any;
-	audiotrack: any;
-	h264: typeof H264Stream;
+	private track: any;
+	private audiotrack: any;
+	private h264: typeof H264Stream;
 
 	constructor() {
 		this.track = {
@@ -227,73 +224,60 @@ export class FTLRemux {
 				this.audiotrack.baseMediaDecodeTime += 1800*samples.length; // 1800 = 20ms*90 or frame size 960@48000hz in 90000 ticks/s
 			}
 		} else if(pkt[0] === 2) {  // H264 packet.
-			if (spkt[1] == this.frameset && spkt[2] == this.source && spkt[3] == this.channel) {
-	
-				if (!this.seen_keyframe) {
-					if (isKeyFrame(pkt[5])) {
-						console.log("Key frame ", spkt[0]);
-						this.seen_keyframe = true;
-					}
-				}
-			
-				if (this.seen_keyframe) {
-					if (this.ts == 0) this.ts = spkt[0];
-					//if (this.track.samples.length > 0) console.error("Unfinished sample");
-					this.dts += spkt[0]-this.ts;
-	
-					this.track.samples.push(createDefaultSample());
-	
-					this.h264.push({
-						type: 'video',
-						dts: this.dts,
-						pts: this.dts, //spkt[0],
-						data: pkt[5],
-						trackId: 0
-					});
-					this.h264.flush();
-	
-					let sample = this.track.samples[0];
-					concatNals(sample);
-					let delta = (spkt[0]-this.ts)*90;
-					sample.duration = (delta > 0) ? delta : 10;
-	
-					let moof = MP4.moof(this.sequenceNo++, [this.track]);
-					let mdat = MP4.mdat(sample.data);
-					let result = new Uint8Array(moof.byteLength + mdat.byteLength);
-					//result.set(MP4.STYP);
-					result.set(moof);
-					result.set(mdat, moof.byteLength);
-					this.emit('data', result);
-	
-					this.track.samples = [];
-					this.track.baseMediaDecodeTime += delta;
-	
-					this.ts = spkt[0];
-				} else {
-                    this.emit('reset');
-                }
-			} else {
-                console.warn('Unmatched packet received', this.channel, spkt[3]);
-            }
-		} else {
-            console.error('Unsupported codec', pkt[0]);
+      if (!this.seen_keyframe) {
+        if (isKeyFrame(pkt[5])) {
+          console.log("Key frame ", spkt[0]);
+          this.seen_keyframe = true;
         }
-	}
-	
-	select(frameset, source, channel) {
-		this.frameset = frameset;
-		this.source = source;
-		this.channel = channel;
-	
-		this.reset();
+      }
+    
+      if (this.seen_keyframe) {
+        if (this.ts == 0) this.ts = spkt[0];
+        //if (this.track.samples.length > 0) console.error("Unfinished sample");
+        this.dts += spkt[0]-this.ts;
+
+        this.track.samples.push(createDefaultSample());
+
+        this.h264.push({
+          type: 'video',
+          dts: this.dts,
+          pts: this.dts, //spkt[0],
+          data: pkt[5],
+          trackId: 0
+        });
+        this.h264.flush();
+
+        let sample = this.track.samples[0];
+        concatNals(sample);
+        let delta = (spkt[0]-this.ts)*90;
+        sample.duration = (delta > 0) ? delta : 10;
+
+        let moof = MP4.moof(this.sequenceNo++, [this.track]);
+        let mdat = MP4.mdat(sample.data);
+        let result = new Uint8Array(moof.byteLength + mdat.byteLength);
+        //result.set(MP4.STYP);
+        result.set(moof);
+        result.set(mdat, moof.byteLength);
+        this.emit('data', result);
+
+        this.track.samples = [];
+        this.track.baseMediaDecodeTime += delta;
+
+        this.ts = spkt[0];
+      } else {
+        this.emit('reset');
+      }
+		} else {
+      // FIXME: Why is "unsupported codec" being received after a key frame.
+      console.error('Unsupported codec', pkt[0], spkt[0]);
+      this.emit('reset');
+    }
 	}
 	
 	reset() {
 		this.init_seg = false;
 		this.seen_keyframe = false;
 		this.ts = 0;
-		//this.track.baseMediaDecodeTime = 0;
-		//this.sequenceNo = 0;
 		this.active = true;
 	}
 };

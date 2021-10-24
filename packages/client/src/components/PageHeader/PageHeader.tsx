@@ -4,13 +4,16 @@ import {pageTitle} from '../../recoil/atoms';
 import {currentSession} from '../../recoil/selectors';
 import {useRecoilValue} from 'recoil';
 import {FaUserCircle} from 'react-icons/fa';
+import UTULogo from './UTU_logo_EN_RGB.png';
 
 const Header = styled.header`
-    border-bottom: 3px solid ${props => props.theme.border.green};
+    border-bottom: 8px solid ${props => props.theme.border.green};
     display: flex;
     flex-direction: row;
-    padding: 0.5rem 2rem;
+    padding: 0 2rem;
     background: white;
+    align-items: center;
+    z-index: 2;
 
     nav {
       flex-grow: 2;
@@ -21,13 +24,8 @@ const Title = styled.h1`
     font-size: 1.5rem;
     font-weight: bold;
     margin: 0;
-`;
-
-const SubTitle = styled.span`
-    font-size: 1.5rem;
-    font-weight: normal;
-    margin-left: 1.5rem;
-    color: #222;
+    margin-left: 1rem;
+    color: ${props => props.theme.text.purple};
 `;
 
 const AccountContainer = styled.div`
@@ -56,9 +54,9 @@ export function PageHeader() {
 
     return (
         <Header>
+            <img src={UTULogo} width={200} />
             <Title>
-                <span>FT-Lab:</span>
-                <SubTitle>{subtitle}</SubTitle>
+                <span>Immersive Video Lab</span>
             </Title>
             <nav></nav>
             {session && <Account session={session} />}

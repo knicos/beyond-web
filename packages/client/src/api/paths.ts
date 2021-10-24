@@ -8,3 +8,4 @@ export const OAUTH2_VALIDATE = `${OAUTH2}/validate`;
 export const OAUTH2_TOKEN = `${OAUTH2}/token`;
 
 export const NODES = `${API_PATH}/nodes`;
+export const STREAMS = `${API_PATH}/streams`;

@@ -64,33 +64,35 @@ export default class ConfigService {
     });
     redisSetStreamCallback('event:stream:data', async (key: string, data: any) => {
       $log.info('SAVE', data.id);
-      const dataObject = JSON.parse(data.data);
-      // eslint-disable-next-line no-restricted-syntax
-      for (const k of Object.keys(dataObject)) {
-        dataObject[k] = JSON.stringify(dataObject[k]);
+      if (data.event === 'request') {
+        const dataObject = JSON.parse(data.data);
+        // eslint-disable-next-line no-restricted-syntax
+        for (const k of Object.keys(dataObject)) {
+          dataObject[k] = JSON.stringify(dataObject[k]);
+        }
+
+        const stream = await this.streams.findOne({
+          uri: data.id,
+          framesetId: data.framesetId,
+          frameId: data.frameId,
+        });
+
+        if (!stream) {
+          $log.error('Cannot save snapshot for unknown stream', data.id);
+          return;
+        }
+
+        const newSnap = await this.snaps.create({
+          data: new Map(Object.entries(dataObject)),
+          timestamp: new Date(),
+          groups: stream.groups,
+          owner: stream.owner,
+          tags: ['save'],
+        });
+
+        stream.snapshots.push(newSnap);
+        await stream.save();
       }
-
-      const stream = await this.streams.findOne({
-        uri: data.id,
-        framesetId: data.framesetId,
-        frameId: data.frameId,
-      });
-
-      if (!stream) {
-        $log.error('Cannot save snapshot for unknown stream', data.id);
-        return;
-      }
-
-      const newSnap = await this.snaps.create({
-        data: new Map(Object.entries(dataObject)),
-        timestamp: new Date(),
-        groups: stream.groups,
-        owner: stream.owner,
-        tags: ['save'],
-      });
-
-      stream.snapshots.push(newSnap);
-      await stream.save();
     });
   }
 
