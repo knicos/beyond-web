@@ -14,5 +14,5 @@ export default class Device {
   type: string;
 
   @Required()
-  serial: number;
+  serial: string;
 }
