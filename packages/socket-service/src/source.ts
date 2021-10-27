@@ -148,7 +148,7 @@ redisSetStreamCallback('event:stream:update', (key: string, data: any) => {
   console.log('CREATE STREAM', data);
   if (data.event === 'start' && peerSerial.has(data.node)) {
     const peer = peerSerial.get(data.node);
-    const existing = initStream(peer, data.id);
+    const existing = initStream(peer, data.id, data.framesetId, data.frameId);
     if (!existing) {
       console.log('SEND create_stream RPC');
       peer.rpc('create_stream', () => {

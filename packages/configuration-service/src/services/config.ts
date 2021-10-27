@@ -6,6 +6,8 @@ import {
 } from '@ftl/common';
 import Snapshot from '../models/snapshot';
 import Stream from '../models/streams';
+import ConfigQuery from '../models/query';
+import Pageable from '../models/pageable';
 
 const { encode } = require('msgpack5')();
 
@@ -88,6 +90,9 @@ export default class ConfigService {
           groups: stream.groups,
           owner: stream.owner,
           tags: ['save'],
+          streamId: data.id,
+          framesetId: data.framesetId,
+          frameId: data.frameId,
         });
 
         stream.snapshots.push(newSnap);
@@ -106,5 +111,35 @@ export default class ConfigService {
     if (snap) {
       sendSnapshot(id, framesetId, frameId, snap.data);
     }
+  }
+
+  async findInGroups(owner: string, groups: string[], query: ConfigQuery, page: Pageable) {
+    if (query.uri) {
+      const snaps = await this.snaps.find({
+        streamId: query.uri,
+        framesetId: query.framesetId,
+        frameId: query.frameId,
+      }, null, null, null);
+
+      if (query.current) {
+        return snaps.length > 0 ? [snaps[snaps.length - 1]] : [];
+      }
+      const offset = page.page * page.size;
+      if (offset >= snaps.length) {
+        return [];
+      }
+      return snaps.slice(offset, Math.min(snaps.length, offset + page.size));
+    }
+
+    return [];
+  }
+
+  async create(snap: Snapshot, owner: string, groups: string[]) {
+    return this.snaps.create({
+      ...snap,
+      groups,
+      owner,
+      timestamp: new Date(),
+    });
   }
 }

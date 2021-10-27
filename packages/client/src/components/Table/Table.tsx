@@ -13,11 +13,43 @@ const StyledTable = styled.table`
 
   tbody {
     background: white;
+    tr {
+      &.clickable {
+        cursor: pointer;
+      }
+      padding: 0 0.5rem;
+
+      .hidden {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        display: none;
+        background: ${props => props.theme.background.lightGray};
+      }
+
+      &:hover {
+        background: ${props => props.theme.background.lightGray};
+
+        .hidden {
+          display: flex;
+        }
+      }
+    }
+  }
+
+  th {
+    padding: 0.2rem 1rem;
+  }
+
+  td {
+    padding: 0.5rem 1rem;
+    position: relative;
   }
 
   th,td {
-    padding: 0.2rem 1rem;
-    border-bottom: 1px solid ${props => props.theme.border.purple};
+    border-bottom: 1px solid ${props => props.theme.border.lightGray};
     text-align: left;
   }
 `;
@@ -44,7 +76,7 @@ export function Table({data, columns, onClick}: Props) {
       </thead>
       <tbody>
         {data.map((d, ix) => (
-          <tr key={ix} onClick={() => {
+          <tr key={ix} className={onClick ? 'clickable' : ''} onClick={() => {
             if (onClick) {
               onClick(d, ix);
             }

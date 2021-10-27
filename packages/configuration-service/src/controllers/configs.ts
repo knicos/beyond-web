@@ -1,14 +1,15 @@
 /* eslint-disable class-methods-use-this */
 import {
-  BodyParams, Get, Inject, Put, PathParams, QueryParams,
+  BodyParams, Get, Inject, Post, PathParams, QueryParams,
 } from '@tsed/common';
-import { Description } from '@tsed/schema';
+import { Description, Groups } from '@tsed/schema';
 import { AccessToken } from '@ftl/types';
 import { Controller, UseToken } from '@ftl/common';
 import { NotFound } from '@tsed/exceptions';
 import ConfigService from '../services/config';
-import Node from '../models/snapshot';
 import Pageable from '../models/pageable';
+import ConfigQuery from '../models/query';
+import Snapshot from '../models/snapshot';
 
 @Controller('/configuration')
 export default class StreamConfiguration {
@@ -17,17 +18,17 @@ export default class StreamConfiguration {
 
   @Get('/')
   @Description('Get all available configurations')
-  async find(@QueryParams() page: Pageable, @UseToken() token: AccessToken): Promise<Node[]> {
-    return [];
+  async find(
+    @QueryParams() page: Pageable,
+    @QueryParams() query: ConfigQuery,
+    @UseToken() token: AccessToken,
+  ): Promise<Snapshot[]> {
+    return this.configService.findInGroups(token.user?.id, token.groups, query, page);
   }
 
-  @Put('/:id')
-  async update(@PathParams('id') id: string, @BodyParams() node: Node, @UseToken() token: AccessToken): Promise<Node> {
-    const result = null;
-    if (!result) {
-      throw new NotFound('node_not_found');
-    }
-    return result;
+  @Post('/')
+  async create(@BodyParams() @Groups('creation') snap: Snapshot, @UseToken() token: AccessToken): Promise<Snapshot> {
+    return this.configService.create(snap, token.user?.id, token.groups);
   }
 
   @Get('/:id')

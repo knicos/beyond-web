@@ -2,7 +2,7 @@ import { Form as FormikForm } from 'formik';
 import styled from 'styled-components';
 
 export const Form = styled(FormikForm)`
-  input {
+  input[type=text], input[type=number] {
     border: 2px solid ${props => props.theme.border.green};
     border-radius: 5px;
     box-sizing: border-box;
