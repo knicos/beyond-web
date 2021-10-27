@@ -1,5 +1,5 @@
 import {
-  Property, Required, CollectionOf, Groups, Default,
+  Property, Required, RequiredGroups, CollectionOf, Groups, Default,
 } from '@tsed/schema';
 import {
   Model, ObjectID, Indexed, Unique,
@@ -15,17 +15,18 @@ export default class Stream {
     _id?: string;
 
     @Required()
-    @Groups('!creation')
+    @Groups('!creation', '!update')
     @Indexed()
     @Unique()
     uri: string;
 
     @Required()
-    @Groups('!creation')
+    @Groups('!creation', '!update')
     owner: string;
 
     @CollectionOf(String)
     @Required()
+    @RequiredGroups('!update')
     @Default([])
     @Groups('!creation')
     groups: string[];

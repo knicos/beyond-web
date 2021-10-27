@@ -7,9 +7,13 @@ import {
   redisSetStreamCallback,
   redisGet,
   redisSet,
+  redisHSet,
+  redisHGetM,
 } from '@ftl/common';
 import { sendStreamUpdateEvent } from '@ftl/api';
 import Stream from '../models/stream';
+
+const HOUR = 60 * 60;
 
 function framesByNodeId(streams: MongooseDocument<Stream>[], nodeId: string) {
   const frames = [];
@@ -38,6 +42,17 @@ export default class StreamService {
     @Inject(Stream)
     private streams: MongooseModel<Stream>;
 
+    private async updateStats(id: string, fsid: number, fid: number, data) {
+      await redisHSet(`stream-stats:${id}:${fsid}:${fid}`, {
+        active: data.active ? 'yes' : 'no',
+      }, HOUR * 24);
+    }
+
+    private async getStats(id: string, fsid: number, fid: number) {
+      const result = await redisHGetM(`stream-stats:${id}:${fsid}:${fid}`, ['active']);
+      return result;
+    }
+
     async $onInit() {
       redisSetStreamCallback('event:stream:data', async (key: string, data: any) => {
         if (data.event === 'thumbnail') {
@@ -51,7 +66,7 @@ export default class StreamService {
       redisSetStreamCallback('event:node:update', async (key: string, data: any) => {
         // Find a stream and perhaps start it.
         console.log('NODE UPDATE', data);
-        if (data.event === 'connect') {
+        if (data.event === 'connect' || data.event === 'disconnect') {
           const streams = await this.streams.find({
             framesets: {
               $elemMatch: {
@@ -63,10 +78,13 @@ export default class StreamService {
           });
 
           const selectedFrames = framesByNodeId(streams, data.id);
-          console.log('START STREAM', selectedFrames);
+          console.log('CHANGE STREAM', selectedFrames);
 
           for (const sf of selectedFrames) {
-            if (sf.autoStart) {
+            this.updateStats(sf.uri, sf.framesetId, sf.frameId, {
+              active: data.event === 'connect',
+            });
+            if (data.event === 'connect' && sf.autoStart) {
               sendStreamUpdateEvent({
                 event: 'start',
                 id: sf.uri,
@@ -116,6 +134,27 @@ export default class StreamService {
         await this.streams.find({ groups: { $in: groups } }).skip(offset).limit(limit)
       ).map((stream) => stream.toClass());
 
+      const statsPromise = [];
+      for (const s of streams) {
+        for (const fs of s.framesets) {
+          for (const f of fs.frames) {
+            statsPromise.push(this.getStats(s.uri, fs.framesetId, f.frameId));
+          }
+        }
+      }
+
+      const stats = await Promise.all(statsPromise);
+
+      let i = 0;
+      for (const s of streams) {
+        for (const fs of s.framesets) {
+          for (const f of fs.frames) {
+            f.active = stats[i].active === 'yes';
+            i += 1;
+          }
+        }
+      }
+
       return streams;
     }
 
@@ -123,6 +162,12 @@ export default class StreamService {
       return (
         await this.streams.findOne({ _id: id, groups: { $in: groups } })
       )?.toClass();
+    }
+
+    async deleteInGroups(id: string, groups: string[]) {
+      return (
+        await this.streams.deleteOne({ _id: id, groups: { $in: groups } })
+      ).deletedCount;
     }
 
     async getThumbnail(id: string, groups: string[]) {

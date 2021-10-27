@@ -1,5 +1,5 @@
 import {
-  Property, Required, Default, Minimum, Maximum,
+  Property, Required, Default, Minimum, Maximum, Groups,
 } from '@tsed/schema';
 import {
   Schema, Indexed,
@@ -26,4 +26,16 @@ export default class Frame {
     @Property()
     @Default(true)
     autoStart: boolean;
+
+    @Property()
+    @Groups('query')
+    active?: boolean;
+
+    @Property()
+    @Groups('query')
+    channels?: number[];
+
+    @Property()
+    @Groups('query')
+    capabilities?: string[];
 }

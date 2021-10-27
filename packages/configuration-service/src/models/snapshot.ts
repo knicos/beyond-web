@@ -2,7 +2,7 @@ import {
   Property, Required, Groups, DateTime, CollectionOf, Default,
 } from '@tsed/schema';
 import {
-  Model, ObjectID,
+  Model, ObjectID, Indexed,
 } from '@tsed/mongoose';
 
 @Model()
@@ -14,7 +14,18 @@ export default class Snapshot {
     _id?: string;
 
     @Required()
+    @Indexed()
+    streamId: string;
+
+    @Required()
+    framesetId: number;
+
+    @Required()
+    frameId: number;
+
+    // @Required()
     @DateTime()
+    @Default(new Date())
     timestamp: Date;
 
     @CollectionOf(String)
@@ -27,10 +38,12 @@ export default class Snapshot {
     tags: string[];
 
     @Property()
+    @Groups('!creation', '!update')
     owner?: string;
 
     @CollectionOf(String)
     @Required()
     @Default([])
+    @Groups('!creation', '!update')
     groups: string[];
 }

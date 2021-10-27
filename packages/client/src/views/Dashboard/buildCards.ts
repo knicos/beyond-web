@@ -4,14 +4,16 @@ import { ICardDetails } from "../../components/StreamCard";
 const path = process.env.ASSET_PATH;
 
 export function buildCards(streams: IStream[], nodes: INode[]): ICardDetails[] {
-  const cStream: ICardDetails[] = streams.map((s) => ({
+  const cStream: ICardDetails[] = streams.reduce((r, s) => [...r, ...s.framesets.reduce((rr, fs) => [...rr, ...fs.frames.map(f => ({
     type: 'stream',
-    title: s.title || s.uri,
+    title: f.title || fs.title || s.title || s.uri,
     image: `${path}v1/streams/${s.id}/thumbnail`,
-    status: 'offline',
-    link: `${path}view?s=${encodeURIComponent(s.uri)}&id=${s.id}`,
+    status: f.active ? 'active' : 'offline',
+    link: `${path}view?s=${encodeURIComponent(s.uri)}&id=${s.id}&fsid=${fs.framesetId}&fid=${f.frameId}`,
     editable: true,
-  }));
+  }))], [])], []);
+
+  console.log('STREAM CARDS', cStream);
 
   const cNodes: ICardDetails[] = nodes.map((s) => ({
     type: 'node',

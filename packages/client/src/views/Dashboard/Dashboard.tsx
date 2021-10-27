@@ -20,6 +20,7 @@ const BodyContainer = styled.main`
   overflow: auto;
   flex-grow: 2;
   align-items: stretch;
+  position: relative;
 `;
 
 export function Dashboard() {
@@ -32,6 +33,7 @@ export function Dashboard() {
 
       const interval = setInterval(() => {
         getNodes().then(setNodes);
+        getStreams().then(setStreams);
       }, 3000);
       return () => clearInterval(interval);
     }, []);

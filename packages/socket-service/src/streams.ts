@@ -87,12 +87,17 @@ export function removeStreams(peer: Peer) {
   }
 }
 
-export function initStream(peer: Peer, uri: string): boolean {
+export function initStream(peer: Peer, uri: string, framesetId: number, frameId: number): boolean {
   const parsedURI = removeQueryString(uri)
 
   if (inputStreams.has(uri)) {
-    console.warn('Stream already exists', uri);
-    return true;
+    const is = inputStreams.get(uri);
+    if (is.enabledFrames.has(`${framesetId}:${frameId}`)) {
+      console.warn('Stream already exists', uri);
+      return true;
+    }
+    is.enabledFrames.add(`${framesetId}:${frameId}`);
+    return false;
   }
 
   console.log('Initiate stream: ', uri);
@@ -102,7 +107,9 @@ export function initStream(peer: Peer, uri: string): boolean {
   }
   peerUris.get(peer.uri).push(parsedURI);
   uriToPeer.set(parsedURI, peer);
-  inputStreams.set(parsedURI, new InputStream(uri, peer));
+  const is = new InputStream(uri, peer);
+  inputStreams.set(parsedURI, is);
+  is.enabledFrames.add(`${framesetId}:${frameId}`);
   redisAddItem('streams', uri, Date.now());
   redisAddItem('activestreams', parsedURI, Date.now());
   return nodeCreated;

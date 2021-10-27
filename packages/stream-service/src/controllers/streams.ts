@@ -1,6 +1,6 @@
 /* eslint-disable class-methods-use-this */
 import {
-  BodyParams, Get, Inject, Put, PathParams, QueryParams, Post,
+  BodyParams, Get, Inject, Put, PathParams, QueryParams, Post, Delete,
 } from '@tsed/common';
 import { Description, Groups, Header } from '@tsed/schema';
 import { AccessToken } from '@ftl/types';
@@ -20,6 +20,7 @@ export default class Streams {
 
   @Get('/')
   @Description('Get all available streams')
+  @Groups('query')
   async find(@QueryParams() page: Pageable, @UseToken() token: AccessToken): Promise<Stream[]> {
     return this.streamService.findInGroups(token.user, token.groups, page.offset, page.limit);
   }
@@ -30,7 +31,7 @@ export default class Streams {
   }
 
   @Put('/:id')
-  async update(@PathParams('id') id: string, @BodyParams() stream: Stream, @UseToken() token: AccessToken): Promise<Stream> {
+  async update(@PathParams('id') id: string, @BodyParams() @Groups('update') stream: Stream, @UseToken() token: AccessToken): Promise<Stream> {
     const result = await this.streamService.update(id, stream, token.groups);
     if (!result) {
       throw new NotFound('stream_not_found');
@@ -57,5 +58,14 @@ export default class Streams {
       throw new NotFound('stream_not_found');
     }
     return result;
+  }
+
+  @Delete('/:id')
+  async delete(@PathParams('id') id: string, @UseToken() token: AccessToken): Promise<{count: number}> {
+    const result = await this.streamService.deleteInGroups(id, token.groups);
+    if (result === 0) {
+      throw new NotFound('stream_not_found');
+    }
+    return { count: result };
   }
 }

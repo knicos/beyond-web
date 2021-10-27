@@ -23,6 +23,8 @@ export default class InputStream {
 
   lastTS = 0;
 
+  enabledFrames = new Set<string>();
+
   constructor(uri: string, peer: Peer) {
     this.peer = peer;
     this.uri = uri;
