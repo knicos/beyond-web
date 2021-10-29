@@ -4,6 +4,7 @@ import axios from 'axios';
 interface IFrame {
   title?: string;
   nodeId?: string;
+  deviceId?: string;
   active?: boolean;
   frameId: number;
   autoStart?: boolean;

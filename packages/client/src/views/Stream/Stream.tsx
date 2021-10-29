@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Formik, Field, FieldArray } from 'formik';
+import { Formik, Field } from 'formik';
 import { useParams } from 'react-router';
 import { useHistory } from 'react-router-dom';
 import { Form, ButtonBar } from '../../components/Form';
 import { Container } from './styledComponents';
 import { TableContainer } from '../Node/styledComponents';
 import { getStream, saveStream, IStream } from '../../api/streams';
+import { INode } from '../../api/nodes';
 import { FaCircle, FaPen } from 'react-icons/fa';
 import { getConfigs, IConfig, createConfig } from '../../api/configs';
 import { Table } from '../../components/Table';
@@ -13,8 +14,15 @@ import {IconButton} from '../../components/IconButton';
 import {ConfigDialog} from './ConfigDialog';
 import {NewConfigDialog} from './NewConfigDialog';
 import { TitleRow } from '../Streams/styledComponents';
+import { useRecoilValue } from 'recoil';
+import { nodeList } from '../../recoil/atoms';
 
 function Frame({values, fsix, fix}: {values: any, fsix: number, fix: number}) {
+  const nodes = useRecoilValue<INode[]>(nodeList) || [];
+  const nodeId = values.framesets[fsix].frames[fix].nodeId;
+  const node = nodeId ? nodes.find(n => n.serial === nodeId) : null;
+  const devices = node ? node.devices : [];
+
   return <>
     <label htmlFor={`framesets.${fsix}.framesetId`}>Set ID</label>
     <Field type="text" name={`framesets.${fsix}.framesetId`} disabled={fix > 0}/>
@@ -25,7 +33,15 @@ function Frame({values, fsix, fix}: {values: any, fsix: number, fix: number}) {
     <label htmlFor={`framesets.${fsix}.frames.${fix}.title`}>Frame Title</label>
     <Field type="text" name={`framesets.${fsix}.frames.${fix}.title`} />
     <label htmlFor={`framesets.${fsix}.frames.${fix}.nodeId`}>Node</label>
-    <Field type="text" name={`framesets.${fsix}.frames.${fix}.nodeId`} />
+    <Field as="select" name={`framesets.${fsix}.frames.${fix}.nodeId`}>
+      <option key="default" value={'none'}>None</option>
+      {nodes.map((n, ix) => <option key={ix} value={n.serial}>{n.name || n._id}</option>)}
+    </Field>
+    <label htmlFor={`framesets.${fsix}.frames.${fix}.deviceId`}>Device</label>
+    <Field as="select" name={`framesets.${fsix}.frames.${fix}.deviceId`} disabled={devices.length === 0}>
+      <option key={-1} value={undefined}>None</option>
+      {devices.map((n, ix) => <option key={ix} value={n.serial}>{`${n.name} (${n.serial})`}</option>)}
+    </Field>
     <label htmlFor={`framesets.${fsix}.frames.${fix}.autoStart`}>Auto-start</label>
     <Field type="checkbox" name={`framesets.${fsix}.frames.${fix}.autoStart`} />
   </>;

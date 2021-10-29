@@ -28,6 +28,7 @@ function framesByNodeId(streams: MongooseDocument<Stream>[], nodeId: string) {
             frameId: f.frameId,
             autoStart: f.autoStart,
             name: f.title || fs.title || s.title,
+            deviceId: f.deviceId,
           });
         }
       }
@@ -35,6 +36,19 @@ function framesByNodeId(streams: MongooseDocument<Stream>[], nodeId: string) {
   }
 
   return frames;
+}
+
+interface IDevice {
+  type: string;
+  id: string;
+  name: string;
+}
+
+function hasDevice(devices: IDevice[], device?: string) {
+  if (!device) {
+    return true;
+  }
+  return devices.some((d) => d.id === device);
 }
 
 @Service()
@@ -58,7 +72,7 @@ export default class StreamService {
         if (data.event === 'thumbnail') {
           const stream = await this.streams.findOne({ uri: data.id });
           if (stream) {
-            await redisSet(`stream:thumbnail:${stream.id}`, data.data);
+            await redisSet(`stream:thumbnail:${stream.id}:${data.framesetId}:${data.frameId}`, data.data);
           }
         }
       });
@@ -79,12 +93,13 @@ export default class StreamService {
 
           const selectedFrames = framesByNodeId(streams, data.id);
           console.log('CHANGE STREAM', selectedFrames);
+          const devices = data.devices ? JSON.parse(data.devices) : [];
 
           for (const sf of selectedFrames) {
-            this.updateStats(sf.uri, sf.framesetId, sf.frameId, {
-              active: data.event === 'connect',
-            });
-            if (data.event === 'connect' && sf.autoStart) {
+            if (data.event === 'connect' && sf.autoStart && hasDevice(devices, sf.deviceId)) {
+              this.updateStats(sf.uri, sf.framesetId, sf.frameId, {
+                active: true,
+              });
               sendStreamUpdateEvent({
                 event: 'start',
                 id: sf.uri,
@@ -92,6 +107,10 @@ export default class StreamService {
                 node: data.id,
                 framesetId: sf.framesetId,
                 frameId: sf.frameId,
+              });
+            } else if (data.event === 'disconnect') {
+              this.updateStats(sf.uri, sf.framesetId, sf.frameId, {
+                active: false,
               });
             }
           }
@@ -170,10 +189,10 @@ export default class StreamService {
       ).deletedCount;
     }
 
-    async getThumbnail(id: string, groups: string[]) {
+    async getThumbnail(id: string, frameset: number, frame: number, groups: string[]) {
       const stream = await this.streams.findOne({ _id: id, groups: { $in: groups } });
       if (stream) {
-        const thumb = await redisGet<string>(`stream:thumbnail:${id}`);
+        const thumb = await redisGet<string>(`stream:thumbnail:${id}:${frameset}:${frame}`);
         return thumb ? Buffer.from(thumb, 'base64') : null;
       }
 
