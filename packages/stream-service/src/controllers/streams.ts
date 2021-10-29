@@ -39,12 +39,12 @@ export default class Streams {
     return result;
   }
 
-  @Get('/:id/thumbnail')
+  @Get('/:id/thumbnail/:fs/:f')
   @Header({
     'Content-Type': 'image/jpeg',
   })
-  async getThumbnail(@PathParams('id') id: string, @UseToken() token: AccessToken): Promise<Buffer> {
-    const result = await this.streamService.getThumbnail(id, token.groups);
+  async getThumbnail(@PathParams('id') id: string, @PathParams('fs') frameset: number, @PathParams('f') frame: number, @UseToken() token: AccessToken): Promise<Buffer> {
+    const result = await this.streamService.getThumbnail(id, frameset, frame, token.groups);
     if (!result) {
       return defaultThumb;
     }

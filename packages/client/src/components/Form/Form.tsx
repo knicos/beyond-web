@@ -2,7 +2,7 @@ import { Form as FormikForm } from 'formik';
 import styled from 'styled-components';
 
 export const Form = styled(FormikForm)`
-  input[type=text], input[type=number] {
+  input[type=text], input[type=number], input[type=password] {
     border: 2px solid ${props => props.theme.border.green};
     border-radius: 5px;
     box-sizing: border-box;
@@ -10,6 +10,28 @@ export const Form = styled(FormikForm)`
     font-family: 'Open Sans',Helvetica,Sans-Serif;
     appearance: none;
     outline: none;
+
+    &:focus {
+      border: 2px solid ${props => props.theme.border.purple};
+    }
+
+    &:active {
+      border: 2px solid ${props => props.theme.border.purple};
+    }
+
+    &:disabled {
+      border: 2px solid ${props => props.theme.border.disabled};
+    }
+  }
+
+  select {
+    border: 2px solid ${props => props.theme.border.green};
+    border-radius: 5px;
+    box-sizing: border-box;
+    padding: 0.5rem;
+    font-family: 'Open Sans',Helvetica,Sans-Serif;
+    outline: none;
+    background: white;
 
     &:focus {
       border: 2px solid ${props => props.theme.border.purple};
