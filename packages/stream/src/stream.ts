@@ -127,7 +127,7 @@ export class FTLStream {
       this.interval = setInterval(() => {
         if (this.active && this.found) {
             this.enabledChannels.forEach((value, key) => {
-                this.peer.send(this.uri, 0, [1,value.stream,255,value.channel,1],[255,7,35,0,0,Buffer.alloc(0)]);
+                this.peer.send(this.uri, 0, [1,value.stream,255,value.channel,1],[255,7,35,255,0,Buffer.alloc(0)]);
             });
         }
       }, 500);
@@ -152,7 +152,7 @@ export class FTLStream {
 
     keyframe() {
       this.enabledChannels.forEach((value, key) => {
-        this.peer.send(this.uri, 0, [1,value.stream,255,value.channel,5],[255,7,35,0,0,Buffer.alloc(0)]);
+        this.peer.send(this.uri, 0, [1,value.stream,255,value.channel,5],[255,7,35,255,0,Buffer.alloc(0)]);
       });
     }
 

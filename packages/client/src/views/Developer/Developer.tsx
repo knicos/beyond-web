@@ -3,12 +3,14 @@ import styled from 'styled-components';
 import {ReactPlayer} from '@ftl/player';
 import {useRecoilValue, useSetRecoilState, useRecoilState} from 'recoil';
 import {currentStream, frameTime, pageTitle, peer} from '../../recoil/atoms';
-import {DataListing} from '../../components/DataListing';
+import DataListing from '../../components/DataListing';
 import {useLocation} from 'react-router';
 import qs from 'query-string';
 import {FTLStream} from '@ftl/stream';
 import {Peer} from '@ftl/protocol';
 import {MenuBar} from './MenuBar';
+
+//const DataListing = React.lazy(() => import('../../components/DataListing'));
 
 const Main = styled.section`
     padding: 1rem;

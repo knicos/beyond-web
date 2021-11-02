@@ -3,15 +3,16 @@ import styled from 'styled-components';
 import {ReactPlayer} from '@ftl/player';
 import {useRecoilValue} from 'recoil';
 import {currentStream, frameTime} from '../../recoil/atoms';
-import {DataListing} from '../../components/DataListing';
+import DataListing from '../../components/DataListing';
 import {FTLStream} from '@ftl/stream';
 import {MenuBar} from './MenuBar';
+
+//const DataListing = React.lazy(() => import('../../components/DataListing'));
 
 const Main = styled.section`
     padding: 1rem;
     display: grid;
     grid-template-columns: repeat(6, minmax(6rem, 1fr));
-    grid-template-rows: repeat(auto-fit, minmax(1rem, 1fr));
     grid-gap: 1rem;
 `;
 

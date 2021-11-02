@@ -52,7 +52,7 @@ interface Props {
     time: number;
 }
 
-export function DataListing({stream, time}: Props) {
+export default function DataListing({stream, time}: Props) {
     const pinned = useRecoilValue<Set<number>>(pinnedData);
 
     return <>
