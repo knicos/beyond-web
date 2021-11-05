@@ -18,7 +18,7 @@ export function StreamDialog({show, onClose, collections}: Props) {
     <Dialog show={show}>
       <Formik
         initialValues={{
-            collection: '',
+            collection: collections[0]?.id || '',
             title: '',
             frameset: 0,
             frame: 0,
@@ -32,9 +32,9 @@ export function StreamDialog({show, onClose, collections}: Props) {
               console.error('Bad collection', values.collection);
               return;
             }
-            const framesets = [...collection.framesets];
+            let framesets = [...collection.framesets];
             console.log('CREATE STREAM', values, collection);
-            const frameset = framesets.find(f => f.framesetId === values.frameset);
+            let frameset = framesets.find(f => f.framesetId === values.frameset);
             if (!frameset) {
               framesets.push({
                 framesetId: values.frameset,
@@ -54,10 +54,10 @@ export function StreamDialog({show, onClose, collections}: Props) {
                 onClose();
                 return;
               } else {
-                frameset.frames.push({
+                frameset.frames = [...frameset.frames, {
                   title: values.title,
                   frameId: values.frame,
-                });
+                }];
               }
             }
             await saveStream(values.collection, { framesets });

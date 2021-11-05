@@ -8,6 +8,7 @@ export const pageTitle = atom({
 export const streamList = atom({
     key: 'streamList',
     default: [],
+    dangerouslyAllowMutability: true,
 });
 
 export const nodeList = atom({
