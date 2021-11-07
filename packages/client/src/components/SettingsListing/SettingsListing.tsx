@@ -4,6 +4,7 @@ import { FTLStream } from '@ftl/stream';
 import { ChannelComponent } from '../ChannelComponent';
 import { useRecoilValue } from 'recoil';
 import {pinnedData} from '../../recoil/atoms';
+import { StyledForm } from '../Form';
 
 const Title = styled.h1`
   margin: 1rem 0;
@@ -22,7 +23,7 @@ const Table = styled.div`
 `;
 
 function insertDataItem(nodes: JSX.Element[], value: unknown, key: number, onChange: (channel: number, value: unknown) => void): void {
-    nodes.push(<ChannelComponent key={key} channel={key} value={value} onChange={onChange} hideEditable={true} />);
+    nodes.push(<ChannelComponent key={key} channel={key} value={value} onChange={onChange} hideReadonly={true} />);
 }
 
 function renderData(data: Map<number, any>, pinned: Set<number>, onChange: (channel: number, value: unknown) => void): JSX.Element[] {
@@ -47,17 +48,19 @@ interface Props {
     time: number;
 }
 
-export default function DataListing({stream, time}: Props) {
+export default function SettingsListing({stream, time}: Props) {
     const pinned = useRecoilValue<Set<number>>(pinnedData);
 
     return <>
-        <Title>Data Stream</Title>
+        <Title>Settings</Title>
         <Container>
+          <StyledForm className="compact">
             <Table>
                 {renderData(stream.data, pinned, (channel: number, value: unknown) => {
                     stream.set(channel, value);
                 })}
             </Table>
+          </StyledForm>
         </Container>
     </>;
 }

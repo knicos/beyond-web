@@ -233,6 +233,11 @@ export class FTLRemux {
     
       if (this.seen_keyframe) {
         if (this.ts == 0) this.ts = spkt[0];
+
+        if (spkt[0] < this.ts) {
+          console.error("Receiver old packet");
+        }
+
         //if (this.track.samples.length > 0) console.error("Unfinished sample");
         this.dts += spkt[0]-this.ts;
 
@@ -249,8 +254,8 @@ export class FTLRemux {
 
         let sample = this.track.samples[0];
         concatNals(sample);
-        let delta = (spkt[0]-this.ts)*90;
-        sample.duration = (delta > 0) ? delta : 10;
+        let delta = 10 * 90;
+        sample.duration = (delta > 0) ? delta : 30 * 90;
 
         let moof = MP4.moof(this.sequenceNo++, [this.track]);
         let mdat = MP4.mdat(sample.data);
@@ -258,6 +263,8 @@ export class FTLRemux {
         //result.set(MP4.STYP);
         result.set(moof);
         result.set(mdat, moof.byteLength);
+
+        //console.log('LATENCY', Date.now() - spkt[0]);
         this.emit('data', result);
 
         this.track.samples = [];

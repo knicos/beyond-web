@@ -114,7 +114,7 @@ export function Streams() {
       frame: f.title ? `${f.title} (${f.frameId})` : `${f.frameId}`,
       nodeId: f.nodeId || '',
       autostart: f.autoStart || false,
-      thumb: `${path}v1/streams/${s.id}/thumbnail`,
+      thumb: `${path}v1/streams/${s.id}/thumbnail/${fs.framesetId}/${f.frameId}`,
       fsid: fs.framesetId,
       fid: f.frameId,
       fsix,
@@ -125,7 +125,7 @@ export function Streams() {
     id: s.id,
     title: s.title || 'No Title',
     uri: s.uri,
-    thumb: `${path}v1/streams/${s.id}/thumbnail`,
+    thumb: `${path}v1/streams/${s.id}/thumbnail/${s.framesets?.[0]?.framesetId || 0}/${s.framesets?.[0]?.frames?.[0]?.frameId || 0}`,
     framesets: s.framesets?.length || 0
   }));
 

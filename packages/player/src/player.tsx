@@ -36,12 +36,14 @@ export class FTLPlayer {
     enableZoom = false;
     enableSelection = true;
     enableMovement = false;
-    private translateX = 0;
-    private translateY = 0;
-    private translateZ = 0;
-    private rotationX = 0;
-    private rotationY = 0;
-    private rotationZ = 0;
+    private cameraObject = {
+      translateX: 0,
+      translateY: 0,
+      translateZ: 0,
+      rotationX: 0,
+      rotationY: 0,
+      rotationZ: 0,
+    };
     private isUserInteracting = false;
     private onPointerDownPointerX = 0;
     private onPointerDownPointerY = 0;
@@ -133,8 +135,8 @@ export class FTLPlayer {
             //this.lon = ( this.onPointerDownPointerX - event.clientX ) * 0.1 + this.onPointerDownLon;
             //this.lat = ( this.onPointerDownPointerY - event.clientY ) * 0.1 + this.onPointerDownLat;
       
-            this.rotationX += event.movementY * (1/25) * 5.0;
-            this.rotationY -= event.movementX * (1/25) * 5.0;
+            this.cameraObject.rotationX += event.movementY * (1/25) * 5.0;
+            this.cameraObject.rotationY -= event.movementX * (1/25) * 5.0;
             this.updatePose();
           }
         });
@@ -147,10 +149,10 @@ export class FTLPlayer {
           if (this.enableMovement) {
             console.log(event);
             switch(event.code) {
-            case "KeyW"		: this.translateZ += 0.05; this.updatePose(); break;
-            case "KeyS"		: this.translateZ -= 0.05; this.updatePose(); break;
-            case "KeyA"		: this.translateX -= 0.05; this.updatePose(); break;
-            case "KeyD"		: this.translateX += 0.05; this.updatePose(); break;
+            case "KeyW"		: this.cameraObject.translateZ += 0.05; this.updatePose(); break;
+            case "KeyS"		: this.cameraObject.translateZ -= 0.05; this.updatePose(); break;
+            case "KeyA"		: this.cameraObject.translateX -= 0.05; this.updatePose(); break;
+            case "KeyD"		: this.cameraObject.translateX += 0.05; this.updatePose(); break;
             }
           }
         });
@@ -318,10 +320,10 @@ export class FTLPlayer {
     }
 
     updatePose() {
-      let poseRX = rematrix.rotateX(this.rotationX);
-      let poseRY = rematrix.rotateY(this.rotationY);
-      let poseRZ = rematrix.rotateZ(this.rotationZ);
-      let poseT = rematrix.translate3d(this.translateX, this.translateY, this.translateZ);
+      let poseRX = rematrix.rotateX(this.cameraObject.rotationX);
+      let poseRY = rematrix.rotateY(this.cameraObject.rotationY);
+      let poseRZ = rematrix.rotateZ(this.cameraObject.rotationZ);
+      let poseT = rematrix.translate3d(this.cameraObject.translateX, this.cameraObject.translateY, this.cameraObject.translateZ);
       let pose = [poseT,poseRX,poseRY,poseRZ].reduce(rematrix.multiply);
       this.emit('pose', pose);
     }

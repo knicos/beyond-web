@@ -93,7 +93,7 @@ export function StreamView() {
 
   const configData = config.length === 1 ? Object.keys(config[0].data).map(k => ({
     channel: k,
-    value: JSON.parse(config[0].data[k]),
+    value: config[0].data[k],
   })) : [];
 
   return (
@@ -152,7 +152,7 @@ export function StreamView() {
         )}
       </Formik>
       <ConfigDialog target={target} onClose={() => setTarget(null)} onSave={(d) => {
-        config[0].data[d.channel] = JSON.stringify(d.value);
+        config[0].data[d.channel] = d.value; //JSON.stringify(d.value);
         console.log('SAVE CONFIG', config[0].data);
         createConfig({
           ...config[0],

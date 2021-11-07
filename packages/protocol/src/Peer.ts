@@ -53,6 +53,7 @@ export class Peer {
   txBytes = 0;
   rxBytes = 0;
   lastStatsCall = Date.now();
+  lastStats = null;
 
 	static uuid: string;
 
@@ -64,7 +65,7 @@ export class Peer {
 			if(isw3c(this.sock)){
 				raw = raw.data;
 			}
-      this.rxBytes += raw.length;
+      this.rxBytes += raw.length || raw.byteLength;
 			let msg = decode(raw);
 			// console.log('MSG', msg)
 			if (this.status === kConnecting) {
@@ -118,11 +119,13 @@ export class Peer {
 
   getStatistics() {
     const time = Date.now();
-    const result = [time - this.lastStatsCall, this.rxBytes, 0];
-    this.rxBytes = 0;
-    this.txBytes = 0;
-    this.lastStatsCall = time;
-    return result;
+    if (time - this.lastStatsCall > 5000 || !this.lastStats) {
+      this.lastStats = [time - this.lastStatsCall, this.rxBytes, 0];
+      this.rxBytes = 0;
+      this.txBytes = 0;
+      this.lastStatsCall = time;
+    }
+    return this.lastStats;
   }
 
   private _handshake(magic, version, id) {

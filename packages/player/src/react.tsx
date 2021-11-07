@@ -73,7 +73,7 @@ export function ReactPlayer({stream, channel, movement, onSelectPoint, points, i
             }
         });
         state.player.on('pose', (pose) => {
-          console.log('Got new pose', pose);
+          stream.set(66, pose);
         });
 
         state.player.play();
@@ -97,7 +97,7 @@ export function ReactPlayer({stream, channel, movement, onSelectPoint, points, i
             //stream.enableVideo(0, 0, channel || 0);
             stream.on('packet', (spkt, pkt) => {
                 const [_, fsid, fid, chan] = spkt;
-                if (state.player && fsid === 0 && fid === 0 && (chan === channel || (channel >= 32 && channel < 34))) {
+                if (state.player && fsid === 0 && fid === 0 && (chan === channel || (chan >= 32 && chan < 34))) {
                     state.player.push(spkt, pkt);
                 }
             });
