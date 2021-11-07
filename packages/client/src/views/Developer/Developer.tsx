@@ -9,6 +9,10 @@ import qs from 'query-string';
 import {FTLStream} from '@ftl/stream';
 import {Peer} from '@ftl/protocol';
 import {MenuBar} from './MenuBar';
+import {Tabs} from '../../components/Tabs';
+import SettingsListing from '../../components/SettingsListing';
+import StreamInfo from '../../components/StreamInfo';
+import {formatTime} from '../../lib/time';
 
 //const DataListing = React.lazy(() => import('../../components/DataListing'));
 
@@ -16,7 +20,6 @@ const Main = styled.section`
     padding: 1rem;
     display: grid;
     grid-template-columns: repeat(6, minmax(6rem, 1fr));
-    grid-template-rows: repeat(auto-fit, minmax(1rem, 1fr));
     grid-gap: 1rem;
 `;
 
@@ -56,13 +59,6 @@ const StatsBar = styled.div`
     width: 100%;
     padding: 1rem;
 `;
-
-function formatTime(seconds: number): string {
-    const hours = Math.floor(seconds / 60 / 60);
-    const minutes = Math.floor((seconds - hours * 60 * 60) / 60);
-    const s = seconds - hours * 60 * 60 - minutes * 60;
-    return `${hours}:${minutes}:${s.toFixed(1)}`;
-}
 
 function generatePoints(stream: FTLStream): [number, number][] {
     const focalPoint = stream.data.get(1026);
@@ -109,26 +105,18 @@ export function DeveloperView() {
                       points={points}
                       frameset={0}
                       frame={0}
+                      movement={true}
                     />
                 </VideoContainer>
-                <StatsBar>
-                    <select onChange={e => {
-                        const newChannel = parseInt(e.target.value);
-                        stream.disableVideo(0, 0, channel);
-                        stream.enableVideo(0, 0, newChannel);
-                        setChannel(newChannel);
-                    }}>
-                        <option value={0}>Colour</option>
-                        <option value={1}>Depth</option>
-                        <option value={2}>Right</option>
-                        <option value={21}>Overlay</option>
-                    </select>
-                    {`Time: ${formatTime(seconds)}`}
-                </StatsBar>
             </PlayerContainer>
         </Card>
         <Card className="side">
-            <DataListing stream={stream} time={time} />
+          <Tabs labels={['Information', 'Data', 'Settings', 'Display']} content={[
+            <StreamInfo stream={stream} time={time} />,
+            <DataListing stream={stream} time={time} />,
+            <SettingsListing stream={stream} time={time} />,
+            <div />,
+          ]} />
         </Card>
     </Main>;
 }

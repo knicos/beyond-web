@@ -1,12 +1,19 @@
+import React from 'react';
 import { Form as FormikForm } from 'formik';
 import styled from 'styled-components';
 
-export const Form = styled(FormikForm)`
+declare type $ElementProps<T> = T extends React.ComponentType<infer Props>
+  ? Props extends object
+    ? Props
+    : never
+  : never;
+
+export const StyledForm = styled.div`
   input[type=text], input[type=number], input[type=password] {
     border: 2px solid ${props => props.theme.border.green};
     border-radius: 5px;
     box-sizing: border-box;
-    padding: 0.5rem;
+    padding: 0.3rem;
     font-family: 'Open Sans',Helvetica,Sans-Serif;
     appearance: none;
     outline: none;
@@ -28,7 +35,7 @@ export const Form = styled(FormikForm)`
     border: 2px solid ${props => props.theme.border.green};
     border-radius: 5px;
     box-sizing: border-box;
-    padding: 0.5rem;
+    padding: 0.3rem;
     font-family: 'Open Sans',Helvetica,Sans-Serif;
     outline: none;
     background: white;
@@ -83,6 +90,10 @@ export const Form = styled(FormikForm)`
   display: flex;
   flex-direction: column;
   padding: 1rem;
+
+  &.compact {
+    padding: 0;
+  }
 `;
 
 export const ButtonBar = styled.div`
@@ -91,3 +102,11 @@ export const ButtonBar = styled.div`
   justify-content: center;
   margin-top: 1rem;
 `;
+
+export function Form({ children, ...props }: { children: React.ReactNode } & $ElementProps<typeof FormikForm>) {
+  return (
+    <StyledForm>
+      <FormikForm {...props}>{children}</FormikForm>
+    </StyledForm>
+  );
+}

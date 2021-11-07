@@ -43,7 +43,16 @@ export class FTLMSE {
 				this.queue.push(data);
 			} else {
 				try {
-					this.sourceBuffer.appendBuffer(data);
+          // Queue has something, send this first
+          if (this.queue.length > 0) {
+            this.queue.push(data);
+            const d = this.queue[0];
+            this.queue.shift();
+            this.sourceBuffer.appendBuffer(d);
+          // Otherwise, send this data immediately.
+          } else {
+					  this.sourceBuffer.appendBuffer(data);
+          }
 				} catch (e) {
 					console.error("Failed to append buffer");
 				}
@@ -56,7 +65,7 @@ export class FTLMSE {
 		});
 
     this.video.addEventListener('waiting', (e) => {
-			console.warn("Video waiting", e);
+			//console.warn("Video waiting", e);
 		});
 
     this.video.addEventListener('stalled', (e) => {
@@ -68,7 +77,7 @@ export class FTLMSE {
 		});
 
     this.video.addEventListener('playing', (e) => {
-			console.info("Video playing", e);
+			//console.info("Video playing", e);
 		});
 
     this.video.addEventListener('abort', (e) => {

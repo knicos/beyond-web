@@ -1,6 +1,7 @@
 import { DataPacket, Peer, StreamPacket } from '@ftl/protocol';
 import { redisPublish, redisSubscribe, redisUnsubscribe } from '@ftl/common';
 import { sendConfigCommand, sendStreamDataEvent } from '@ftl/api';
+import { recordLatency } from './latencyManager';
 
 const { encode, decode } = require('msgpack5')();
 
@@ -33,8 +34,9 @@ export default class InputStream {
 
     // Add RPC handler to receive frames from the source
     peer.bind(this.baseUri, (latency: number, spacket: StreamPacket, packet: DataPacket) => {
+      const code = recordLatency(latency);
       this.parseFrame(spacket, packet);
-      this.pushFrame(latency, spacket, packet);
+      this.pushFrame(code, spacket, packet);
     });
 
     this.onMessage = (message) => {
@@ -90,7 +92,7 @@ export default class InputStream {
     }
   }
 
-  private pushFrame(latency: number, spacket: unknown, packet: unknown) {
+  private pushFrame(latency: string, spacket: unknown, packet: unknown) {
     redisPublish(`stream-in:${this.baseUri}`, encode([latency, spacket, packet]));
   }
 

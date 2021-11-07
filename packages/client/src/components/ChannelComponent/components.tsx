@@ -48,9 +48,10 @@ interface IManifestOption {
 }
 
 interface IManifest {
-    label: string;
+    title: string;
     component: string;
-    options?: IManifestOption[];
+    type: string;
+    enum?: string[];
 }
 
 interface DataItemProps {
@@ -98,7 +99,7 @@ function Image({data, config}: {data: any, config: IManifest}) {
             new Blob([data])
         ));
     }, [data])
-    return <DataItem name={config.label} value={<img width="50" src={img} />} />
+    return <DataItem name={config.title} value={<img width="50" src={img} />} />
 }
 
 interface IMetaData {
@@ -138,7 +139,7 @@ function Capabilities({data}: {data: number[]}) {
 
 function RawValue({data, config, channel}: IDataComponentProps) {
     const str = typeof data === 'object' ? JSON.stringify(data) : data;
-    return <DataItem channel={channel} name={pupa(config.label, {channel})} value={str} />;
+    return <DataItem channel={channel} name={pupa(config.title, {channel})} value={str} />;
 }
 
 function TemporalHistogram({data, config, channel}: IDataComponentProps) {
@@ -154,7 +155,7 @@ function TemporalHistogram({data, config, channel}: IDataComponentProps) {
         }
     }, [data]);
 
-    return <DataItem channel={channel} name={pupa(config.label, {channel})} value={<div id={`plotly${channel}`}></div>} />;
+    return <DataItem channel={channel} name={pupa(config.title, {channel})} value={<div id={`plotly${channel}`}></div>} />;
 }
 
 function Histogram({data, config, channel}: IDataComponentProps) {
@@ -164,7 +165,7 @@ function Histogram({data, config, channel}: IDataComponentProps) {
         }
     }, [data]);
 
-    return <DataItem channel={channel} name={pupa(config.label, {channel})} value={<div id={`plotly${channel}`}></div>} />;
+    return <DataItem channel={channel} name={pupa(config.title, {channel})} value={<div id={`plotly${channel}`}></div>} />;
 }
 
 function EditableValue({data, config, channel, onChange}: IDataComponentProps) {
@@ -183,7 +184,7 @@ function EditableValue({data, config, channel, onChange}: IDataComponentProps) {
 
         }
     }} />;
-    return <DataItem channel={channel} name={pupa(config.label, {channel})} value={input} />;
+    return <DataItem channel={channel} name={pupa(config.title, {channel})} value={input} />;
 }
 
 function Enumerated({data, config, channel, onChange}: IDataComponentProps) {
@@ -191,9 +192,9 @@ function Enumerated({data, config, channel, onChange}: IDataComponentProps) {
         return null;
     }
     const input = <select value={data} onChange={e => onChange && onChange(channel, e.target.value)}>
-        {config.options.map((option, key) => <option key={key} value={option.value}>{option.label}</option>)}
+        {config.enum.map((option, key) => <option key={key} value={option}>{option}</option>)}
     </select>;
-    return <DataItem channel={channel} name={pupa(config.label, {channel})} value={input} />;
+    return <DataItem channel={channel} name={pupa(config.title, {channel})} value={input} />;
 }
 
 interface IDataComponentProps {

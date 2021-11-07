@@ -42,6 +42,7 @@ export default class Streams {
   @Get('/:id/thumbnail/:fs/:f')
   @Header({
     'Content-Type': 'image/jpeg',
+    'Cache-Control': 'max-age=30',
   })
   async getThumbnail(@PathParams('id') id: string, @PathParams('fs') frameset: number, @PathParams('f') frame: number, @UseToken() token: AccessToken): Promise<Buffer> {
     const result = await this.streamService.getThumbnail(id, frameset, frame, token.groups);

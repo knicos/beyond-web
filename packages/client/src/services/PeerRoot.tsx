@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import {Peer} from '@ftl/protocol';
 import {currentStream, peer} from '../recoil/atoms';
 import {currentSession} from '../recoil/selectors';
@@ -6,6 +6,7 @@ import {useSetRecoilState, useRecoilValue} from 'recoil';
 // import qs from 'query-string';
 
 export function PeerRoot(): React.ReactElement {
+    const [pingInterval, setPingInterval] = useState(null);
     const setPeer = useSetRecoilState(peer);
     // const setStreams = useSetRecoilState(streamList);
     const setStream = useSetRecoilState(currentStream);
@@ -34,6 +35,15 @@ export function PeerRoot(): React.ReactElement {
 
         peer.on('connect', () => {
             setPeer(peer);
+            const checkLatency = () => {
+              const pingTime = Date.now();
+              peer.rpc('__ping__', (ts: number) => {
+                const latency = (Date.now() - pingTime) / 2;
+                peer.latency = latency;
+              });
+            };
+            setPingInterval(setInterval(checkLatency, 5000));
+            checkLatency();
             /*peer.rpc('list_streams', (streams: string[]) => {
                 console.log('Stream list', streams);
                 const mapped = streams.map(s => {
@@ -50,8 +60,10 @@ export function PeerRoot(): React.ReactElement {
         });
 
         peer.on('disconnect', () => {
+            if (pingInterval) clearInterval(pingInterval);
             setPeer(null);
             setStream(null);
+            setPingInterval(null);
             setTimeout(createPeer, 1000);
             console.log('Socket disconnect');
         });

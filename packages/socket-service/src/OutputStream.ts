@@ -1,5 +1,6 @@
 import { Peer } from '@ftl/protocol';
 import { redisPublish, redisSubscribe, redisUnsubscribe } from '@ftl/common';
+import { getLatency } from './latencyManager';
 
 const { encode, decode } = require('msgpack5')();
 
@@ -29,7 +30,7 @@ export default class OutputStream {
 
     const onMessage = (message) => {
       const args = decode(message);
-      this.peer.send(this.baseUri, ...args);
+      this.peer.send(this.baseUri, getLatency(args[0]), args[1], args[2]);
     };
     this.onMessage = onMessage;
 

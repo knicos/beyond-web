@@ -28,6 +28,12 @@ export class FTLStream {
   data = new Map<number, any>();
   interval: NodeJS.Timer;
 
+  private statsCount = 0;
+  private latencySum = 0;
+  private latency = 0;
+  private fps = 0;
+  private statsTime = Date.now();
+
 	constructor(peer: Peer, uri: string) {
     this.peer = peer;
     this.uri = uri;
@@ -37,9 +43,14 @@ export class FTLStream {
             return;
         }
 
-        this.emit('raw', streampckg, pckg);
-
         const [timestamp, fs, frame, channel] = streampckg;
+
+        let rts: number;
+        if (channel === 0) {
+          rts = Date.now();
+        }
+
+        this.emit('raw', streampckg, pckg);
 
         if (this.startTimestamp === 0) {
             this.startTimestamp = timestamp;
@@ -66,6 +77,12 @@ export class FTLStream {
                 this.emit('packet', streampckg, pckg);
             }
         }
+
+        if (channel === 0) {
+          const procLatency = Date.now() - rts;
+          this.latencySum += latency + this.peer.latency + procLatency;
+          ++this.statsCount;
+        }
     });
 
     this.on('started', () => {
@@ -84,6 +101,22 @@ export class FTLStream {
       this.peer.off('disconnect', disconCB);
     })
 	}
+
+  getStatistics() {
+    if (this.statsCount >= 20) {
+      this.latency = this.latencySum / this.statsCount;
+      const now = Date.now();
+      const seconds = (now - this.statsTime) / 1000;
+      this.fps = this.statsCount / seconds;
+      this.statsTime = now;
+      this.latencySum = 0;
+      this.statsCount = 0;
+    };
+    return {
+      latency: this.latency,
+      fps: this.fps,
+    };
+  }
 
     private _decodeData(channel: number, rawData: Buffer) {
       try {
