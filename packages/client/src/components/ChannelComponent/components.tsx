@@ -5,6 +5,7 @@ import Plotly from 'plotly.js-dist-min';
 import {useRecoilState} from 'recoil';
 import {pinnedData} from '../../recoil/atoms';
 import {FaMapPin} from 'react-icons/fa';
+import {SketchPicker} from 'react-color';
 
 const Name = styled.div`
     font-size: 0.8rem;
@@ -52,6 +53,7 @@ interface IManifest {
     component: string;
     type: string;
     enum?: string[];
+    labels?: string[];
 }
 
 interface DataItemProps {
@@ -175,7 +177,10 @@ function EditableValue({data, config, channel, onChange}: IDataComponentProps) {
         setValue(JSON.stringify(data));
     }, [data]);
 
-    const input = <input type="text" value={value} onChange={e=> setValue(e.target.value)} onBlur={e => {
+    let input: JSX.Element = null;
+
+    if (config.type === 'number') {
+      input = <input type="number" value={value} onChange={e=> setValue(e.target.value)} onBlur={e => {
         // setValue(e.target.value);
         try {
             const newValue = JSON.parse(e.target.value);
@@ -183,18 +188,49 @@ function EditableValue({data, config, channel, onChange}: IDataComponentProps) {
         } catch (e) {
 
         }
-    }} />;
+      }} />;
+    } else if (config.type === 'boolean') {
+      input = <input type="checkbox" checked={value === 'true'} onChange={e => {
+        setValue(e.target.checked ? 'true' : 'false');
+        try {
+            const newValue = e.target.checked;
+            onChange(channel, newValue);
+        } catch (e) {
+
+        }
+      }} />;
+    } else {
+      input = <input type="text" value={value} onChange={e=> setValue(e.target.value)} onBlur={e => {
+          // setValue(e.target.value);
+          try {
+              const newValue = JSON.parse(e.target.value);
+              onChange(channel, newValue);
+          } catch (e) {
+
+          }
+      }} />;
+    }
     return <DataItem channel={channel} name={pupa(config.title, {channel})} value={input} />;
 }
 
 function Enumerated({data, config, channel, onChange}: IDataComponentProps) {
-    if (typeof data !== 'string') {
+    if (typeof data !== 'string' && typeof data !== 'number') {
         return null;
     }
-    const input = <select value={data} onChange={e => onChange && onChange(channel, e.target.value)}>
-        {config.enum.map((option, key) => <option key={key} value={option}>{option}</option>)}
+    const input = <select value={data} onChange={e => onChange && onChange(channel, config.type === 'number' ? parseInt(e.target.value) : e.target.value)}>
+        {config.enum.map((option, key) => <option key={key} value={option}>{config.labels?.[key] || option}</option>)}
     </select>;
     return <DataItem channel={channel} name={pupa(config.title, {channel})} value={input} />;
+}
+
+function ColourPicker({data, config, channel, onChange}: IDataComponentProps) {
+  const [value, setValue] = useState<string>(`${data}`);
+
+  const input = <SketchPicker color={value} onChangeComplete={(color: any) => {
+    setValue(color.hex);
+    onChange(channel, color.hex);
+  }}/>
+  return <DataItem channel={channel} name={pupa(config.title, {channel})} value={input} />;
 }
 
 interface IDataComponentProps {
@@ -214,4 +250,5 @@ export const components: Record<string, React.FunctionComponent<IDataComponentPr
     EditableValue,
     Histogram,
     TemporalHistogram,
+    ColourPicker,
 };

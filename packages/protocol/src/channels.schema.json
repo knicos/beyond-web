@@ -135,6 +135,14 @@
       "type": "string",
       "title": "Visualisation",
       "enum": ["mesh", "pointcloud"],
+      "labels": ["Mesh", "Point Cloud"],
+      "editable": "virtual",
+      "component": "Enumerated"
+    },
+    "402": {
+      "type": "string",
+      "title": "Render Engine",
+      "enum": ["CUDA", "GL", "SKR"],
       "editable": "virtual",
       "component": "Enumerated"
     },
@@ -144,7 +152,9 @@
       "maximum": 31,
       "default": 0,
       "title": "Renderer Overlay Channel",
-      "component": "EditableValue",
+      "component": "Enumerated",
+      "enum": [0, 1],
+      "labels": ["None", "Depth"],
       "editable": "virtual"
     },
     "407": {
@@ -154,6 +164,28 @@
         "type": "string"
       },
       "component": "SourceMenu",
+      "editable": "virtual"
+    },
+    "408": {
+      "type": "number",
+      "title": "Projection",
+      "enum": [0, 1, 2],
+      "default": 0,
+      "component": "Enumerated",
+      "editable": "virtual"
+    },
+    "409": {
+      "type": "string",
+      "title": "Background",
+      "default": "#4c4c4c",
+      "component": "ColourPicker",
+      "editable": "virtual"
+    },
+    "420": {
+      "type": "boolean",
+      "title": "Show Bad Colours",
+      "default": false,
+      "component": "EditableValue",
       "editable": "virtual"
     }
   }
