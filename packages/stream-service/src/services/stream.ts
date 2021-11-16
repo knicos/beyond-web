@@ -45,7 +45,7 @@ interface IDevice {
 }
 
 function hasDevice(devices: IDevice[], device?: string) {
-  if (!device) {
+  if (!device || device === '') {
     return true;
   }
   return devices.some((d) => d.id === device);

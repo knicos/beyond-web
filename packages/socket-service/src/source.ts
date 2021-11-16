@@ -3,7 +3,7 @@
 import { Peer } from '@ftl/protocol';
 import { AccessToken } from '@ftl/types';
 import { redisSetStreamCallback } from '@ftl/common';
-import { sendNodeUpdateEvent, sendNodeStatsEvent } from '@ftl/api';
+import { sendNodeUpdateEvent, sendNodeStatsEvent, RecordingEvent } from '@ftl/api';
 import {
   removeStreams, getStreams, bindToStream, createStream, initStream, startStream,
 } from './streams';
@@ -144,17 +144,30 @@ export function createSource(ws, address: string, token: AccessToken, ephemeral:
   return p;
 }
 
+// eslint-disable-next-line no-unused-vars
+function broadcastEvent(name: string, owner?: string, groups?: string[]) {
+  peerData.forEach((peer) => {
+    peer.send('event', name);
+  });
+}
+
 redisSetStreamCallback('event:stream:update', (key: string, data: any) => {
-  console.log('CREATE STREAM', data);
   if (data.event === 'start' && peerSerial.has(data.node)) {
     const peer = peerSerial.get(data.node);
     const existing = initStream(peer, data.id, data.framesetId, data.frameId);
     if (!existing) {
-      console.log('SEND create_stream RPC');
       peer.rpc('create_stream', () => {
-        console.log('Stream created on client');
         startStream(data.id);
       }, data.id, parseInt(data.framesetId, 10), parseInt(data.frameId, 10));
     }
+  }
+});
+
+redisSetStreamCallback('event:recording', (key: string, data: RecordingEvent) => {
+  switch (data.event) {
+    case 'start': broadcastEvent('recording.start', data.owner); break;
+    case 'complete': broadcastEvent('recording.complete', data.owner); break;
+    case 'cancel': broadcastEvent('recording.cancel', data.owner); break;
+    default:
   }
 });

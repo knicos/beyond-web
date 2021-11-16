@@ -67,6 +67,10 @@ export function PeerRoot(): React.ReactElement {
             setTimeout(createPeer, 1000);
             console.log('Socket disconnect');
         });
+
+        peer.bind('event', (name: string) => {
+          console.log('Service Event', name);
+        });
     }
 
     useEffect(createPeer, [session]);

@@ -11,6 +11,7 @@ services:
       FTL_CONFIG_SERVICE: configservice:8080
       FTL_NODE_SERVICE: nodeservice:8080
       FTL_STREAM_SERVICE: streamservice:8080
+      FTL_RECORDER_SERVICE: recorderservice:8080
       ASSET_PATH: /lab/
     depends_on:
       - socketservice
@@ -18,6 +19,7 @@ services:
       - configservice
       - nodeservice
       - streamservice
+      - recorderservice
   socketservice:
     image: ftlab.utu.fi/app-socketservice
     restart: unless-stopped
@@ -45,6 +47,14 @@ services:
       NODE_ENV: production
       REDIS_HOST: redis
       MONGO_HOST: authmongo
+  recorderservice:
+    image: ftlab.utu.fi/app-recorderservice
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      REDIS_HOST: redis
+    volumes:
+      - /srv/ftl/webapp/data/recordings:/data/ftl
   authservice:
     image: ftlab.utu.fi/app-authservice:${TAG:-latest}
     restart: unless-stopped

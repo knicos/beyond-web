@@ -157,3 +157,28 @@ COPY --from=build /usr/src/app/packages/stream-service/resources/ ./packages/str
 USER node
 
 CMD ["yarn", "workspace", "@ftl/stream-service", "run", "start"]
+
+FROM node:16-alpine AS recorderservice
+
+WORKDIR /usr/src/app
+
+RUN mkdir ./packages ./packages/node-service ./packages/common ./packages/api
+COPY ./package.json ./yarn.lock ./lerna.json ./
+COPY ./packages/common/package.json ./packages/common/
+COPY ./packages/types/package.json ./packages/types/
+COPY ./packages/api/package.json ./packages/api/
+COPY ./packages/recorder-service/package.json ./packages/recorder-service/
+
+RUN yarn install --production \
+  && yarn cache clean \
+  && yarn autoclean --init \
+  && yarn autoclean --force
+
+COPY --from=build /usr/src/app/packages/common/dist/ ./packages/common/dist/
+COPY --from=build /usr/src/app/packages/types/dist/ ./packages/types/dist/
+COPY --from=build /usr/src/app/packages/api/dist/ ./packages/api/dist/
+COPY --from=build /usr/src/app/packages/recorder-service/dist/ ./packages/recorder-service/dist/
+
+USER node
+
+CMD ["yarn", "workspace", "@ftl/recorder-service", "run", "start"]

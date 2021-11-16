@@ -120,6 +120,19 @@ export function redisGet<T>(key: string): Promise<T> {
   });
 }
 
+export function redisMGet<T>(keys: string[]): Promise<T[]> {
+  initRedis();
+  return new Promise((resolve) => {
+    redisClient.mget(...keys, (err, reply) => {
+      if (err) {
+        resolve(null);
+      } else {
+        resolve(JSON.parse(reply))
+      }
+    });
+  });
+}
+
 export function redisDelete(key: string): Promise<boolean> {
   initRedis();
   return new Promise((resolve) => {

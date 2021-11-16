@@ -13,12 +13,14 @@ services:
       FTL_NODE_SERVICE: nodeservice:8080
       FTL_STREAM_SERVICE: streamservice:8080
       FTL_CONFIG_SERVICE: configservice:8080
+      FTL_RECORDER_SERVICE: recorderservice:8080
     depends_on:
       - socketservice
       - authservice
       - configservice
       - nodeservice
       - streamservice
+      - recorderservice
     volumes:
       - ./packages/client/dist:/usr/share/nginx/html
   socketservice:
@@ -68,6 +70,18 @@ services:
       MONGO_HOST: authmongo
     volumes:
       - ./:/usr/src/app
+  recorderservice:
+    image: ftlab.utu.fi/app-recorderservice:${TAG:-latest}
+    build:
+      context: ./
+      dockerfile: ./docker/Dockerfile.services
+      target: recorderservice
+    environment:
+      NODE_ENV: development
+      REDIS_HOST: redis
+    volumes:
+      - ./:/usr/src/app
+      - "$HOME/ftl-data:/data/ftl"
   streamservice:
     image: ftlab.utu.fi/app-streamservice:${TAG:-latest}
     build:
