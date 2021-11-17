@@ -11,7 +11,10 @@ export function recordLatency(latency: number) {
 }
 
 export function getLatency(code: string) {
-  const lat = latencyMap.get(code);
-  latencyMap.delete(code);
-  return Date.now() - lat;
+  if (latencyMap.has(code)) {
+    const lat = latencyMap.get(code);
+    latencyMap.delete(code);
+    return Date.now() - lat;
+  }
+  return 0;
 }
