@@ -13,7 +13,7 @@ interface Props {
 export function ChannelComponent({ channel, value, onChange, hideEditable, hideReadonly }: Props) {
   const schema = (channels as any).properties[`${channel}`];
   if (schema && (!hideEditable || !schema.editable) && (!hideReadonly || schema.editable)) {
-    const Comp = components[schema.component];
+    const Comp = components[schema.component] || components.RawValue;
     if (Comp) {
       return <Comp channel={channel} data={value} config={schema} onChange={onChange} />;
     }

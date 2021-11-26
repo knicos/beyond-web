@@ -124,6 +124,88 @@
       "contentMediaType": "image/jpg",
       "component": "Image"
     },
+    "100": {
+      "type": "number",
+      "title": "Brightness",
+      "default": 100,
+      "component": "EditableValue",
+      "editable": true
+    },
+    "101": {
+      "type": "number",
+      "title": "Contrast",
+      "default": 100,
+      "component": "EditableValue",
+      "editable": true
+    },
+    "102": {
+      "type": "number",
+      "title": "Exposure",
+      "default": 100,
+      "component": "EditableValue",
+      "editable": true
+    },
+    "103": {
+      "type": "number",
+      "title": "Gain",
+      "default": 100,
+      "component": "EditableValue",
+      "editable": true
+    },
+    "104": {
+      "type": "number",
+      "title": "White Balance",
+      "default": 100,
+      "component": "EditableValue",
+      "editable": true
+    },
+    "105": {
+      "type": "number",
+      "title": "Auto Exposure",
+      "default": 0,
+      "enum": [0, 1],
+      "labels": ["Disabled", "Enabled"],
+      "component": "Enumerated",
+      "editable": true
+    },
+    "106": {
+      "type": "number",
+      "title": "Auto White Balance",
+      "default": 0,
+      "enum": [0, 1],
+      "labels": ["Disabled", "Enabled"],
+      "component": "Enumerated",
+      "editable": true
+    },
+    "107": {
+      "type": "number",
+      "title": "Camera Temperature",
+      "default": 100,
+      "component": "RawValue"
+    },
+    "150": {
+      "type": "number",
+      "title": "Laser Power",
+      "default": 100,
+      "component": "EditableValue",
+      "editable": true
+    },
+    "151": {
+      "type": "number",
+      "title": "Minimum Distance",
+      "default": 0,
+      "component": "EditableValue",
+      "editable": true
+    },
+    "153": {
+      "type": "number",
+      "title": "Inter Camera Sync",
+      "default": 0,
+      "enum": [0, 1],
+      "labels": ["Disabled", "Enabled"],
+      "component": "Enumerated",
+      "editable": true
+    },
     "400": {
       "type": "string",
       "title": "Camera Mode",
