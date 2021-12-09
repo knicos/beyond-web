@@ -44,6 +44,7 @@ export class FTLPlayer {
       rotationY: 0,
       rotationZ: 0,
     };
+    private pose: rematrix.Matrix3D;
     private isUserInteracting = false;
     private onPointerDownPointerX = 0;
     private onPointerDownPointerY = 0;
@@ -319,13 +320,31 @@ export class FTLPlayer {
       this.mse.hardReset();
     }
 
+    setPose(pose: rematrix.Matrix3D) {
+      this.pose = pose;
+    }
+
     updatePose() {
+      // update to rotation
       let poseRX = rematrix.rotateX(this.cameraObject.rotationX);
       let poseRY = rematrix.rotateY(this.cameraObject.rotationY);
       let poseRZ = rematrix.rotateZ(this.cameraObject.rotationZ);
+      let poseR = [poseRX, poseRY, poseRZ].reduce(rematrix.multiply);
+
+      // update to translation
       let poseT = rematrix.translate3d(this.cameraObject.translateX, this.cameraObject.translateY, this.cameraObject.translateZ);
-      let pose = [poseT,poseRX,poseRY,poseRZ].reduce(rematrix.multiply);
-      this.emit('pose', pose);
+      
+      // apply and update
+      this.pose = [this.pose, poseT, poseR].reduce(rematrix.multiply);
+
+      this.cameraObject.rotationX = 0;
+      this.cameraObject.rotationY = 0;
+      this.cameraObject.rotationZ = 0;
+      this.cameraObject.translateX = 0;
+      this.cameraObject.translateY = 0;
+      this.cameraObject.translateZ = 0;
+
+      this.emit('pose', this.pose);
     }
 }
 

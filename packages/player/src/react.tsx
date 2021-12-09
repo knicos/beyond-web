@@ -66,6 +66,7 @@ export function ReactPlayer({stream, channel, movement, onSelectPoint, points, i
         state.player.on('reset', () => {
             // Need to request a keyframe now
             stream.keyframe();
+            state.player.setPose(stream.data.get(66));
         });
         state.player.on('select', (x: number, y: number) => {
             if (onSelectPoint) {
