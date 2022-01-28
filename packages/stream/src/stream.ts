@@ -27,6 +27,7 @@ export class FTLStream {
   startTimestamp = 0;
   data = new Map<number, any>();
   interval: NodeJS.Timer;
+  frame = 0;
 
   private statsCount = 0;
   private latencySum = 0;
@@ -61,6 +62,8 @@ export class FTLStream {
             this.lastTimestamp = timestamp;
             this.emit('frameStart', this.lastTimestamp);
         }
+
+        if (frame !== this.frame) return;
 
         if (channel >= 32) {
             if (channel > 64 && pckg[5].length > 0) {
@@ -156,6 +159,7 @@ export class FTLStream {
         return;
       }
       this.active = true;
+      this.frame = frame;
 
       this.interval = setInterval(() => {
         if (this.active && this.found) {
@@ -200,7 +204,7 @@ export class FTLStream {
     }
 
     set(channel: number, value: unknown) {
-        this.peer.send(this.uri, 0, [1, 0 , 0, channel, 0],[103,7,1,0,0, encode(value)]);
+        this.peer.send(this.uri, 0, [1, 0 , this.frame, channel, 0],[103,7,1,0,0, encode(value)]);
     }
 
     getWidth(): number {
