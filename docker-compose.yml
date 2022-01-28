@@ -1,7 +1,7 @@
 version: "3.4"
 services:
   client:
-    image: ftlab.utu.fi/app-client:${TAG:-latest}
+    image: app.ftlab.utu.fi/app-client:${TAG:-latest}
     build:
       context: ./
       dockerfile: ./docker/Dockerfile.client
@@ -24,7 +24,7 @@ services:
     volumes:
       - ./packages/client/dist:/usr/share/nginx/html
   socketservice:
-    image: ftlab.utu.fi/app-socketservice:${TAG:-latest}
+    image: app.ftlab.utu.fi/app-socketservice:${TAG:-latest}
     build:
       context: ./
       dockerfile: ./docker/Dockerfile.services
@@ -38,7 +38,7 @@ services:
     volumes:
       - ./:/usr/src/app
   authservice:
-    image: ftlab.utu.fi/app-authservice:${TAG:-latest}
+    image: app.ftlab.utu.fi/app-authservice:${TAG:-latest}
     build:
       context: ./
       dockerfile: ./docker/Dockerfile.services
@@ -53,7 +53,7 @@ services:
     volumes:
       - ./:/usr/src/app
   nodeservice:
-    image: ftlab.utu.fi/app-nodeservice:${TAG:-latest}
+    image: app.ftlab.utu.fi/app-nodeservice:${TAG:-latest}
     build:
       context: ./
       dockerfile: ./docker/Dockerfile.services
@@ -68,7 +68,7 @@ services:
     volumes:
       - ./:/usr/src/app
   configservice:
-    image: ftlab.utu.fi/app-configservice:${TAG:-latest}
+    image: app.ftlab.utu.fi/app-configservice:${TAG:-latest}
     build:
       context: ./
       dockerfile: ./docker/Dockerfile.services
@@ -83,7 +83,7 @@ services:
     volumes:
       - ./:/usr/src/app
   recorderservice:
-    image: ftlab.utu.fi/app-recorderservice:${TAG:-latest}
+    image: app.ftlab.utu.fi/app-recorderservice:${TAG:-latest}
     build:
       context: ./
       dockerfile: ./docker/Dockerfile.services
@@ -98,7 +98,7 @@ services:
       - ./:/usr/src/app
       - "$HOME/ftl-data:/data/ftl"
   streamservice:
-    image: ftlab.utu.fi/app-streamservice:${TAG:-latest}
+    image: app.ftlab.utu.fi/app-streamservice:${TAG:-latest}
     build:
       context: ./
       dockerfile: ./docker/Dockerfile.services
