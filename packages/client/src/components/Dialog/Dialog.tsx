@@ -17,6 +17,7 @@ const Background = styled.div`
 const Container = styled.div`
   background: white;
   border-radius: 5px;
+  z-index: 2;
 `;
 
 export function Dialog({ show, children }: { show: boolean, children: JSX.Element }) {

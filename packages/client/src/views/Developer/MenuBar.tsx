@@ -3,7 +3,8 @@ import styled from 'styled-components';
 import {IconButton} from '../../components/IconButton';
 import {FaPlay, FaPause, FaSyncAlt, FaCircle} from 'react-icons/fa';
 import { FTLStream } from '@ftl/stream';
-import {startRecording, stopRecording} from '../../api/recorder';
+import {startRecording, stopRecording, ICreateRecording} from '../../api/recorder';
+import {RecordDialog} from './RecordDialog';
 
 const MenuContainer = styled.nav`
     display: flex;
@@ -17,6 +18,7 @@ interface Props {
 export function MenuBar({stream}: Props) {
     const [paused, setPaused] = useState(false);
     const [recording, setRecording] = useState<string>(null);
+    const [showRecording, setShowRecording] = useState(false);
 
     useEffect(() => {
         stream.paused = paused;
@@ -34,11 +36,15 @@ export function MenuBar({stream}: Props) {
               stopRecording(recording);
               setRecording(null);
             } else {
-              const res = await startRecording({streams: [stream.uri], channels: [0]});
-              setRecording(res.id);
+              setShowRecording(true);
             }
           }}>
             <FaCircle color={recording ? 'red' : 'black'}/>
         </IconButton>
+        <RecordDialog show={showRecording} stream={stream} onClose={() => setShowRecording(false)} onRecord={async (data: ICreateRecording) => {
+            const res = await startRecording(data);
+            setRecording(res.id);
+            setShowRecording(false);
+        }} />
     </MenuContainer>;
 }

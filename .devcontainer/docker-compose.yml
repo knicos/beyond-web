@@ -40,6 +40,8 @@ services:
       context: ./
       dockerfile: ./docker/Dockerfile.services
       target: build
+    volumes:
+      - $HOME/ftl-data/recordings:/data/ftl
     command: ["yarn", "workspace", "@ftl/recorder-service", "run", "start:dev"]
 
   watchservice:
