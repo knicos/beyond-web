@@ -269,6 +269,35 @@
       "default": false,
       "component": "EditableValue",
       "editable": "virtual"
+    },
+    "429": {
+      "type": "string",
+      "title": "Render Debug Ouput",
+      "default": "none",
+      "enum": ["none", "derror", "field", "cerror", "inhibition", "orientation", "status", "confidence", "orientations", "lr_error", "gradient", "mipmap"],
+      "editable": "virtual",
+      "component": "Enumerated"
+    },
+    "430": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 8,
+      "default": 0,
+      "title": "Renderer Orientation Layer",
+      "component": "EditableValue",
+      "editable": "virtual"
+    },
+    "431": {
+      "type": "boolean",
+      "title": "Renderer Use Inhibition",
+      "component": "EditableValue",
+      "editable": "virtual"
+    },
+    "432": {
+      "type": "number",
+      "title": "Renderer Field Max",
+      "component": "EditableValue",
+      "editable": "virtual"
     }
   }
 }
