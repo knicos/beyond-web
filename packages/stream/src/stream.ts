@@ -26,6 +26,7 @@ export class FTLStream {
   lastTimestamp = 0;
   startTimestamp = 0;
   data = new Map<number, any>();
+  fsdata = new Map<number, any>();
   interval: NodeJS.Timer;
   frame = 0;
 
@@ -63,10 +64,17 @@ export class FTLStream {
             this.emit('frameStart', this.lastTimestamp);
         }
 
+        if (frame === 255) {
+          if (channel >= 64 && pckg[5].length > 0) {
+            this._decodeFramesetData(channel, pckg[5]);
+            this.emit('fsdata', channel);
+          }
+        }
+
         if (frame !== this.frame) return;
 
         if (channel >= 32) {
-            if (channel > 64 && pckg[5].length > 0) {
+            if (channel >= 64 && pckg[5].length > 0) {
                 this._decodeData(channel, pckg[5]);
             }
             this.emit('packet', streampckg, pckg);
@@ -129,6 +137,15 @@ export class FTLStream {
             console.log('EVENT', data);
             this.emit(data[0]);
         }
+      } catch(err) {
+          console.error('Decode error', err, rawData);
+      }
+    }
+
+    private _decodeFramesetData(channel: number, rawData: Buffer) {
+      try {
+        const data = decode(rawData);
+        this.fsdata.set(channel, data);
       } catch(err) {
           console.error('Decode error', err, rawData);
       }

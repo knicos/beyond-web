@@ -29,7 +29,7 @@ interface ActiveRecording {
   owner: string;
   streams: string[];
   streamCallbacks: Function[];
-  channels: Set<Number>;
+  channels: Set<number>;
   fd: fs.FileHandle;
   size: number;
   timestamp: number;
@@ -70,6 +70,13 @@ function sendReset(uri: string, fsid: number, channel: number) {
   redisPublish(`stream-out:${uri}`, encode([latency, spkt, pkt]));
 }
 
+function sendRequest(uri: string, fsid: number, channel: number) {
+  const latency = 0;
+  const spkt = [1, fsid, 255, channel, 1];
+  const pkt = [255, 7, 35, 255, 0, Buffer.alloc(0)];
+  redisPublish(`stream-out:${uri}`, encode([latency, spkt, pkt]));
+}
+
 async function processPackets(rec: ActiveRecording, entry: Recording) {
   // Write data in correct timestamp order
   const timestamps = Array.from(rec.queue.keys()).sort();
@@ -95,6 +102,15 @@ async function processPackets(rec: ActiveRecording, entry: Recording) {
       duration: entry.duration,
       date: entry.startTime,
     });
+  }
+
+  // Send a request to every stream for each recorded channel to ensure data is sent.
+  // eslint-disable-next-line no-restricted-syntax
+  for (const s of rec.streams) {
+    // eslint-disable-next-line no-restricted-syntax
+    for (const c of rec.channels) {
+      sendRequest(s, 0, c);
+    }
   }
 }
 
