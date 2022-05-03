@@ -20,7 +20,15 @@ export default class UserService {
 
     async $onInit() {
       const admin = await this.getByUsername('admin');
-      const adminGroup = await this.groups.findOne({ name: 'FTL Root' });
+      let adminGroup = await this.groups.findOne({ name: 'FTL Root' });
+
+      if (!adminGroup) {
+        adminGroup = await this.groups.create({
+          name: 'FTL Root',
+          scopes: ['*.*'],
+          children: [],
+        });
+      }
 
       if (!admin) {
         await this.create({
