@@ -28,9 +28,9 @@ export default class GrantService {
       if (!client) {
         // eslint-disable-next-line new-cap
         const newClient = new this.clients({
+          _id: '614d906bf0d4d418b719b9a8',
           name: 'WebApp',
           grantTypes: ['password'],
-          secret: 'l7FNrUMa3ILzi3qiyo5J44wVGC40YTBx',
         });
         const result = await newClient.save();
         $log.info('Client token id', result.id);
@@ -59,7 +59,7 @@ export default class GrantService {
       // Validate the client first
       const { client_id, client_secret } = request;
 
-      if (!client_id || !client_secret) {
+      if (!client_id) {
         throw new OAuthException('invalid_request');
       }
 
