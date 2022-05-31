@@ -206,6 +206,13 @@
       "component": "Enumerated",
       "editable": true
     },
+    "154": {
+      "type": "number",
+      "title": "Post Sharpening",
+      "default": 0,
+      "component": "EditableValue",
+      "editable": true
+    },
     "400": {
       "type": "string",
       "title": "Camera Mode",
@@ -274,7 +281,7 @@
       "type": "string",
       "title": "Render Debug Ouput",
       "default": "none",
-      "enum": ["none", "derror", "field", "cerror", "inhibition", "orientation", "status", "confidence", "orientations", "lr_error", "gradient", "mipmap"],
+      "enum": ["none", "gradientX", "gradientY", "strength"],
       "editable": "virtual",
       "component": "Enumerated"
     },

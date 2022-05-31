@@ -7,7 +7,6 @@ services:
       dockerfile: ./docker/Dockerfile.client
     ports:
       - "8080:8080"
-    restart: on-failure
     environment:
       FTL_SOCKET_SERVICE: socketservice:8080
       FTL_AUTH_SERVICE: authservice:8080
@@ -30,7 +29,6 @@ services:
       context: ./
       dockerfile: ./docker/Dockerfile.services
       target: socketservice
-    restart: on-failure
     environment:
       NODE_ENV: development
       REDIS_HOST: redis
@@ -45,7 +43,6 @@ services:
       context: ./
       dockerfile: ./docker/Dockerfile.services
       target: authservice
-    restart: on-failure
     environment:
       NODE_ENV: development
       REDIS_HOST: redis
@@ -61,7 +58,6 @@ services:
       context: ./
       dockerfile: ./docker/Dockerfile.services
       target: nodeservice
-    restart: on-failure
     environment:
       NODE_ENV: development
       REDIS_HOST: redis
@@ -77,7 +73,6 @@ services:
       context: ./
       dockerfile: ./docker/Dockerfile.services
       target: configservice
-    restart: on-failure
     environment:
       NODE_ENV: development
       REDIS_HOST: redis
@@ -93,7 +88,6 @@ services:
       context: ./
       dockerfile: ./docker/Dockerfile.services
       target: recorderservice
-    restart: on-failure
     environment:
       NODE_ENV: development
       REDIS_HOST: redis
@@ -109,7 +103,6 @@ services:
       context: ./
       dockerfile: ./docker/Dockerfile.services
       target: streamservice
-    restart: on-failure
     environment:
       NODE_ENV: development
       REDIS_HOST: redis
@@ -122,13 +115,11 @@ services:
       
   authmongo:
     image: mongo:4.2
-    restart: on-failure
     ports:
       - "27017:27017"
 
   redis:
-    image: redis:alpine
-    restart: on-failure
+    image: redis:6.2.7-alpine
     volumes:
       - ./.data:/data
     command: redis-server --maxmemory 200mb --save "300 1" --appendonly no
