@@ -1,6 +1,6 @@
-import { DataPacket, Peer, StreamPacket } from '@ftl/protocol';
+import { DataPacket, Peer, StreamPacket } from '@beyond/protocol';
 import { redisPublish, redisSubscribe, redisUnsubscribe } from '@ftl/common';
-import { sendConfigCommand, sendStreamDataEvent } from '@ftl/api';
+import { sendConfigCommand, sendStreamDataEvent, sendStreamUpdateEvent } from '@ftl/api';
 import { recordLatency } from './latencyManager';
 
 const { encode, decode } = require('msgpack5')();
@@ -26,6 +26,8 @@ export default class InputStream {
 
   enabledFrames = new Set<string>();
 
+  seenFrames = new Set<string>();
+
   constructor(uri: string, peer: Peer) {
     this.peer = peer;
     this.uri = uri;
@@ -37,6 +39,7 @@ export default class InputStream {
       const code = recordLatency(latency);
       this.parseFrame(spacket, packet);
       this.pushFrame(code, spacket, packet);
+      // console.log('Got packet', spacket[0], spacket[1], spacket[2], spacket[3]);
     });
 
     this.onMessage = (message) => {
@@ -47,13 +50,27 @@ export default class InputStream {
   }
 
   startStream() {
-    this.peer.send(this.baseUri, 0, [1, 255, 255, 74, 1], [7, 0, 1, 255, 0, new Uint8Array(0)]);
+    this.peer.send(this.baseUri, 0, [1, 255, 255, 74, 5], [7, 0, 10, 255, 0, new Uint8Array(0)]);
+    console.log('Sent start request', this.peer.string_id);
     this.sendEvent('started');
   }
 
   private parseFrame(spacket: StreamPacket, packet: DataPacket) {
     const [ts, fsId, fId, channel] = spacket;
     this.lastTS = Math.max(this.lastTS, ts);
+
+    const frameStr = `${fsId}-${fId}`;
+    if (!this.seenFrames.has(frameStr)) {
+      this.seenFrames.add(frameStr);
+      sendStreamUpdateEvent({
+        event: 'start',
+        id: this.baseUri,
+        name: this.baseUri,
+        node: this.peer.uri,
+        framesetId: fsId,
+        frameId: fId,
+      });
+    }
 
     // MsgPack encoded data channel?
     if (channel >= 64 && packet[5].length > 0 && packet[0] === 103) {
@@ -83,6 +100,14 @@ export default class InputStream {
             id: this.baseUri,
             event: 'thumbnail',
             data: decode(packet[5]).toString('base64'),
+            framesetId: fsId,
+            frameId: fId,
+          });
+        } else if (channel === 71) {
+          sendStreamDataEvent({
+            id: this.baseUri,
+            event: 'metadata',
+            data: decode(packet[5]),
             framesetId: fsId,
             frameId: fId,
           });

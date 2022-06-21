@@ -1,6 +1,6 @@
 /* eslint-disable no-prototype-builtins */
 /* eslint-disable no-param-reassign */
-import { Peer } from '@ftl/protocol';
+import { Peer } from '@beyond/protocol';
 import { AccessToken } from '@ftl/types';
 import { redisSetStreamCallback } from '@ftl/common';
 import { sendNodeUpdateEvent, sendNodeStatsEvent, RecordingEvent } from '@ftl/api';
@@ -13,60 +13,58 @@ const peerUris = {};
 const peerById = {};
 const peerSerial = new Map<string, Peer>();
 
-setInterval(() => {
+setInterval(async () => {
   for (const x in peerById) {
     const p = peerById[x];
     const start = (new Date()).getMilliseconds();
-    p.rpc('__ping__', (ts: number) => {
-      const end = (new Date()).getMilliseconds();
-      p.latency = (end - start) / 2;
-      const [ms, rx, tx] = p.getStatistics();
-      sendNodeStatsEvent({
-        event: 'ping',
-        id: p.uri,
-        latency: p.latency,
-        timestamp: ts,
-        clientId: p.clientId,
-        rxRate: Math.floor(rx / (ms / 1000)),
-        txRate: Math.floor(tx / (ms / 1000)),
-      });
+    const ts: number = await p.rpc('__ping__');
+    const end = (new Date()).getMilliseconds();
+    p.latency = (end - start) / 2;
+    const [ms, rx, tx] = p.getStatistics();
+    sendNodeStatsEvent({
+      event: 'ping',
+      id: p.uri,
+      latency: p.latency,
+      timestamp: ts,
+      clientId: p.clientId,
+      rxRate: Math.floor(rx / (ms / 1000)),
+      txRate: Math.floor(tx / (ms / 1000)),
     });
   }
 }, 20000);
 
 // eslint-disable-next-line import/prefer-default-export
 export function createSource(ws, address: string, token: AccessToken, ephemeral: boolean) {
-  const p = new Peer(ws);
+  const p = new Peer(ws, true);
   peerData.push(p);
 
-  p.on('connect', (peer) => {
-    console.log('Node connected...', token);
+  p.on('connect', async (peer) => {
+    console.log('Node connected...', token, peer.string_id);
     peerUris[peer.string_id] = [];
     peerById[peer.string_id] = peer;
 
-    peer.rpc('node_details', (details) => {
-      const obj = JSON.parse(details[0]);
-      peerSerial.set(obj.id, peer);
+    const details = await peer.rpc('node_details');
 
-      peer.uri = obj.id;
-      peer.name = obj.title;
-      peer.clientId = token.client?.id;
-      peer.master = (obj.kind === 'master');
-      console.log('Peer name = ', peer.name);
-      console.log('Details: ', details);
-      sendNodeUpdateEvent({
-        event: 'connect',
-        id: obj.id,
-        name: obj.title,
-        kind: obj.kind,
-        devices: obj.devices,
-        ip: address,
-        clientId: token.client?.id,
-        userId: token.user?.id,
-        ephemeral: ephemeral ? 'yes' : undefined,
-        groups: token.groups || [],
-      });
-      // checkStreams(peer);
+    const obj = JSON.parse(details[0]);
+    peerSerial.set(obj.id, peer);
+
+    peer.uri = obj.id;
+    peer.name = obj.title;
+    peer.clientId = token.client?.id;
+    peer.master = (obj.kind === 'master');
+    console.log('Peer name = ', peer.name);
+    console.log('Details: ', details);
+    sendNodeUpdateEvent({
+      event: 'connect',
+      id: obj.id,
+      name: obj.title,
+      kind: obj.kind,
+      devices: obj.devices,
+      ip: address,
+      clientId: token.client?.id,
+      userId: token.user?.id,
+      ephemeral: ephemeral ? 'yes' : undefined,
+      groups: token.groups || [],
     });
   });
 
@@ -117,8 +115,8 @@ export function createSource(ws, address: string, token: AccessToken, ephemeral:
 
   // Register a new stream
   /** @deprecated */
-  p.bind('add_stream', () => {
-    // createStream(p, uri, 0, 0);
+  p.bind('add_stream', (uri: string) => {
+    createStream(p, uri, 255, 255);
   });
 
   /** Allow this node to receive specific stream data */
@@ -151,14 +149,13 @@ function broadcastEvent(name: string, owner?: string, groups?: string[]) {
   });
 }
 
-redisSetStreamCallback('event:stream:update', (key: string, data: any) => {
+redisSetStreamCallback('event:stream:update', async (key: string, data: any) => {
   if (data.event === 'start' && peerSerial.has(data.node)) {
     const peer = peerSerial.get(data.node);
     const existing = initStream(peer, data.id, data.framesetId, data.frameId);
     if (!existing) {
-      peer.rpc('create_stream', () => {
-        startStream(data.id);
-      }, data.id, parseInt(data.framesetId, 10), parseInt(data.frameId, 10));
+      await peer.rpc('create_stream', data.id, parseInt(data.framesetId, 10), parseInt(data.frameId, 10));
+      startStream(data.id);
     }
   }
 });

@@ -7,9 +7,8 @@ import { buildCards } from './buildCards';
 
 export default function MainListing() {
   const streams = useRecoilValue(streamList);
-  const nodes = useRecoilValue(nodeList);
 
-  const cardData = buildCards(streams, nodes);
+  const cardData = buildCards(streams, []);
   
   return (
     <>

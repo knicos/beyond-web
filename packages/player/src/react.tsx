@@ -3,6 +3,7 @@ import {FTLPlayer} from './player';
 import {FTLStream} from '@ftl/stream';
 import styled from 'styled-components';
 import {FaPause, FaPlay, FaSpinner} from 'react-icons/fa';
+import * as rematrix from 'rematrix';
 
 const Container = styled.div`
     position: relative;
@@ -56,6 +57,16 @@ type PlayerMode = 'waiting' | 'paused' | 'playing';
 
 type ModeState = [PlayerMode, (mode: PlayerMode) => void];
 
+function waitForPose(stream: FTLStream): Promise<rematrix.Matrix3D> {
+  return new Promise((resolve) => {
+    const f = () => {
+      if (stream.data.has(66)) resolve(stream.data.get(66));
+      else setTimeout(f, 50);
+    };
+    f();
+  });
+}
+
 export function ReactPlayer({stream, channel, movement, onSelectPoint, points, image}: Props) {
     const ref = useRef();
     const [state] = useState<{player: FTLPlayer}>({player: null});
@@ -63,10 +74,10 @@ export function ReactPlayer({stream, channel, movement, onSelectPoint, points, i
 
     useEffect(() => {
         state.player = new FTLPlayer(ref.current);
-        state.player.on('reset', () => {
+        state.player.on('reset', async () => {
             // Need to request a keyframe now
             stream.keyframe();
-            state.player.setPose(stream.data.get(66));
+            state.player.setPose(await waitForPose(stream));
         });
         state.player.on('select', (x: number, y: number) => {
             if (onSelectPoint) {

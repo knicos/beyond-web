@@ -47,10 +47,6 @@ export function SideMenu() {
         <FaHome />
         <MenuText>Home</MenuText>
       </Link>
-      <Link to={`${path}streams`}>
-        <FaVideo />
-        <MenuText>My Streams</MenuText>
-      </Link>
       <Link to={`${path}configs`}>
         <FaTable />
         <MenuText>My Configurations</MenuText>

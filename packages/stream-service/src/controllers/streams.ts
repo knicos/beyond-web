@@ -1,14 +1,13 @@
 /* eslint-disable class-methods-use-this */
 import {
-  BodyParams, Get, Inject, Put, PathParams, QueryParams, Post, Delete,
+  Get, Inject, PathParams, QueryParams,
 } from '@tsed/common';
 import { Description, Groups, Header } from '@tsed/schema';
 import { AccessToken } from '@ftl/types';
 import { Controller, UseToken } from '@ftl/common';
 import { NotFound } from '@tsed/exceptions';
 import fs from 'fs';
-import StreamService from '../services/stream';
-import Stream from '../models/stream';
+import StreamService, { Stream } from '../services/stream';
 import Pageable from '../models/pageable';
 
 const defaultThumb = fs.readFileSync('./resources/thumb.jpg');
@@ -23,20 +22,6 @@ export default class Streams {
   @Groups('query')
   async find(@QueryParams() page: Pageable, @UseToken() token: AccessToken): Promise<Stream[]> {
     return this.streamService.findInGroups(token.user, token.groups, page.offset, page.limit);
-  }
-
-  @Post('/')
-  async create(@BodyParams() @Groups('creation') stream: Stream, @UseToken() token: AccessToken): Promise<Stream> {
-    return this.streamService.create(stream, token.user, token.groups);
-  }
-
-  @Put('/:id')
-  async update(@PathParams('id') id: string, @BodyParams() @Groups('update') stream: Stream, @UseToken() token: AccessToken): Promise<Stream> {
-    const result = await this.streamService.update(id, stream, token.groups);
-    if (!result) {
-      throw new NotFound('stream_not_found');
-    }
-    return result;
   }
 
   @Get('/:id/thumbnail/:fs/:f')
@@ -59,14 +44,5 @@ export default class Streams {
       throw new NotFound('stream_not_found');
     }
     return result;
-  }
-
-  @Delete('/:id')
-  async delete(@PathParams('id') id: string, @UseToken() token: AccessToken): Promise<{count: number}> {
-    const result = await this.streamService.deleteInGroups(id, token.groups);
-    if (result === 0) {
-      throw new NotFound('stream_not_found');
-    }
-    return { count: result };
   }
 }
