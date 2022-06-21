@@ -1,4 +1,4 @@
-import { Peer } from '@ftl/protocol';
+import { Peer } from '@beyond/protocol';
 import {
   redisAddItem, redisRemoveItem, redisTopItems,
 } from '@ftl/common';
@@ -73,8 +73,8 @@ export function removeStreams(peer: Peer) {
       sendStreamUpdateEvent({
         event: 'stop',
         id: puris[i],
-        framesetId: 0, // TODO: Get these from somewhere
-        frameId: 0,
+        framesetId: 255, // TODO: Get these from somewhere
+        frameId: 255,
       });
 
       uriToPeer.delete(puris[i]);
@@ -109,9 +109,16 @@ export function initStream(peer: Peer, uri: string, framesetId: number, frameId:
   uriToPeer.set(parsedURI, peer);
   const is = new InputStream(uri, peer);
   inputStreams.set(parsedURI, is);
-  is.enabledFrames.add(`${framesetId}:${frameId}`);
+  if (framesetId !== 255) {
+    is.enabledFrames.add(`${framesetId}:${frameId}`);
+  }
   redisAddItem('streams', uri, Date.now());
   redisAddItem('activestreams', parsedURI, Date.now());
+  if (nodeCreated) {
+    setTimeout(() => {
+      is.startStream();
+    }, 500);
+  }
   return nodeCreated;
 }
 
@@ -145,12 +152,11 @@ export function checkStreams(peer: Peer) {
   }
 
   if (!peer.master) {
-    setTimeout(() => {
-      peer.rpc('list_streams', (streams: string[]) => {
-        for (let i = 0; i < streams.length; i++) {
-          createStream(peer, streams[i], 0, 0);
-        }
-      });
+    setTimeout(async () => {
+      const streams = await peer.rpc('list_streams') as string[];
+      for (let i = 0; i < streams.length; i++) {
+        createStream(peer, streams[i], 255, 255);
+      }
     }, 500); // Give a delay to allow startup
   }
 }
