@@ -11,6 +11,21 @@ interface Props {
 }
 
 export function ChannelComponent({ channel, value, onChange, hideEditable, hideReadonly }: Props) {
+  if ((channels as any).properties[`${channel}`] === undefined) {
+    const dummyEntry = {
+      title: `Channel ${channel}`,
+      editable: true,
+      component: 'EditableValue',
+      type: 'string'
+    };
+    if (Array.isArray(value)) {
+      dummyEntry.type = "array";
+    } else {
+      dummyEntry.type = typeof value;
+    }
+
+    (channels as any).properties[`${channel}`] = dummyEntry;
+  }
   const schema = (channels as any).properties[`${channel}`];
   if (schema && (!hideEditable || !schema.editable) && (!hideReadonly || schema.editable)) {
     const Comp = components[schema.component] || components.RawValue;
