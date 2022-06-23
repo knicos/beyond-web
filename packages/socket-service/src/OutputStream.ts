@@ -8,7 +8,7 @@ const { encode, decode } = require('msgpack5')();
  * Allow connected nodes to receive stream data from other streams.
  */
 export default class OutputStream {
-  private uri: string;
+  readonly uri: string;
 
   private baseUri: string;
 

@@ -73,7 +73,7 @@ export function removeStreams(peer: Peer) {
       sendStreamUpdateEvent({
         event: 'stop',
         id: puris[i],
-        framesetId: 255, // TODO: Get these from somewhere
+        framesetId: 255,
         frameId: 255,
       });
 
@@ -136,6 +136,7 @@ export function startStream(uri: string) {
 export function createStream(peer: Peer, uri: string, framesetId: number, frameId: number) {
   const parsedURI = removeQueryString(uri);
   uriToPeer.set(parsedURI, peer);
+  initStream(peer, uri, framesetId, frameId);
   sendStreamUpdateEvent({
     event: 'start',
     id: parsedURI,

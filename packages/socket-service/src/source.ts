@@ -5,7 +5,7 @@ import { AccessToken } from '@ftl/types';
 import { redisSetStreamCallback } from '@ftl/common';
 import { sendNodeUpdateEvent, sendNodeStatsEvent, RecordingEvent } from '@ftl/api';
 import {
-  removeStreams, getStreams, bindToStream, createStream, initStream, startStream,
+  removeStreams, getStreams, bindToStream, createStream,
 } from './streams';
 
 const peerData = [];
@@ -17,18 +17,19 @@ setInterval(async () => {
   for (const x in peerById) {
     const p = peerById[x];
     const start = (new Date()).getMilliseconds();
-    const ts: number = await p.rpc('__ping__');
-    const end = (new Date()).getMilliseconds();
-    p.latency = (end - start) / 2;
-    const [ms, rx, tx] = p.getStatistics();
-    sendNodeStatsEvent({
-      event: 'ping',
-      id: p.uri,
-      latency: p.latency,
-      timestamp: ts,
-      clientId: p.clientId,
-      rxRate: Math.floor(rx / (ms / 1000)),
-      txRate: Math.floor(tx / (ms / 1000)),
+    p.rpc('__ping__').then((ts: number) => {
+      const end = (new Date()).getMilliseconds();
+      p.latency = (end - start) / 2;
+      const [ms, rx, tx] = p.getStatistics();
+      sendNodeStatsEvent({
+        event: 'ping',
+        id: p.uri,
+        latency: p.latency,
+        timestamp: ts,
+        clientId: p.clientId,
+        rxRate: Math.floor(rx / (ms / 1000)),
+        txRate: Math.floor(tx / (ms / 1000)),
+      });
     });
   }
 }, 20000);
@@ -69,7 +70,7 @@ export function createSource(ws, address: string, token: AccessToken, ephemeral:
   });
 
   p.on('disconnect', (peer) => {
-    console.log('DISCONNECT', peer.name);
+    console.log('DISCONNECT', peer.string_id);
     // Remove all peer details and streams....
 
     sendNodeUpdateEvent({
@@ -101,10 +102,10 @@ export function createSource(ws, address: string, token: AccessToken, ephemeral:
   /** @deprecated */
   p.proxy('get_configurable', () => '{}');
 
-  /** @deprecated */
+  /* Unused by new protocol */
   p.bind('find_stream', (uri: string, proxy) => {
     if (!proxy) return null;
-    return null; // bindToStream(p, uri);
+    return bindToStream(p, uri);
   });
 
   /** @deprecated */
@@ -114,11 +115,13 @@ export function createSource(ws, address: string, token: AccessToken, ephemeral:
   p.bind('update_cfg', () => '{}')
 
   // Register a new stream
-  /** @deprecated */
   p.bind('add_stream', (uri: string) => {
+    // TODO: Authorise this by checking group membership
+    // It should also validate the URI.
     createStream(p, uri, 255, 255);
   });
 
+  // TODO: Authorise this by checking group membership
   /** Allow this node to receive specific stream data */
   // eslint-disable-next-line no-unused-vars
   p.bind('enable_stream', (uri: string, frameset: number, frame: number) => bindToStream(p, uri));
@@ -126,8 +129,9 @@ export function createSource(ws, address: string, token: AccessToken, ephemeral:
   // eslint-disable-next-line no-unused-vars
   p.bind('disable_stream', (uri: string, frameset: number, frame: number) => true);
 
-  // eslint-disable-next-line no-unused-vars
   p.bind('create_stream', (uri: string, frameset: number, frame: number) => {
+    // TODO: Authorise this by checking group membership
+    // It should also validate the URI.
     createStream(p, uri, frameset, frame);
   });
 
@@ -148,17 +152,6 @@ function broadcastEvent(name: string, owner?: string, groups?: string[]) {
     peer.send('event', name);
   });
 }
-
-redisSetStreamCallback('event:stream:update', async (key: string, data: any) => {
-  if (data.event === 'start' && peerSerial.has(data.node)) {
-    const peer = peerSerial.get(data.node);
-    const existing = initStream(peer, data.id, data.framesetId, data.frameId);
-    if (!existing) {
-      await peer.rpc('create_stream', data.id, parseInt(data.framesetId, 10), parseInt(data.frameId, 10));
-      startStream(data.id);
-    }
-  }
-});
 
 redisSetStreamCallback('event:recording', (key: string, data: RecordingEvent) => {
   switch (data.event) {
