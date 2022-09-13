@@ -3,6 +3,7 @@ import {
   redisAddItem, redisRemoveItem, redisTopItems,
 } from '@ftl/common';
 import { sendStreamUpdateEvent } from '@ftl/api';
+import { $log } from '@tsed/logger';
 import InputStream from './InputStream';
 import OutputStream from './OutputStream';
 
@@ -44,30 +45,30 @@ export async function bindToStream(p: Peer, uri: string) {
   const parsedURI = removeQueryString(uri);
   const streams = await getActiveStreams();
   if (streams.some((s) => s === parsedURI)) {
-    console.log('Stream found: ', uri, parsedURI);
+    $log.info('Stream found: ', uri, parsedURI);
 
     if (!p.isBound(parsedURI)) {
-      console.log('Adding local stream binding: ', parsedURI);
+      $log.info('Adding local stream binding: ', parsedURI);
       outputStreams.set(p.uri, new OutputStream(parsedURI, p));
     }
 
     return [Peer.uuid];
   }
 
-  console.log('Stream not found: ', uri)
+  $log.warn('Stream not found: ', uri)
   return null;
 }
 
 export function removeStreams(peer: Peer) {
-  if (outputStreams.has(peer.uri)) {
-    const os = outputStreams.get(peer.uri);
+  if (outputStreams.has(peer.string_id)) {
+    const os = outputStreams.get(peer.string_id);
     os.destroy();
-    outputStreams.delete(peer.uri);
+    outputStreams.delete(peer.string_id);
   }
-  const puris = peerUris.get(peer.uri);
+  const puris = peerUris.get(peer.string_id);
   if (puris) {
     for (let i = 0; i < puris.length; i++) {
-      console.log('Removing stream: ', puris[i]);
+      $log.info('Removing stream: ', puris[i]);
       redisRemoveItem('activestreams', puris[i]);
 
       sendStreamUpdateEvent({
@@ -83,41 +84,44 @@ export function removeStreams(peer: Peer) {
         inputStreams.delete(puris[i]);
       }
     }
-    peerUris.delete(peer.uri);
+    peerUris.delete(peer.string_id);
   }
 }
 
-export function initStream(peer: Peer, uri: string, framesetId: number, frameId: number): boolean {
+export async function initStream(
+  peer: Peer,
+  uri: string,
+  framesetId: number,
+  frameId: number,
+): Promise<boolean> {
   const parsedURI = removeQueryString(uri)
 
   if (inputStreams.has(uri)) {
     const is = inputStreams.get(uri);
     if (is.enabledFrames.has(`${framesetId}:${frameId}`)) {
-      console.warn('Stream already exists', uri);
+      $log.warn('Stream already exists', uri);
       return true;
     }
     is.enabledFrames.add(`${framesetId}:${frameId}`);
     return false;
   }
 
-  console.log('Initiate stream: ', uri);
+  $log.info('Initiate stream: ', uri);
   const nodeCreated = uriToPeer.has(parsedURI);
-  if (!peerUris.has(peer.uri)) {
-    peerUris.set(peer.uri, []);
+  if (!peerUris.has(peer.string_id)) {
+    peerUris.set(peer.string_id, []);
   }
-  peerUris.get(peer.uri).push(parsedURI);
+  peerUris.get(peer.string_id).push(parsedURI);
   uriToPeer.set(parsedURI, peer);
   const is = new InputStream(uri, peer);
   inputStreams.set(parsedURI, is);
   if (framesetId !== 255) {
     is.enabledFrames.add(`${framesetId}:${frameId}`);
   }
-  redisAddItem('streams', uri, Date.now());
-  redisAddItem('activestreams', parsedURI, Date.now());
+  await redisAddItem('streams', uri, Date.now());
+  await redisAddItem('activestreams', parsedURI, Date.now());
   if (nodeCreated) {
-    setTimeout(() => {
-      is.startStream();
-    }, 500);
+    is.startStream();
   }
   return nodeCreated;
 }
@@ -126,7 +130,7 @@ export function startStream(uri: string) {
   const parsedURI = removeQueryString(uri)
 
   if (!inputStreams.has(parsedURI)) {
-    console.warn('Stream does not exist', uri);
+    $log.warn('Stream does not exist', uri);
     return;
   }
 
@@ -141,15 +145,15 @@ export function createStream(peer: Peer, uri: string, framesetId: number, frameI
     event: 'start',
     id: parsedURI,
     name: parsedURI,
-    node: peer.uri,
+    node: peer.string_id,
     framesetId,
     frameId,
   });
 }
 
 export function checkStreams(peer: Peer) {
-  if (!peerUris.has(peer.uri)) {
-    peerUris.set(peer.uri, []);
+  if (!peerUris.has(peer.string_id)) {
+    peerUris.set(peer.string_id, []);
   }
 
   if (!peer.master) {

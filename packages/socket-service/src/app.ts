@@ -79,7 +79,7 @@ async function authorizeWebsocket(req: express.Request): Promise<AccessToken> {
 app.ws('/v1/socket', async (ws, req) => {
   const token = await authorizeWebsocket(req);
   if (!token) {
-    $log.warn('Closing socket');
+    $log.warn(`Unauthorized socket: ${req.ip}`);
     ws.close(1008);
     return;
   }

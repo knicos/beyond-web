@@ -1,4 +1,5 @@
 import { DataPacket, Peer, StreamPacket } from '@beyond/protocol';
+import { $log } from '@tsed/logger';
 import { redisPublish, redisSubscribe, redisUnsubscribe } from '@ftl/common';
 import { sendConfigCommand, sendStreamDataEvent, sendStreamUpdateEvent } from '@ftl/api';
 import { recordLatency } from './latencyManager';
@@ -28,6 +29,10 @@ export default class InputStream {
 
   seenFrames = new Set<string>();
 
+  seenPacket = 0;
+
+  starting = false;
+
   constructor(uri: string, peer: Peer) {
     this.peer = peer;
     this.uri = uri;
@@ -37,6 +42,7 @@ export default class InputStream {
     // Add RPC handler to receive frames from the source
     peer.bind(this.baseUri, (latency: number, spacket: StreamPacket, packet: DataPacket) => {
       const code = recordLatency(latency);
+      this.seenPacket = -1;
       this.parseFrame(spacket, packet);
       this.pushFrame(code, spacket, packet);
       // console.log('Got packet', spacket[0], spacket[1], spacket[2], spacket[3]);
@@ -50,9 +56,24 @@ export default class InputStream {
   }
 
   startStream() {
-    this.peer.send(this.baseUri, 0, [1, 255, 255, 74, 5], [7, 0, 10, 255, 0, new Uint8Array(0)]);
-    console.log('Sent start request', this.peer.string_id);
-    this.sendEvent('started');
+    if (this.starting) return;
+    this.starting = true;
+    this.pstartStream();
+  }
+
+  private pstartStream() {
+    if (this.seenPacket >= 0) {
+      this.peer.send(this.baseUri, 0, [1, 255, 255, 74, 5], [7, 0, 10, 255, 0, new Uint8Array(0)]);
+      $log.info('Sent start request', this.peer.string_id, this.baseUri);
+      if (this.seenPacket++ < 10) {
+        setTimeout(() => {
+          this.pstartStream();
+        }, 500);
+      }
+    } else {
+      $log.info('Start request has worked');
+      this.sendEvent('started');
+    }
   }
 
   private parseFrame(spacket: StreamPacket, packet: DataPacket) {

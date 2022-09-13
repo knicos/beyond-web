@@ -2,6 +2,7 @@
 /* eslint-disable no-param-reassign */
 import { Peer } from '@beyond/protocol';
 import { AccessToken } from '@ftl/types';
+import { $log } from '@tsed/logger';
 import { redisSetStreamCallback } from '@ftl/common';
 import { sendNodeUpdateEvent, sendNodeStatsEvent, RecordingEvent } from '@ftl/api';
 import {
@@ -40,7 +41,7 @@ export function createSource(ws, address: string, token: AccessToken, ephemeral:
   peerData.push(p);
 
   p.on('connect', async (peer) => {
-    console.log('Node connected...', token, peer.string_id);
+    $log.info('Node connected...', token, peer.string_id);
     peerUris[peer.string_id] = [];
     peerById[peer.string_id] = peer;
 
@@ -53,8 +54,8 @@ export function createSource(ws, address: string, token: AccessToken, ephemeral:
     peer.name = obj.title;
     peer.clientId = token.client?.id;
     peer.master = (obj.kind === 'master');
-    console.log('Peer name = ', peer.name);
-    console.log('Details: ', details);
+    $log.info('Peer name = ', peer.name);
+    $log.info('Details: ', details);
     sendNodeUpdateEvent({
       event: 'connect',
       id: obj.id,
@@ -70,7 +71,7 @@ export function createSource(ws, address: string, token: AccessToken, ephemeral:
   });
 
   p.on('disconnect', (peer) => {
-    console.log('DISCONNECT', peer.string_id);
+    $log.info('DISCONNECT', peer.string_id);
     // Remove all peer details and streams....
 
     sendNodeUpdateEvent({
@@ -119,6 +120,7 @@ export function createSource(ws, address: string, token: AccessToken, ephemeral:
     // TODO: Authorise this by checking group membership
     // It should also validate the URI.
     createStream(p, uri, 255, 255);
+    $log.info('Add stream', uri);
   });
 
   // TODO: Authorise this by checking group membership
@@ -132,6 +134,7 @@ export function createSource(ws, address: string, token: AccessToken, ephemeral:
   p.bind('create_stream', (uri: string, frameset: number, frame: number) => {
     // TODO: Authorise this by checking group membership
     // It should also validate the URI.
+    $log.info('Create stream', uri);
     createStream(p, uri, frameset, frame);
   });
 

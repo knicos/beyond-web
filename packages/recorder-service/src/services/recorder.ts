@@ -202,9 +202,9 @@ export default class RecorderService {
         const [timestamp,,, channel] = spkt;
         // TODO: Filter by FS
         // Skip unwanted channels and empty data.
-        if ((!r.channels.has(channel) && channel < 64) || pkt[5].byteLength === 0) {
-          return;
-        }
+        //if ((!r.channels.has(channel) && channel < 64) || pkt[5].byteLength === 0) {
+        //  return;
+        //}
 
         const reencoded = encode([spkt, pkt]);
         r.timestamp = timestamp;

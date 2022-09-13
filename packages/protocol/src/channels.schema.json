@@ -242,8 +242,8 @@
       "default": 0,
       "title": "Renderer Overlay Channel",
       "component": "Enumerated",
-      "enum": [0, 1],
-      "labels": ["None", "Depth"],
+      "enum": [0, 1, 9],
+      "labels": ["None", "Depth", "Flow"],
       "editable": "virtual"
     },
     "407": {
@@ -281,7 +281,7 @@
       "type": "string",
       "title": "Render Debug Ouput",
       "default": "none",
-      "enum": ["none", "gradientX", "gradientY", "strength"],
+      "enum": ["none", "gradient", "counts", "strength", "segments"],
       "editable": "virtual",
       "component": "Enumerated"
     },
