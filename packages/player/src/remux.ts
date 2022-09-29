@@ -4,6 +4,11 @@ import MP4 from './lib/mp4-generator';
 
 const H264Stream = MUXJS.codecs.h264.H264Stream;
 
+const FRAME_SIZE = 10;    // ms
+const SAMPLE_RATE = 48000;
+const SAMPLES_PER_FRAME = 48000 * (10 / 1000);
+const FRAME_DURATION = FRAME_SIZE * 90;
+
 const VIDEO_PROPERTIES = [
 	'width',
 	'height',
@@ -146,13 +151,13 @@ export class FTLRemux {
 			timelineStartInfo: {
 				baseMediaDecodeTime: 0
 			},
-			baseMediaDecodeTime: 1800,
+			baseMediaDecodeTime: FRAME_DURATION,
 			id: 1,
 			codec: 'opus',
 			type: 'audio',
 			samples: [{
 				size: 0,
-				duration: 1800 //960
+				duration: FRAME_DURATION //960
 			}],
 			duration: 0,
 			insamplerate: 48000,
@@ -221,7 +226,7 @@ export class FTLRemux {
 				result.set(moof);
 				result.set(mdat, moof.byteLength);
 				this.emit('data', result);
-				this.audiotrack.baseMediaDecodeTime += 1800*samples.length; // 1800 = 20ms*90 or frame size 960@48000hz in 90000 ticks/s
+				this.audiotrack.baseMediaDecodeTime += FRAME_DURATION*samples.length; // 1800 = 20ms*90 or frame size 960@48000hz in 90000 ticks/s
 			}
 		} else if(pkt[0] === 2) {  // H264 packet.
       if (!this.seen_keyframe) {

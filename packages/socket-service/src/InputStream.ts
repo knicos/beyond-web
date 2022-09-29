@@ -78,6 +78,9 @@ export default class InputStream {
 
   private parseFrame(spacket: StreamPacket, packet: DataPacket) {
     const [ts, fsId, fId, channel] = spacket;
+    if (ts < this.lastTS) {
+      $log.warn('Out-of-order frames', ts, this.lastTS);
+    }
     this.lastTS = Math.max(this.lastTS, ts);
 
     const frameStr = `${fsId}-${fId}`;
