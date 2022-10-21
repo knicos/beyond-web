@@ -1,5 +1,6 @@
-import { Peer } from '@ftl/protocol';
+import { Peer, getStreamFlags, getChannel } from '@beyond/protocol';
 import { redisPublish, redisSubscribe, redisUnsubscribe } from '@ftl/common';
+import { $log } from '@tsed/logger';
 import { getLatency } from './latencyManager';
 
 const { encode, decode } = require('msgpack5')();
@@ -16,6 +17,12 @@ export default class OutputStream {
 
   private onMessage: Function;
 
+  private bitrateScale = 1.0;
+
+  private lastBufferSize = 0;
+
+  private bitrateCheck = 2000;
+
   constructor(uri, peer) {
     this.peer = peer;
     this.uri = uri;
@@ -24,12 +31,27 @@ export default class OutputStream {
 
     // Add RPC handler to receive frames from the source
     peer.bind(this.baseUri, (latency, spacket, packet) => {
+      // eslint-disable-next-line no-bitwise
+      if (getStreamFlags(spacket) & 0x01) {
+        const c = getChannel(spacket);
+        if (c === 0 || c === 1) {
+          // eslint-disable-next-line no-param-reassign
+          packet[3] = Math.floor(packet[3] * this.bitrateScale);
+        }
+      }
       // Forward frames to redis
       this.pushFrame(latency, spacket, packet);
     });
 
     const onMessage = (message) => {
       const args = decode(message);
+      if (this.bitrateCheck <= 0 && this.peer.sendCount > this.lastBufferSize + 100) {
+        this.lastBufferSize = this.peer.sendCount;
+        $log.info('Peer is buffering: ', this.peer.sendCount);
+        this.bitrateCheck = 500;
+        this.bitrateScale *= 0.9;
+      }
+      --this.bitrateCheck;
       this.peer.send(this.baseUri, getLatency(args[0]), args[1], args[2]);
     };
     this.onMessage = onMessage;

@@ -16,10 +16,9 @@
     "typescript": "^4.3.5"
   },
   "dependencies": {
-    "@beyond/protocol": "^0.1.2",
+    "@beyond/protocol": "^0.1.3",
     "@ftl/api": "1.0.0",
     "@ftl/common": "1.0.0",
-    "@ftl/protocol": "1.0.0",
     "@ftl/types": "1.0.0",
     "@tsed/logger": "^5.17.0",
     "body-parser": "^1.19.0",
