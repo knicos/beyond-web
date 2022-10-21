@@ -6,6 +6,8 @@ services:
       dockerfile: ./docker/Dockerfile.services
       target: build
     command: ["yarn", "workspace", "@ftl/socket-service", "run", "start:dev"]
+    environment:
+      FTL_SOCKET_NOAUTH: "true"
 
   authservice:
     build:

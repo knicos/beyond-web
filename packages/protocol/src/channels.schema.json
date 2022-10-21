@@ -281,7 +281,7 @@
       "type": "string",
       "title": "Render Debug Ouput",
       "default": "none",
-      "enum": ["none", "gradient", "counts", "strength", "segments"],
+      "enum": ["none", "gradient", "counts", "strength", "segments", "orientation", "ogradient", "depthflow", "flowconf", "mask"],
       "editable": "virtual",
       "component": "Enumerated"
     },
@@ -303,6 +303,30 @@
     "433": {
       "type": "number",
       "title": "Renderer Field Max",
+      "component": "EditableValue",
+      "editable": "virtual"
+    },
+    "527": {
+      "type": "boolean",
+      "title": "SKR Show Filling",
+      "component": "EditableValue",
+      "editable": "virtual"
+    },
+    "526": {
+      "type": "number",
+      "title": "SKR Iterations",
+      "component": "EditableValue",
+      "editable": "virtual"
+    },
+    "525": {
+      "type": "boolean",
+      "title": "SKR Temporal Smooth",
+      "component": "EditableValue",
+      "editable": "virtual"
+    },
+    "524": {
+      "type": "boolean",
+      "title": "SKR Enable",
       "component": "EditableValue",
       "editable": "virtual"
     }
