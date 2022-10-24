@@ -19,8 +19,6 @@ export default class OutputStream {
 
   private bitrateScale = 1.0;
 
-  private lastBufferSize = 0;
-
   private bitrateCheck = 2000;
 
   constructor(uri, peer) {
@@ -44,10 +42,15 @@ export default class OutputStream {
     });
 
     const onMessage = (message) => {
+      const stats = this.peer.getStatistics();
+      if (stats.txRatio > 4.0) {
+        $log.warn('Peer closed due to poor connection', stats);
+        this.peer.close();
+        return;
+      }
       const args = decode(message);
-      if (this.bitrateCheck <= 0 && this.peer.sendCount > this.lastBufferSize + 100) {
-        this.lastBufferSize = this.peer.sendCount;
-        $log.info('Peer is buffering: ', this.peer.sendCount);
+      if (this.bitrateCheck <= 0 && stats.txRatio > 1.1) {
+        $log.info('Peer is buffering: ', stats.txRatio);
         this.bitrateCheck = 500;
         this.bitrateScale *= 0.9;
       }

@@ -380,10 +380,10 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@beyond/protocol@^0.1.3":
-  version "0.1.3"
-  resolved "https://gitlab.utu.fi/api/v4/projects/15198/packages/npm/@beyond/protocol/-/@beyond/protocol-0.1.3.tgz#49b7afd3d196cea8e95d38176e36671ef858773d"
-  integrity sha1-Sbev09GWzqjpXTgXbjZnHvhYdz0=
+"@beyond/protocol@^0.1.4":
+  version "0.1.4"
+  resolved "https://gitlab.utu.fi/api/v4/projects/15198/packages/npm/@beyond/protocol/-/@beyond/protocol-0.1.4.tgz#5564b9fa51816697765417f6ed140f69e6841179"
+  integrity sha1-VWS5+lGBZpd2VBf27RQPaeaEEXk=
   dependencies:
     event-emitter "^0.3.5"
     msgpack5 "^5.3.2"
