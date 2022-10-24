@@ -21,15 +21,15 @@ setInterval(async () => {
     p.rpc('__ping__').then((ts: number) => {
       const end = (new Date()).getMilliseconds();
       p.latency = (end - start) / 2;
-      const [ms, rx, tx] = p.getStatistics();
+      const stats = p.getStatistics();
       sendNodeStatsEvent({
         event: 'ping',
         id: p.uri,
         latency: p.latency,
         timestamp: ts,
         clientId: p.clientId,
-        rxRate: Math.floor(rx / (ms / 1000)),
-        txRate: Math.floor(tx / (ms / 1000)),
+        rxRate: stats.rxRate,
+        txRate: stats.txRate,
       });
     });
   }
