@@ -5,6 +5,8 @@ import { getLatency } from './latencyManager';
 
 const { encode, decode } = require('msgpack5')();
 
+type StatsMethod = typeof Peer.prototype.getStatistics;
+
 /**
  * Allow connected nodes to receive stream data from other streams.
  */
@@ -19,7 +21,7 @@ export default class OutputStream {
 
   private bitrateScale = 1.0;
 
-  private bitrateCheck = 2000;
+  private lastStats?: ReturnType<StatsMethod>;
 
   constructor(uri, peer) {
     this.peer = peer;
@@ -42,20 +44,29 @@ export default class OutputStream {
     });
 
     const onMessage = (message) => {
-      const stats = this.peer.getStatistics();
-      if (stats.txRatio > 4.0) {
-        $log.warn('Peer closed due to poor connection', stats);
-        this.peer.close();
-        return;
+      try {
+        const stats = this.peer.getStatistics();
+
+        if (stats !== this.lastStats) {
+          this.lastStats = stats;
+          if (stats.txRatio > 4.0 && this.bitrateScale < 0.1) {
+            this.peer.close();
+            return;
+          }
+          if (stats.txRatio > 1.1) {
+            $log.info('Peer is buffering: ', stats.txRatio);
+            this.bitrateScale *= 0.9;
+          } else {
+            $log.info('Stats', stats);
+          }
+        }
+
+        const args = decode(message);
+
+        this.peer.send(this.baseUri, getLatency(args[0]), args[1], args[2]);
+      } catch (e) {
+        $log.error(e);
       }
-      const args = decode(message);
-      if (this.bitrateCheck <= 0 && stats.txRatio > 1.1) {
-        $log.info('Peer is buffering: ', stats.txRatio);
-        this.bitrateCheck = 500;
-        this.bitrateScale *= 0.9;
-      }
-      --this.bitrateCheck;
-      this.peer.send(this.baseUri, getLatency(args[0]), args[1], args[2]);
     };
     this.onMessage = onMessage;
 
