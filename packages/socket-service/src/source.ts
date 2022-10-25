@@ -79,8 +79,6 @@ export function createSource(ws, address: string, token: AccessToken, ephemeral:
       id: peer.uri,
     });
 
-    if (peer.status !== 2) return;
-
     removeStreams(peer);
     if (peerById.hasOwnProperty(peer.string_id)) delete peerById[peer.string_id];
     if (peerSerial.has(peer.uri)) peerSerial.delete(peer.uri);
