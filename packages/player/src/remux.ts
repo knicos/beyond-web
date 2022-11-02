@@ -85,7 +85,7 @@ function reformAudio(data) {
 			p.set(data.subarray(offset+1, offset+l), 3);
 		}*/
 		//let mdat = MP4.mdat(p);
-		results.push({size: p.byteLength, duration: 1800, data: p});
+		results.push({size: p.byteLength, duration: FRAME_DURATION, data: p});
 		offset += l;
 	}
 
@@ -133,6 +133,7 @@ export class FTLRemux {
 	private track: any;
 	private audiotrack: any;
 	private h264: typeof H264Stream;
+  private lastVideoTimestamp = 0;
 
 	constructor() {
 		this.track = {
@@ -151,14 +152,11 @@ export class FTLRemux {
 			timelineStartInfo: {
 				baseMediaDecodeTime: 0
 			},
-			baseMediaDecodeTime: FRAME_DURATION,
+			baseMediaDecodeTime: 0,
 			id: 1,
 			codec: 'opus',
 			type: 'audio',
-			samples: [{
-				size: 0,
-				duration: FRAME_DURATION //960
-			}],
+			samples: [],
 			duration: 0,
 			insamplerate: 48000,
 			channelcount: 2,
@@ -217,6 +215,7 @@ export class FTLRemux {
 			if (this.has_audio && this.init_seg) {
 				// Split into individual packets and create moof+mdat
 				let samples = reformAudio(pkt[5]);
+        if (samples.length === 0) return;
 				this.audiotrack.samples = samples;
 	
 				// TODO: Can this audio track be combined into same fragment as video frame?
@@ -237,7 +236,8 @@ export class FTLRemux {
       }
     
       if (this.seen_keyframe) {
-        if (this.ts == 0) this.ts = spkt[0];
+        if (this.ts === 0) this.ts = spkt[0];
+        if (this.lastVideoTimestamp === 0) this.lastVideoTimestamp = spkt[0];
 
         if (spkt[0] < this.ts) {
           console.error("Receiver old packet");
@@ -259,8 +259,9 @@ export class FTLRemux {
 
         let sample = this.track.samples[0];
         concatNals(sample);
-        let delta = 10 * 90;
-        sample.duration = (delta > 0) ? delta : 30 * 90;
+        let delta = (spkt[0] - this.lastVideoTimestamp) * 90;
+        this.lastVideoTimestamp = spkt[0];
+        sample.duration = (delta > 0) ? delta : 33.33 * 90;
 
         let moof = MP4.moof(this.sequenceNo++, [this.track]);
         let mdat = MP4.mdat(sample.data);
