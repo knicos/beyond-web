@@ -57,7 +57,7 @@ export default class OutputStream {
             $log.info('Peer is buffering: ', stats.txRatio);
             this.bitrateScale *= 0.9;
           } else {
-            $log.info('Stats', stats);
+            // $log.info('Stats', stats);
           }
         }
 
