@@ -14,26 +14,39 @@ const peerUris = {};
 const peerById = {};
 const peerSerial = new Map<string, Peer>();
 
-setInterval(async () => {
-  for (const x in peerById) {
-    const p = peerById[x];
-    const start = (new Date()).getMilliseconds();
-    p.rpc('__ping__').then((ts: number) => {
-      const end = (new Date()).getMilliseconds();
-      p.latency = (end - start) / 2;
-      const stats = p.getStatistics();
-      sendNodeStatsEvent({
-        event: 'ping',
-        id: p.uri,
-        latency: p.latency,
-        timestamp: ts,
-        clientId: p.clientId,
-        rxRate: stats.rxRate,
-        txRate: stats.txRate,
-      });
-    });
+let timer: NodeJS.Timer = null;
+
+export function clearTimer() {
+  if (timer) timer.unref();
+}
+
+export function reset() {
+  if (timer) {
+    timer.unref();
   }
-}, 20000);
+  timer = setInterval(async () => {
+    for (const x in peerById) {
+      const p = peerById[x];
+      const start = (new Date()).getMilliseconds();
+      p.rpc('__ping__').then((ts: number) => {
+        const end = (new Date()).getMilliseconds();
+        p.latency = (end - start) / 2;
+        const stats = p.getStatistics();
+        sendNodeStatsEvent({
+          event: 'ping',
+          id: p.uri,
+          latency: p.latency,
+          timestamp: ts,
+          clientId: p.clientId,
+          rxRate: stats.rxRate,
+          txRate: stats.txRate,
+        });
+      });
+    }
+  }, 20000);
+}
+
+reset();
 
 // eslint-disable-next-line import/prefer-default-export
 export function createSource(ws, address: string, token: AccessToken, ephemeral: boolean) {
