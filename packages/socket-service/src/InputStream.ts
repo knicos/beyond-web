@@ -49,7 +49,8 @@ export default class InputStream {
     });
 
     this.onMessage = (message) => {
-      const args = decode(message);
+      const buf = (typeof message === 'string') ? new Uint8Array(JSON.parse(message).data) : message;
+      const args = decode(buf);
       this.peer.send(this.baseUri, ...args);
     }
     redisSubscribe(`stream-out:${this.baseUri}`, this.onMessage);

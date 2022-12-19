@@ -44,6 +44,7 @@ export default class OutputStream {
     });
 
     const onMessage = (message) => {
+      const buf = (typeof message === 'string') ? new Uint8Array(JSON.parse(message).data) : message;
       try {
         const stats = this.peer.getStatistics();
 
@@ -61,7 +62,7 @@ export default class OutputStream {
           }
         }
 
-        const args = decode(message);
+        const args = decode(buf);
 
         this.peer.send(this.baseUri, getLatency(args[0]), args[1], args[2]);
       } catch (e) {

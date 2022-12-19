@@ -301,6 +301,7 @@ export function redisHGetM(key: string, items: string[]): Promise<any> {
 export function redisSendEvent(key: string, event: any) {
   initRedis();
   const items = keysFromObject(event);
+  if (!redisClient.xadd) return;
   redisClient.xadd.apply(
     redisClient,
     [
