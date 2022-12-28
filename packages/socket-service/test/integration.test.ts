@@ -98,7 +98,7 @@ describe('Socket-service integration test', () => {
 
       expect(redisAddItem).toHaveBeenCalledWith('streams', 'ftl://test', expect.any(Number));
       expect(redisAddItem).toHaveBeenCalledWith('activestreams', 'ftl://test', expect.any(Number));
-      expect(redisSendEvent).toHaveBeenCalledWith('event:stream:update', expect.any(Object));
+      expect(redisSendEvent).toHaveBeenCalledWith({ event: 'events:stream', body: expect.any(Object) });
 
       ws.close();
 

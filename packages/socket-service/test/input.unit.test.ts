@@ -60,7 +60,7 @@ describe('Input Stream unit test', () => {
     const result = await promise;
     const dresult = decode(result);
     expect(dresult).toEqual(['latency:0', [0, 0, 0, 0, 0], [0, 0, 0, 0, []]]);
-    expect(redisSendEvent).toHaveBeenCalledWith('event:stream:update', expect.any(Object));
+    expect(redisSendEvent).toHaveBeenCalledWith({ event: 'events:stream', body: expect.any(Object) });
   });
 
   it('extracts data channels', async () => {
@@ -77,6 +77,6 @@ describe('Input Stream unit test', () => {
     p.bindings['ftl://test'](0, [0, 0, 0, 74, 0], [103, 0, 0, 0, 0, encode('hello')]);
 
     expect(is.data[74]).toBe('hello');
-    expect(redisSendEvent).toHaveBeenCalledWith('event:stream:data', expect.any(Object));
+    expect(redisSendEvent).toHaveBeenCalledWith({ event: 'events:stream', body: expect.any(Object) });
   });
 });

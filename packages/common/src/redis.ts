@@ -1,6 +1,8 @@
 import redis from 'redis';
 import { v4 as uuidv4 } from 'uuid';
 import { $log } from '@tsed/logger';
+import { BaseEventBody, Event } from '@ftl/api';
+import * as fs from 'fs';
 
 let redisClient: redis.RedisClient;
 let redisSub: redis.RedisClient;
@@ -255,7 +257,9 @@ function keysFromObject(obj: any): string[] {
 function objectFromKeys(keys: string[]): any {
   const obj = {};
   for (let i = 0; i < keys.length; i += 2) {
-    obj[keys[i]] = keys[i + 1];
+    const k = keys[i + 1];
+    // eslint-disable-next-line no-restricted-globals
+    obj[keys[i]] = (isNaN(k as any)) ? k : parseFloat(k);
   }
   return obj;
 }
@@ -298,14 +302,14 @@ export function redisHGetM(key: string, items: string[]): Promise<any> {
   });
 }
 
-export function redisSendEvent(key: string, event: any) {
+export function redisSendEvent<T extends Event>(event: T) {
   initRedis();
-  const items = keysFromObject(event);
+  const items = keysFromObject(event.body);
   if (!redisClient.xadd) return;
   redisClient.xadd.apply(
     redisClient,
     [
-      key, 'MAXLEN', '~', '1000', '*',
+      event.event, 'MAXLEN', '~', '1000', '*',
       ...items, (err) => {
         if (err) {
           $log.error('Redis event error', err);
@@ -318,8 +322,8 @@ export function redisSendEvent(key: string, event: any) {
 const streamKeys = new Set<string>();
 let streamListen = false;
 // eslint-disable-next-line no-unused-vars
-type StreamCallback = (key: string, data: unknown, id: string) => void;
-const streamCallbacks = new Map<string, StreamCallback>();
+type StreamCallback<T extends BaseEventBody> = (data: T, id: string) => void;
+const streamCallbacks = new Map<string, StreamCallback<BaseEventBody>>();
 let streamID = '0';
 let consumerGroup = null;
 
@@ -340,13 +344,23 @@ export async function redisCreateGroup(stream: string): Promise<number> {
   });
 }
 
-export function redisSetStreamCallback(key: string, cb: StreamCallback): Promise<number> {
+export function redisSetStreamCallback<T extends Event>(key: T['event'], cb: StreamCallback<T['body']>): Promise<number> {
   streamCallbacks.set(key, cb);
   streamKeys.add(key);
   return redisCreateGroup(key);
 }
 
-export function redisStreamListen(name?: string, newKeys?: string[]) {
+export function redisStreamListen(optName?: string, newKeys?: string[]) {
+  let name = optName;
+
+  if (!name) {
+    if (fs.existsSync('/tmp/serviceid')) {
+      name = fs.readFileSync('/tmp/serviceid', 'utf8');
+    } else {
+      name = uuidv4();
+      fs.writeFileSync('/tmp/serviceid', name);
+    }
+  }
   initRedis();
 
   if (Array.isArray(newKeys)) {
@@ -384,7 +398,7 @@ export function redisStreamListen(name?: string, newKeys?: string[]) {
               const obj = objectFromKeys(columns);
               if (streamCallbacks.has(key)) {
                 try {
-                  streamCallbacks.get(key)(key, obj, id);
+                  streamCallbacks.get(key)(obj, id);
                 } catch (e) {
                   $log.error('Stream callback error', e);
                 }
@@ -411,7 +425,7 @@ export function redisStreamListen(name?: string, newKeys?: string[]) {
               const obj = objectFromKeys(columns);
               if (streamCallbacks.has(key)) {
                 try {
-                  streamCallbacks.get(key)(key, obj, id);
+                  streamCallbacks.get(key)(obj, id);
                 } catch (e) {
                   $log.error('Stream callback error', e);
                 }

@@ -14,7 +14,6 @@ COPY ./packages/api/package.json ./packages/api/
 COPY ./packages/socket-service/package.json ./packages/socket-service/
 COPY ./packages/node-service/package.json ./packages/node-service/
 COPY ./packages/auth-service/package.json ./packages/auth-service/
-COPY ./packages/configuration-service/package.json ./packages/configuration-service/
 COPY ./packages/stream-service/package.json ./packages/stream-service/
 
 RUN yarn install && yarn cache clean
@@ -106,31 +105,6 @@ COPY --from=build /usr/src/app/packages/node-service/dist/ ./packages/node-servi
 USER node
 
 CMD ["yarn", "workspace", "@ftl/node-service", "run", "start"]
-
-FROM node:16-alpine AS configservice
-
-WORKDIR /usr/src/app
-
-RUN mkdir ./packages ./packages/configuration-service ./packages/common ./packages/api
-COPY ./package.json ./yarn.lock ./lerna.json ./jest.config.js ./
-COPY ./packages/common/package.json ./packages/common/
-COPY ./packages/types/package.json ./packages/types/
-COPY ./packages/api/package.json ./packages/api/
-COPY ./packages/configuration-service/package.json ./packages/configuration-service/
-
-RUN yarn install --production \
-  && yarn cache clean \
-  && yarn autoclean --init \
-  && yarn autoclean --force
-
-COPY --from=build /usr/src/app/packages/common/dist/ ./packages/common/dist/
-COPY --from=build /usr/src/app/packages/types/dist/ ./packages/types/dist/
-COPY --from=build /usr/src/app/packages/api/dist/ ./packages/api/dist/
-COPY --from=build /usr/src/app/packages/configuration-service/dist/ ./packages/configuration-service/dist/
-
-USER node
-
-CMD ["yarn", "workspace", "@ftl/config-service", "run", "start"]
 
 FROM node:16-alpine AS streamservice
 

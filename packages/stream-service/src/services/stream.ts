@@ -10,6 +10,7 @@ import {
   redisHSet,
   redisHGetM,
 } from '@ftl/common';
+import { StreamDataEventBody, StreamOperationEventBody } from '@ftl/api';
 
 const HOUR = 60 * 60;
 
@@ -57,27 +58,27 @@ export default class StreamService {
     }
 
     async $onInit() {
-      redisSetStreamCallback('event:stream:data', async (key: string, data: any) => {
-        if (data.event === 'thumbnail') {
+      redisSetStreamCallback('events:stream:data', async (data: StreamDataEventBody) => {
+        if (data.channel === 'thumbnail') {
           const stream = this.streams.get(data.id);
           if (stream) {
-            await redisSet(`stream:thumbnail:${stream.id}:${data.framesetId}:${data.frameId}`, data.data);
+            await redisSet(`stream:thumbnail:${stream.id}:${data.framesetId}:${data.frameId}`, data.value);
           }
-        } else if (data.event === 'metadata') {
+        } else if (data.channel === 'metadata') {
           const f = this.getFrame(
             data.id,
-            parseInt(data.framesetId, 10),
-            parseInt(data.frameId, 10),
+            data.framesetId,
+            data.frameId,
           );
           if (f) {
-            f.title = JSON.parse(data.data).name;
+            f.title = JSON.parse(data.value as string).name;
           }
         }
       });
-      redisSetStreamCallback('event:stream:update', async (key: string, data: any) => {
-        if (data.event === 'start') {
+      redisSetStreamCallback('events:stream', async (data: StreamOperationEventBody) => {
+        if (data.operation === 'start') {
           console.log('Stream update:', data);
-          if (data.framesetId === '255') {
+          if (data.framesetId === 255) {
             this.streams.set(data.id, {
               id: uuidv4(),
               uri: data.id,
@@ -85,8 +86,8 @@ export default class StreamService {
             });
           } else {
             const s = this.streams.get(data.id);
-            const fsid = parseInt(data.framesetId, 10);
-            const fid = parseInt(data.frameId, 10);
+            const fsid = data.framesetId;
+            const fid = data.frameId;
             while (s.framesets.length <= fsid) {
               s.framesets.push({
                 framesetId: fsid,
@@ -107,7 +108,7 @@ export default class StreamService {
 
             this.updateStats(s.id, fsid, fid, { active: true });
           }
-        } else if (data.event === 'stop') {
+        } else if (data.operation === 'stop') {
           if (this.streams.has(data.id)) {
             const s = this.streams.get(data.id);
             for (const fs of s.framesets) {
@@ -119,9 +120,9 @@ export default class StreamService {
         }
       });
       // Subscribe to node streams.
-      redisSetStreamCallback('event:node:update', async (key: string, data: any) => {
-        console.log('NODE UPDATE', data);
-      });
+      // redisSetStreamCallback('event:node:update', async (key: string, data: any) => {
+      //  console.log('NODE UPDATE', data);
+      // });
     }
 
     async findInGroups(user: IUser, groups: string[], offset: number, limit: number) {

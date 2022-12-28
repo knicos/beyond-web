@@ -8,7 +8,6 @@ services:
     environment:
       FTL_SOCKET_SERVICE: socketservice:8080
       FTL_AUTH_SERVICE: authservice:8080
-      FTL_CONFIG_SERVICE: configservice:8080
       FTL_NODE_SERVICE: nodeservice:8080
       FTL_STREAM_SERVICE: streamservice:8080
       FTL_RECORDER_SERVICE: recorderservice:8080
@@ -35,13 +34,6 @@ services:
       MONGO_HOST: authmongo
   streamservice:
     image: ftlab.utu.fi/app-streamservice
-    restart: unless-stopped
-    environment:
-      NODE_ENV: production
-      REDIS_HOST: redis
-      MONGO_HOST: authmongo
-  configservice:
-    image: ftlab.utu.fi/app-configservice
     restart: unless-stopped
     environment:
       NODE_ENV: production
