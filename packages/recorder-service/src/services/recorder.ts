@@ -12,7 +12,8 @@ import {
   redisRemoveItem,
   redisGet,
 } from '@ftl/common';
-import { sendRecordingEvent } from '@ftl/api';
+import { RecordingEvent } from '@ftl/api';
+import { redisSendEvent } from '@ftl/common';
 import fs from 'fs/promises';
 import { BadRequest, NotFound } from '@tsed/exceptions';
 import Recording from '../models/recording';
@@ -93,14 +94,17 @@ async function processPackets(rec: ActiveRecording, entry: Recording) {
     activeRecordings.delete(rec.id);
     await redisRemoveItem(`recordings:list:${rec.owner}`, rec.id);
     await rec.fd.close();
-    sendRecordingEvent({
-      id: rec.id,
-      owner: rec.owner,
-      filename: entry.filename,
-      event: 'complete',
-      size: rec.size,
-      duration: entry.duration,
-      date: entry.startTime,
+    redisSendEvent<RecordingEvent>({
+      event: 'events:recording',
+      body: {
+        id: rec.id,
+        owner: rec.owner,
+        filename: entry.filename,
+        event: 'complete',
+        size: rec.size,
+        duration: entry.duration,
+        date: entry.startTime,
+      },
     });
   }
 
@@ -224,14 +228,17 @@ export default class RecorderService {
     }
     activeRecordings.set(newEntry.id, r);
 
-    sendRecordingEvent({
-      id: r.id,
-      owner: r.owner,
-      filename,
-      event: 'start',
-      size: 0,
-      duration: 0,
-      date: newEntry.startTime,
+    redisSendEvent<RecordingEvent>({
+      event: 'events:recording',
+      body: {
+        id: r.id,
+        owner: r.owner,
+        filename,
+        event: 'start',
+        size: 0,
+        duration: 0,
+        date: newEntry.startTime,
+      },
     });
 
     return { ...newEntry, filename: undefined };

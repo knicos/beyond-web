@@ -30,13 +30,6 @@ services:
       target: build
     command: ["yarn", "workspace", "@ftl/stream-service", "run", "start:dev"]
 
-  configservice:
-    build:
-      context: ./
-      dockerfile: ./docker/Dockerfile.services
-      target: build
-    command: ["yarn", "workspace", "@ftl/config-service", "run", "start:dev"]
-
   recorderservice:
     build:
       context: ./

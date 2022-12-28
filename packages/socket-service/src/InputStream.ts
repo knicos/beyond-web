@@ -1,7 +1,8 @@
 import { DataPacket, Peer, StreamPacket } from '@beyond/protocol';
 import { $log } from '@tsed/logger';
-import { redisPublish, redisSubscribe, redisUnsubscribe } from '@ftl/common';
-import { sendConfigCommand, sendStreamDataEvent, sendStreamUpdateEvent } from '@ftl/api';
+import {
+  redisPublish, redisSendEvent, redisSubscribe, redisUnsubscribe,
+} from '@ftl/common';
 import { recordLatency } from './latencyManager';
 
 const { encode, decode } = require('msgpack5')();
@@ -87,13 +88,17 @@ export default class InputStream {
     const frameStr = `${fsId}-${fId}`;
     if (!this.seenFrames.has(frameStr)) {
       this.seenFrames.add(frameStr);
-      sendStreamUpdateEvent({
-        event: 'start',
-        id: this.baseUri,
-        name: this.baseUri,
-        node: this.peer.uri,
-        framesetId: fsId,
-        frameId: fId,
+      redisSendEvent({
+        event: 'events:stream',
+        body: {
+          operation: 'start',
+          id: this.baseUri,
+          node: this.peer.uri,
+          framesetId: fsId,
+          frameId: fId,
+          owner: '',
+          groups: [],
+        },
       });
     }
 
@@ -101,44 +106,31 @@ export default class InputStream {
     if (channel >= 64 && packet[5].length > 0 && packet[0] === 103) {
       const decoded = decode(packet[5]);
 
-      if (channel === 69) {
-        if (decoded[0] === 'save_data') {
-          sendStreamDataEvent({
+      // Thumbnail
+      if (channel === 74) {
+        redisSendEvent({
+          event: 'events:stream:data',
+          body: {
             id: this.baseUri,
-            event: 'request',
-            data: this.data,
+            channel: 'thumbnail',
+            value: decode(packet[5]).toString('base64'),
             framesetId: fsId,
             frameId: fId,
-          });
-        } else if (decoded[0] === 'restore_data') {
-          sendConfigCommand({
+          },
+        });
+      } else if (channel === 71) {
+        redisSendEvent({
+          event: 'events:stream:data',
+          body: {
             id: this.baseUri,
-            cmd: 'restore',
+            channel: 'metadata',
+            value: decode(packet[5]),
             framesetId: fsId,
             frameId: fId,
-          });
-        }
-      } else {
-        // Thumbnail
-        if (channel === 74) {
-          sendStreamDataEvent({
-            id: this.baseUri,
-            event: 'thumbnail',
-            data: decode(packet[5]).toString('base64'),
-            framesetId: fsId,
-            frameId: fId,
-          });
-        } else if (channel === 71) {
-          sendStreamDataEvent({
-            id: this.baseUri,
-            event: 'metadata',
-            data: decode(packet[5]),
-            framesetId: fsId,
-            frameId: fId,
-          });
-        }
-        this.data[channel] = decoded;
+          },
+        });
       }
+      this.data[channel] = decoded;
     }
   }
 

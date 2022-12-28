@@ -27,7 +27,7 @@ export default class Server {
   }
 
   public $afterInit() {
-    redisStreamListen('consumer1');
+    redisStreamListen();
   }
 
   /**

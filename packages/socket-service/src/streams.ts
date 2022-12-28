@@ -1,8 +1,7 @@
 import { Peer } from '@beyond/protocol';
 import {
-  redisAddItem, redisRemoveItem, redisTopItems,
+  redisAddItem, redisRemoveItem, redisTopItems, redisSendEvent,
 } from '@ftl/common';
-import { sendStreamUpdateEvent } from '@ftl/api';
 import { $log } from '@tsed/logger';
 import InputStream from './InputStream';
 import OutputStream from './OutputStream';
@@ -71,11 +70,14 @@ export function removeStreams(peer: Peer) {
       $log.info('Removing stream: ', puris[i]);
       redisRemoveItem('activestreams', puris[i]);
 
-      sendStreamUpdateEvent({
-        event: 'stop',
-        id: puris[i],
-        framesetId: 255,
-        frameId: 255,
+      redisSendEvent({
+        event: 'events:stream',
+        body: {
+          operation: 'stop',
+          id: puris[i],
+          framesetId: 255,
+          frameId: 255,
+        },
       });
 
       uriToPeer.delete(puris[i]);
@@ -141,13 +143,16 @@ export function createStream(peer: Peer, uri: string, framesetId: number, frameI
   const parsedURI = removeQueryString(uri);
   uriToPeer.set(parsedURI, peer);
   initStream(peer, uri, framesetId, frameId);
-  sendStreamUpdateEvent({
-    event: 'start',
-    id: parsedURI,
-    name: parsedURI,
-    node: peer.string_id,
-    framesetId,
-    frameId,
+  redisSendEvent({
+    event: 'events:stream',
+    body: {
+      operation: 'start',
+      id: parsedURI,
+      name: parsedURI,
+      node: peer.string_id,
+      framesetId,
+      frameId,
+    },
   });
 }
 

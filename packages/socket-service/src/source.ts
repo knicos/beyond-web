@@ -3,15 +3,15 @@
 import { Peer } from '@beyond/protocol';
 import { AccessToken } from '@ftl/types';
 import { $log } from '@tsed/logger';
-import { redisSetStreamCallback } from '@ftl/common';
-import { sendNodeUpdateEvent, sendNodeStatsEvent, RecordingEvent } from '@ftl/api';
+import { redisSetStreamCallback, redisSendEvent } from '@ftl/common';
+import { RecordingEventBody } from '@ftl/api';
 import {
   removeStreams, getStreams, bindToStream, createStream,
 } from './streams';
 
 const peerData = [];
 const peerUris = {};
-const peerById = {};
+const peerById = new Map<string, Peer>();
 const peerSerial = new Map<string, Peer>();
 
 let timer: NodeJS.Timer = null;
@@ -25,22 +25,26 @@ export function reset() {
     timer.unref();
   }
   timer = setInterval(async () => {
-    for (const x in peerById) {
-      const p = peerById[x];
+    for (const x in peerById.keys()) {
+      const p = peerById.get(x);
       const start = (new Date()).getMilliseconds();
-      p.rpc('__ping__').then((ts: number) => {
+      p.rpc('__ping__').then(() => {
         const end = (new Date()).getMilliseconds();
         p.latency = (end - start) / 2;
         const stats = p.getStatistics();
-        sendNodeStatsEvent({
-          event: 'ping',
-          id: p.uri,
-          latency: p.latency,
-          timestamp: ts,
-          clientId: p.clientId,
-          rxRate: stats.rxRate,
-          txRate: stats.txRate,
-        });
+        redisSendEvent({
+          event: 'events:node:metric',
+          body: {
+            metric: 'summary',
+            txTotal: stats.txTotal,
+            rxTotal: stats.rxTotal,
+            txRate: stats.txRate,
+            rxRate: stats.rxRate,
+            latency: p.latency,
+            id: p.uri,
+            bufferSize: stats.txRequested,
+          },
+        })
       });
     }
   }, 20000);
@@ -56,7 +60,7 @@ export function createSource(ws, address: string, token: AccessToken, ephemeral:
   p.on('connect', async (peer) => {
     $log.info('Node connected...', token, peer.string_id);
     peerUris[peer.string_id] = [];
-    peerById[peer.string_id] = peer;
+    peerById.set(peer.string_id, peer);
 
     const details = await peer.rpc('node_details');
 
@@ -69,17 +73,21 @@ export function createSource(ws, address: string, token: AccessToken, ephemeral:
     peer.master = (obj.kind === 'master');
     $log.info('Peer name = ', peer.name);
     $log.info('Details: ', details);
-    sendNodeUpdateEvent({
-      event: 'connect',
-      id: obj.id,
-      name: obj.title,
-      kind: obj.kind,
-      devices: obj.devices,
-      ip: address,
-      clientId: token.client?.id,
-      userId: token.user?.id,
-      ephemeral: ephemeral ? 'yes' : undefined,
-      groups: token.groups || [],
+    redisSendEvent({
+      event: 'events:node',
+      body: {
+        operation: 'connect',
+        id: obj.id,
+        name: obj.title,
+        kind: obj.kind,
+        devices: obj.devices || [],
+        ip: address,
+        clientId: token.client?.id || '',
+        userId: token.user?.id,
+        ephemeral,
+        groups: token.groups || [],
+        serviceId: '', // TODO
+      },
     });
   });
 
@@ -87,13 +95,16 @@ export function createSource(ws, address: string, token: AccessToken, ephemeral:
     $log.info('DISCONNECT', peer.string_id);
     // Remove all peer details and streams....
 
-    sendNodeUpdateEvent({
-      event: 'disconnect',
-      id: peer.uri,
+    redisSendEvent({
+      event: 'events:node',
+      body: {
+        operation: 'disconnect',
+        id: peer.uri,
+      },
     });
 
     removeStreams(peer);
-    if (peerById.hasOwnProperty(peer.string_id)) delete peerById[peer.string_id];
+    if (peerById.has(peer.string_id)) peerById.delete(peer.string_id);
     if (peerSerial.has(peer.uri)) peerSerial.delete(peer.uri);
   });
 
@@ -150,10 +161,14 @@ export function createSource(ws, address: string, token: AccessToken, ephemeral:
   });
 
   p.bind('error', (message: string) => {
-    sendNodeUpdateEvent({
-      event: 'error',
-      id: p.uri,
-      message,
+    redisSendEvent({
+      event: 'events:node:log',
+      body: {
+        id: p.uri,
+        level: 2,
+        timestamp: Date.now(),
+        message: `Connection error: ${message}`,
+      },
     });
   });
 
@@ -167,7 +182,7 @@ function broadcastEvent(name: string, owner?: string, groups?: string[]) {
   });
 }
 
-redisSetStreamCallback('event:recording', (key: string, data: RecordingEvent) => {
+redisSetStreamCallback('events:recording', (data: RecordingEventBody) => {
   switch (data.event) {
     case 'start': broadcastEvent('recording.start', data.owner); break;
     case 'complete': broadcastEvent('recording.complete', data.owner); break;

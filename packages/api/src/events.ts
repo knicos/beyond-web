@@ -1,4 +1,10 @@
-export interface BaseEvent {
-  id: string;
-  event: string;
-}
+import { StreamEvents, NodeEvents } from './socket-service/events';
+
+import {
+  RecordingEvent,
+} from './recorder-service';
+
+export type Event =
+  | StreamEvents
+  | NodeEvents
+  | RecordingEvent;

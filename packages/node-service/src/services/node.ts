@@ -3,6 +3,13 @@ import { MongooseModel } from '@tsed/mongoose';
 import {
   redisSetStreamCallback, redisHSet, redisAddItem, redisHGetM,
 } from '@ftl/common';
+import {
+  NodeDisconnectEventBody,
+  NodeConnectEventBody,
+  NodeSummaryMetricBody,
+  StreamOperationStopEventBody,
+  StreamOperationStartEventBody,
+} from '@ftl/api';
 import Node from '../models/node';
 import NodeQuery from '../models/query';
 
@@ -15,16 +22,16 @@ export default class NodeService {
 
     async $onInit() {
       // Subscribe to node streams.
-      redisSetStreamCallback('event:node:update', async (key: string, data: any) => {
-        if (data.event === 'connect') {
+      redisSetStreamCallback('events:node', async (data: NodeConnectEventBody | NodeDisconnectEventBody) => {
+        if (data.operation === 'connect') {
           this.connectNode(data);
         }
       });
-      redisSetStreamCallback('event:node:stats', async (key: string, data: any) => {
+      redisSetStreamCallback('events:node:metric', async (data: NodeSummaryMetricBody) => {
         this.updateStats(data);
       });
-      redisSetStreamCallback('event:stream:update', async (key: string, data: any) => {
-        if (data.node && data.name) {
+      redisSetStreamCallback('events:stream', async (data: StreamOperationStopEventBody | StreamOperationStartEventBody) => {
+        if (data.operation === 'start') {
           const result = await this.nodes.findOneAndUpdate({
             serial: data.node,
             'streams.uri': data.id,
@@ -32,7 +39,7 @@ export default class NodeService {
             $set: {
               'streams.$': {
                 uri: data.id,
-                name: data.name,
+                name: data.id,
                 framesetId: data.framesetId,
                 frameId: data.frameId,
               },
@@ -46,7 +53,7 @@ export default class NodeService {
               $push: {
                 streams: {
                   uri: data.id,
-                  name: data.name,
+                  name: data.id,
                   framesetId: data.framesetId,
                   frameId: data.frameId,
                 },
