@@ -77,19 +77,19 @@ async function authorizeWebsocket(req: express.Request): Promise<AccessToken> {
 }
 
 app.ws('/v1/socket', async (ws, req) => {
-  let token: AccessToken = {
-    id: 'no-id',
-    groups: [],
-    scopes: [],
-    scope: '',
-  };
+  let token: AccessToken = await authorizeWebsocket(req);
   // Allow authorization to be disabled
-  if (process.env.FTL_SOCKET_NOAUTH !== 'true') {
-    token = await authorizeWebsocket(req);
-    if (!token) {
-      $log.warn(`Unauthorized socket: ${req.ip}`);
-      ws.close(1008);
-      return;
+  if (process.env.FTL_SOCKET_NOAUTH !== 'true' && !token) {
+    $log.warn(`Unauthorized socket: ${req.ip}`);
+    ws.close(1008);
+    return;
+  }
+  if (!token) {
+    token = {
+      id: 'no-id',
+      groups: [],
+      scopes: [],
+      scope: '',
     }
   }
   createSource(ws, req.headers['x-forwarded-for'] as string, token, !!req.headers['user-agent']);
