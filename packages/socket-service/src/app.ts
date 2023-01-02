@@ -7,6 +7,12 @@ import {
 import { $log } from '@tsed/logger';
 import { AccessToken } from '@ftl/types';
 import { createSource } from './source';
+import './logger';
+
+$log.appenders.set('redis', {
+  type: 'redis',
+  level: ['warn', 'info', 'error', 'fatal'],
+});
 
 const { app } = expressWs(express());
 

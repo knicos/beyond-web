@@ -1,7 +1,15 @@
 import { Configuration, Inject, PlatformApplication } from '@tsed/common';
+import { $log } from '@tsed/logger';
 import express from 'express';
 import compress from 'compression';
 import cookieParser from 'cookie-parser';
+import { redisSetGroup } from '@ftl/common';
+import './logger';
+
+$log.appenders.set('redis', {
+  type: 'redis',
+  level: ['warn', 'info', 'error', 'fatal'],
+});
 
 const rootDir = __dirname;
 
@@ -12,6 +20,11 @@ const rootDir = __dirname;
   debug: false,
   mount: {
     '/v1': `${rootDir}/controllers/**/*.ts`,
+  },
+  logger: {
+    disableRoutesSummary: true,
+    disableBootstrapLog: true,
+    logRequest: true,
   },
   mongoose: [
     {
@@ -27,6 +40,10 @@ export default class Server {
 
   @Configuration()
   settings: Configuration;
+
+  public $beforeInit() {
+    redisSetGroup('auth-service');
+  }
 
   /**
    * This method let you configure the express middleware required by your application to works.

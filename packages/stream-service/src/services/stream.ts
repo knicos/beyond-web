@@ -11,6 +11,7 @@ import {
   redisHGetM,
 } from '@ftl/common';
 import { StreamDataEventBody, StreamOperationEventBody } from '@ftl/api';
+import { StreamLogger } from '../logger';
 
 const HOUR = 60 * 60;
 
@@ -59,12 +60,12 @@ export default class StreamService {
 
     async $onInit() {
       redisSetStreamCallback('events:stream:data', async (data: StreamDataEventBody) => {
-        if (data.channel === 'thumbnail') {
+        if (data.channel === 74) {
           const stream = this.streams.get(data.id);
           if (stream) {
             await redisSet(`stream:thumbnail:${stream.id}:${data.framesetId}:${data.frameId}`, data.value);
           }
-        } else if (data.channel === 'metadata') {
+        } else if (data.channel === 71) {
           const f = this.getFrame(
             data.id,
             data.framesetId,
@@ -76,8 +77,8 @@ export default class StreamService {
         }
       });
       redisSetStreamCallback('events:stream', async (data: StreamOperationEventBody) => {
+        StreamLogger.info(data.id, 'Stream update:', data.operation, data.id, data.framesetId, data.frameId);
         if (data.operation === 'start') {
-          console.log('Stream update:', data);
           if (data.framesetId === 255) {
             this.streams.set(data.id, {
               id: uuidv4(),

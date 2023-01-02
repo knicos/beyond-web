@@ -9,7 +9,6 @@ export type StreamEventTypes =
 
 export type StreamOperation = 'start' | 'stop';
 export type StreamMetricType = 'source' | 'client';
-export type StreamDataChannels = 'metadata' | 'thumbnail';
 export type StreamClientOperation = 'connect' | 'disconnect';
 
 export interface StreamEventBody extends BaseEventBody {
@@ -44,7 +43,7 @@ export interface StreamOperationEvent extends StreamEvent {
 }
 
 export interface StreamDataEventBody extends StreamEventBody {
-  channel: StreamDataChannels;
+  channel: number;
   value: unknown;
 }
 

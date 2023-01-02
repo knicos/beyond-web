@@ -1,9 +1,9 @@
 import { DataPacket, Peer, StreamPacket } from '@beyond/protocol';
-import { $log } from '@tsed/logger';
 import {
   redisPublish, redisSendEvent, redisSubscribe, redisUnsubscribe,
 } from '@ftl/common';
 import { recordLatency } from './latencyManager';
+import { StreamLogger } from './logger';
 
 const { encode, decode } = require('msgpack5')();
 
@@ -66,14 +66,14 @@ export default class InputStream {
   private pstartStream() {
     if (this.seenPacket >= 0) {
       this.peer.send(this.baseUri, 0, [1, 255, 255, 74, 5], [7, 0, 10, 255, 0, new Uint8Array(0)]);
-      $log.info('Sent start request', this.peer.string_id, this.baseUri);
+      StreamLogger.info(this.baseUri, 'Sent start request', this.peer.string_id, this.baseUri);
       if (this.seenPacket++ < 10) {
         setTimeout(() => {
           this.pstartStream();
         }, 500);
       }
     } else {
-      $log.info('Start request has worked');
+      StreamLogger.info(this.baseUri, 'Start request has worked');
       this.sendEvent('started');
     }
   }
@@ -106,24 +106,26 @@ export default class InputStream {
     if (channel >= 64 && packet[5].length > 0 && packet[0] === 103) {
       const decoded = decode(packet[5]);
 
+      // TODO: Only send periodically, not for every data change
+
       // Thumbnail
       if (channel === 74) {
         redisSendEvent({
           event: 'events:stream:data',
           body: {
             id: this.baseUri,
-            channel: 'thumbnail',
+            channel,
             value: decode(packet[5]).toString('base64'),
             framesetId: fsId,
             frameId: fId,
           },
         });
-      } else if (channel === 71) {
+      } else {
         redisSendEvent({
           event: 'events:stream:data',
           body: {
             id: this.baseUri,
-            channel: 'metadata',
+            channel,
             value: decode(packet[5]),
             framesetId: fsId,
             frameId: fId,
@@ -146,6 +148,7 @@ export default class InputStream {
 
   destroy() {
     this.sendEvent('stopped');
+    StreamLogger.info(this.baseUri, 'Stream stopped');
     redisUnsubscribe(`stream-out:${this.baseUri}`, this.onMessage);
   }
 }

@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { $log } from '@tsed/logger';
 import { BaseEventBody, Event } from '@ftl/api';
 import * as fs from 'fs';
+import ALS from './als';
 
 let redisClient: redis.RedisClient;
 let redisSub: redis.RedisClient;
@@ -304,6 +305,20 @@ export function redisHGetM(key: string, items: string[]): Promise<any> {
 
 export function redisSendEvent<T extends Event>(event: T) {
   initRedis();
+  if (!event.body.operationId) {
+    const opId = ALS.getStore() || new Map<string, string>();
+    if (!opId.has('operationId')) {
+      opId.set('operationId', uuidv4());
+    }
+    // eslint-disable-next-line no-param-reassign
+    event.body.operationId = opId.get('operationId');
+    // eslint-disable-next-line no-param-reassign
+    event.body.userId = opId.get('userId');
+    // eslint-disable-next-line no-param-reassign
+    event.body.sessionId = opId.get('sessionId');
+    // eslint-disable-next-line no-param-reassign
+    event.body.clientId = opId.get('clientId');
+  }
   const items = keysFromObject(event.body);
   if (!redisClient.xadd) return;
   redisClient.xadd.apply(
@@ -322,10 +337,11 @@ export function redisSendEvent<T extends Event>(event: T) {
 const streamKeys = new Set<string>();
 let streamListen = false;
 // eslint-disable-next-line no-unused-vars
-type StreamCallback<T extends BaseEventBody> = (data: T, id: string) => void;
+type StreamCallback<T extends BaseEventBody> = (data: T, id: string) => Promise<void>;
 const streamCallbacks = new Map<string, StreamCallback<BaseEventBody>>();
 let streamID = '0';
 let consumerGroup = null;
+let consumerId = null;
 
 export function redisSetGroup(group: string) {
   consumerGroup = group;
@@ -350,16 +366,32 @@ export function redisSetStreamCallback<T extends Event>(key: T['event'], cb: Str
   return redisCreateGroup(key);
 }
 
-export function redisStreamListen(optName?: string, newKeys?: string[]) {
-  let name = optName;
+export function redisConsumerGroup() {
+  return consumerGroup || '';
+}
 
-  if (!name) {
+export function redisConsumerId() {
+  let name: string;
+  if (consumerId) {
+    name = consumerId;
+  } else {
     if (fs.existsSync('/tmp/serviceid')) {
       name = fs.readFileSync('/tmp/serviceid', 'utf8');
     } else {
       name = uuidv4();
       fs.writeFileSync('/tmp/serviceid', name);
     }
+    consumerId = name;
+  }
+
+  return name;
+}
+
+export function redisStreamListen(optName?: string, newKeys?: string[]) {
+  let name = optName;
+
+  if (!name) {
+    name = redisConsumerId();
   }
   initRedis();
 
@@ -395,12 +427,23 @@ export function redisStreamListen(optName?: string, newKeys?: string[]) {
             for (const data of dataSet) {
               const [id, columns] = data;
               streamID = id;
-              const obj = objectFromKeys(columns);
+              const obj = objectFromKeys(columns) as BaseEventBody;
               if (streamCallbacks.has(key)) {
-                try {
-                  streamCallbacks.get(key)(obj, id);
-                } catch (e) {
-                  $log.error('Stream callback error', e);
+                if (obj.operationId) {
+                  const state = new Map<string, string>();
+                  state.set('operationId', obj.operationId);
+                  if (obj.userId) state.set('userId', obj.userId);
+                  if (obj.sessionId) state.set('sessionId', obj.sessionId);
+                  if (obj.clientId) state.set('clientId', obj.clientId);
+                  ALS.run(state, () => {
+                    streamCallbacks.get(key)(obj, id).catch((e) => {
+                      $log.error('Stream callback error', e);
+                    });
+                  });
+                } else {
+                  streamCallbacks.get(key)(obj, id).catch((e) => {
+                    $log.error('Stream callback error', e);
+                  });
                 }
               }
             }
@@ -424,17 +467,38 @@ export function redisStreamListen(optName?: string, newKeys?: string[]) {
               streamID = id;
               const obj = objectFromKeys(columns);
               if (streamCallbacks.has(key)) {
-                try {
-                  streamCallbacks.get(key)(obj, id);
-                } catch (e) {
-                  $log.error('Stream callback error', e);
+                if (obj.operationId) {
+                  const state = new Map<string, string>();
+                  state.set('operationId', obj.operationId);
+                  if (obj.userId) state.set('userId', obj.userId);
+                  if (obj.sessionId) state.set('sessionId', obj.sessionId);
+                  if (obj.clientId) state.set('clientId', obj.clientId);
+                  // eslint-disable-next-line no-loop-func
+                  ALS.run(state, () => {
+                    // eslint-disable-next-line no-loop-func
+                    streamCallbacks.get(key)(obj, id).then(() => {
+                      redisClient.xack(key, consumerGroup, id, (ackerr) => {
+                        if (err) {
+                          $log.error('ACK Error', ackerr);
+                        }
+                      });
+                    }).catch((e) => {
+                      $log.error('Stream callback error', e);
+                    });
+                  });
+                } else {
+                  // eslint-disable-next-line no-loop-func
+                  streamCallbacks.get(key)(obj, id).then(() => {
+                    redisClient.xack(key, consumerGroup, id, (ackerr) => {
+                      if (err) {
+                        $log.error('ACK Error', ackerr);
+                      }
+                    });
+                  }).catch((e) => {
+                    $log.error('Stream callback error', e);
+                  });
                 }
               }
-              redisClient.xack(key, consumerGroup, id, (ackerr) => {
-                if (err) {
-                  $log.error('ACK Error', ackerr);
-                }
-              });
             }
           }
         }

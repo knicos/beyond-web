@@ -17,6 +17,19 @@ jest.mock('@ftl/common', () => ({
     mockRedisState.subscriptions.set(uri, cb);
   },
   redisSendEvent: jest.fn(),
+  RedisLogger: jest.fn().mockImplementation(() => ({
+    log: () => {},
+    info: () => {},
+    warn: () => {},
+    error: () => {},
+  })),
+  redisSetGroup: jest.fn(),
+  redisConsumerId: jest.fn(),
+  redisConsumerGroup: jest.fn(),
+  ALS: {
+    run: (a, b) => b(),
+    getStore: () => new Map<string, string>(),
+  },
 }));
 jest.mock('@beyond/protocol');
 

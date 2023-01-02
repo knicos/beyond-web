@@ -99,15 +99,20 @@ export default class NodeService {
       this.updateStats(data);
     }
 
-    private async updateStats(data) {
+    private async updateStats(data: NodeSummaryMetricBody) {
       await redisHSet(`node-stats:${data.id}`, {
         latency: data.latency,
+        txRate: data.txRate,
+        rxRate: data.rxRate,
+        txTotal: data.txTotal,
+        rxTotal: data.rxTotal,
+        bufferSize: data.bufferSize,
         active: 'yes',
-      }, MINUIT);
+      }, MINUIT * 2);
     }
 
     private async getStats(serial: string) {
-      const result = await redisHGetM(`node-stats:${serial}`, ['latency', 'active']);
+      const result = await redisHGetM(`node-stats:${serial}`, ['latency', 'active', 'rxRate', 'txRate']);
       return result;
     }
 
