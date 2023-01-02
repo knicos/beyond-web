@@ -102,7 +102,7 @@ services:
       - "27017:27017"
 
   redis:
-    image: redis:6.2.7-alpine
+    image: redis/redis-stack-server:latest
     volumes:
       - ./.data:/data
-    command: redis-server --maxmemory 200mb --save "300 1" --appendonly no
+    command: redis-stack-server --maxmemory 200mb --save "300 1" --appendonly no

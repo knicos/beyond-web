@@ -1,6 +1,7 @@
 import { Server } from 'http';
 import WebSocket from 'ws';
 import { Peer } from '@beyond/protocol';
+import { AsyncLocalStorage } from 'async_hooks';
 import { redisAddItem, redisPublish, redisSendEvent } from '@ftl/common';
 import app from '../src/app';
 import { clearTimer } from '../src/source';
@@ -22,6 +23,9 @@ jest.mock('@ftl/common', () => ({
   redisSubscribe: (uri: string, cb: Function) => {
     mockRedisState.subscriptions.set(uri, cb);
   },
+  redisSetGroup: jest.fn(),
+  redisConsumerId: jest.fn(),
+  redisConsumerGroup: jest.fn(),
   redisSendEvent: jest.fn(),
   redisSetStreamCallback: jest.fn(),
   redisStreamListen: jest.fn(),
@@ -38,6 +42,13 @@ jest.mock('@ftl/common', () => ({
   }),
   redisRemoveItem: jest.fn(),
   redisUnsubscribe: jest.fn(),
+  RedisLogger: jest.fn().mockImplementation(() => ({
+    log: () => {},
+    info: () => {},
+    warn: () => {},
+    error: () => {},
+  })),
+  ALS: new AsyncLocalStorage<Map<string, string>>(),
 }));
 
 describe('Socket-service integration test', () => {

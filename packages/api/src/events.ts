@@ -1,4 +1,5 @@
 import { StreamEvents, NodeEvents } from './socket-service/events';
+import { LogEvent } from './logging';
 
 import {
   RecordingEvent,
@@ -7,4 +8,5 @@ import {
 export type Event =
   | StreamEvents
   | NodeEvents
-  | RecordingEvent;
+  | RecordingEvent
+  | LogEvent;

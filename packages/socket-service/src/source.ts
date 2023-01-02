@@ -2,12 +2,18 @@
 /* eslint-disable no-param-reassign */
 import { Peer } from '@beyond/protocol';
 import { AccessToken } from '@ftl/types';
-import { $log } from '@tsed/logger';
-import { redisSetStreamCallback, redisSendEvent } from '@ftl/common';
+import {
+  redisSetStreamCallback, redisSendEvent, redisSetGroup, ALS,
+} from '@ftl/common';
 import { RecordingEventBody } from '@ftl/api';
+import { v4 as uuidv4 } from 'uuid';
+import { $log } from '@tsed/logger';
 import {
   removeStreams, getStreams, bindToStream, createStream,
 } from './streams';
+import { NodeLogger } from './logger';
+
+redisSetGroup('socket-service');
 
 const peerData = [];
 const peerUris = {};
@@ -25,7 +31,7 @@ export function reset() {
     timer.unref();
   }
   timer = setInterval(async () => {
-    for (const x in peerById.keys()) {
+    for (const x of peerById.keys()) {
       const p = peerById.get(x);
       const start = (new Date()).getMilliseconds();
       p.rpc('__ping__').then(() => {
@@ -42,7 +48,7 @@ export function reset() {
             rxRate: stats.rxRate,
             latency: p.latency,
             id: p.uri,
-            bufferSize: stats.txRequested,
+            bufferSize: stats.txRequested - stats.txBytes,
           },
         })
       });
@@ -57,55 +63,70 @@ export function createSource(ws, address: string, token: AccessToken, ephemeral:
   const p = new Peer(ws, true);
   peerData.push(p);
 
+  const sessionId = uuidv4();
+
   p.on('connect', async (peer) => {
-    $log.info('Node connected...', token, peer.string_id);
-    peerUris[peer.string_id] = [];
-    peerById.set(peer.string_id, peer);
+    const state = new Map<string, string>();
+    state.set('operationId', uuidv4());
+    state.set('userId', token.user?.id);
+    state.set('clientId', token.client?.id);
+    state.set('sessionId', sessionId);
+    ALS.run(state, async () => {
+      $log.info('Node connected...', token, peer.string_id);
+      peerUris[peer.string_id] = [];
+      peerById.set(peer.string_id, peer);
 
-    const details = await peer.rpc('node_details');
+      const details = await peer.rpc('node_details');
 
-    const obj = JSON.parse(details[0]);
-    peerSerial.set(obj.id, peer);
+      const obj = JSON.parse(details[0]);
+      peerSerial.set(obj.id, peer);
 
-    peer.uri = obj.id;
-    peer.name = obj.title;
-    peer.clientId = token.client?.id;
-    peer.master = (obj.kind === 'master');
-    $log.info('Peer name = ', peer.name);
-    $log.info('Details: ', details);
-    redisSendEvent({
-      event: 'events:node',
-      body: {
-        operation: 'connect',
-        id: obj.id,
-        name: obj.title,
-        kind: obj.kind,
-        devices: obj.devices || [],
-        ip: address,
-        clientId: token.client?.id || '',
-        userId: token.user?.id,
-        ephemeral,
-        groups: token.groups || [],
-        serviceId: '', // TODO
-      },
+      peer.uri = obj.id;
+      peer.name = obj.title;
+      peer.clientId = token.client?.id;
+      peer.master = (obj.kind === 'master');
+      NodeLogger.info(peer.string_id, 'Peer name = ', peer.name);
+      NodeLogger.info(peer.string_id, 'Details: ', details);
+      redisSendEvent({
+        event: 'events:node',
+        body: {
+          operation: 'connect',
+          id: obj.id,
+          name: obj.title,
+          kind: obj.kind,
+          devices: obj.devices || [],
+          ip: address,
+          clientId: token.client?.id,
+          ephemeral,
+          groups: token.groups || [],
+          serviceId: '', // TODO
+        },
+      });
     });
   });
 
   p.on('disconnect', (peer) => {
-    $log.info('DISCONNECT', peer.string_id);
-    // Remove all peer details and streams....
+    const state = new Map<string, string>();
+    state.set('operationId', uuidv4());
+    state.set('userId', token.user?.id);
+    state.set('clientId', token.client?.id);
+    state.set('sessionId', sessionId);
+    ALS.run(state, async () => {
+      NodeLogger.info(peer.string_id, 'Disconnect');
+      // Remove all peer details and streams....
 
-    redisSendEvent({
-      event: 'events:node',
-      body: {
-        operation: 'disconnect',
-        id: peer.uri,
-      },
+      redisSendEvent({
+        event: 'events:node',
+        body: {
+          operation: 'disconnect',
+          id: p.string_id,
+        },
+      });
+
+      removeStreams(peer);
+      if (peerById.has(peer.string_id)) peerById.delete(peer.string_id);
+      if (peerSerial.has(peer.uri)) peerSerial.delete(peer.uri);
     });
-
-    removeStreams(peer);
-    if (peerById.has(peer.string_id)) peerById.delete(peer.string_id);
-    if (peerSerial.has(peer.uri)) peerSerial.delete(peer.uri);
   });
 
   p.bind('new_peer', () => {
@@ -128,7 +149,17 @@ export function createSource(ws, address: string, token: AccessToken, ephemeral:
   /* Unused by new protocol */
   p.bind('find_stream', (uri: string, proxy) => {
     if (!proxy) return null;
-    return bindToStream(p, uri);
+    return new Promise((resolve) => {
+      const state = new Map<string, string>();
+      state.set('operationId', uuidv4());
+      state.set('userId', token.user?.id);
+      state.set('clientId', token.client?.id);
+      state.set('sessionId', sessionId);
+      ALS.run(state, () => {
+        NodeLogger.info(p.string_id, 'Find stream', uri);
+        bindToStream(p, uri).then(resolve);
+      });
+    });
   });
 
   /** @deprecated */
@@ -139,37 +170,52 @@ export function createSource(ws, address: string, token: AccessToken, ephemeral:
 
   // Register a new stream
   p.bind('add_stream', (uri: string) => {
+    const state = new Map<string, string>();
+    state.set('operationId', uuidv4());
+    state.set('userId', token.user?.id);
+    state.set('clientId', token.client?.id);
+    state.set('sessionId', sessionId);
     // TODO: Authorise this by checking group membership
     // It should also validate the URI.
-    createStream(p, uri, 255, 255);
-    $log.info('Add stream', uri);
+    ALS.run(state, () => {
+      NodeLogger.info(p.string_id, 'Add stream', uri);
+      createStream(p, uri, 255, 255);
+    });
   });
 
   // TODO: Authorise this by checking group membership
   /** Allow this node to receive specific stream data */
-  // eslint-disable-next-line no-unused-vars
-  p.bind('enable_stream', (uri: string, frameset: number, frame: number) => bindToStream(p, uri));
+  p.bind('enable_stream', (uri: string, frameset: number, frame: number) => new Promise((resolve) => {
+    const state = new Map<string, string>();
+    state.set('operationId', uuidv4());
+    state.set('userId', token.user?.id);
+    state.set('clientId', token.client?.id);
+    state.set('sessionId', sessionId);
+    ALS.run(state, () => {
+      NodeLogger.info(p.string_id, 'Enable stream', uri, frameset, frame);
+      bindToStream(p, uri).then(resolve);
+    });
+  }));
 
   // eslint-disable-next-line no-unused-vars
   p.bind('disable_stream', (uri: string, frameset: number, frame: number) => true);
 
   p.bind('create_stream', (uri: string, frameset: number, frame: number) => {
+    const state = new Map<string, string>();
+    state.set('operationId', uuidv4());
+    state.set('userId', token.user?.id);
+    state.set('clientId', token.client?.id);
+    state.set('sessionId', sessionId);
     // TODO: Authorise this by checking group membership
     // It should also validate the URI.
-    $log.info('Create stream', uri);
-    createStream(p, uri, frameset, frame);
+    ALS.run(state, () => {
+      NodeLogger.info(p.string_id, 'Create stream', uri);
+      createStream(p, uri, frameset, frame);
+    });
   });
 
   p.bind('error', (message: string) => {
-    redisSendEvent({
-      event: 'events:node:log',
-      body: {
-        id: p.uri,
-        level: 2,
-        timestamp: Date.now(),
-        message: `Connection error: ${message}`,
-      },
-    });
+    NodeLogger.error(p.string_id, 'Node error', message);
   });
 
   return p;
@@ -182,7 +228,7 @@ function broadcastEvent(name: string, owner?: string, groups?: string[]) {
   });
 }
 
-redisSetStreamCallback('events:recording', (data: RecordingEventBody) => {
+redisSetStreamCallback('events:recording', async (data: RecordingEventBody) => {
   switch (data.event) {
     case 'start': broadcastEvent('recording.start', data.owner); break;
     case 'complete': broadcastEvent('recording.complete', data.owner); break;

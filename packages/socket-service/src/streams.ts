@@ -5,6 +5,7 @@ import {
 import { $log } from '@tsed/logger';
 import InputStream from './InputStream';
 import OutputStream from './OutputStream';
+import { NodeLogger } from './logger';
 
 const peerUris = new Map<string, string[]>();
 const uriToPeer = new Map<string, Peer>();
@@ -44,10 +45,10 @@ export async function bindToStream(p: Peer, uri: string) {
   const parsedURI = removeQueryString(uri);
   const streams = await getActiveStreams();
   if (streams.some((s) => s === parsedURI)) {
-    $log.info('Stream found: ', uri, parsedURI);
+    NodeLogger.info(p.string_id, 'Stream found: ', uri, parsedURI);
 
     if (!p.isBound(parsedURI)) {
-      $log.info('Adding local stream binding: ', parsedURI);
+      NodeLogger.info(p.string_id, 'Adding local stream binding: ', parsedURI);
       outputStreams.set(p.uri, new OutputStream(parsedURI, p));
     }
 
@@ -67,7 +68,7 @@ export function removeStreams(peer: Peer) {
   const puris = peerUris.get(peer.string_id);
   if (puris) {
     for (let i = 0; i < puris.length; i++) {
-      $log.info('Removing stream: ', puris[i]);
+      NodeLogger.info(peer.string_id, 'Removing stream: ', puris[i]);
       redisRemoveItem('activestreams', puris[i]);
 
       redisSendEvent({
@@ -101,14 +102,14 @@ export async function initStream(
   if (inputStreams.has(uri)) {
     const is = inputStreams.get(uri);
     if (is.enabledFrames.has(`${framesetId}:${frameId}`)) {
-      $log.warn('Stream already exists', uri);
+      NodeLogger.warn(peer.string_id, 'Stream already exists', uri);
       return true;
     }
     is.enabledFrames.add(`${framesetId}:${frameId}`);
     return false;
   }
 
-  $log.info('Initiate stream: ', uri);
+  NodeLogger.info(peer.string_id, 'Initiate stream: ', uri);
   const nodeCreated = uriToPeer.has(parsedURI);
   if (!peerUris.has(peer.string_id)) {
     peerUris.set(peer.string_id, []);
