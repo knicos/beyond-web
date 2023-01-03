@@ -31,8 +31,7 @@ export function reset() {
     timer.unref();
   }
   timer = setInterval(async () => {
-    for (const x of peerById.keys()) {
-      const p = peerById.get(x);
+    for (const [, p] of peerById.entries()) {
       const start = (new Date()).getMilliseconds();
       p.rpc('__ping__').then(() => {
         const end = (new Date()).getMilliseconds();
@@ -53,7 +52,7 @@ export function reset() {
         })
       });
     }
-  }, 20000);
+  }, 10000);
 }
 
 reset();
