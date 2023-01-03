@@ -4,7 +4,7 @@ WORKDIR /usr/src/app
 
 RUN mkdir ./packages
 
-COPY ./package.json ./yarn.lock ./lerna.json ./
+COPY ./package.json ./yarn.lock ./lerna.json ./nx.json ./
 COPY ./packages/stream/package.json ./packages/stream/
 COPY ./packages/player/package.json ./packages/player/
 COPY ./packages/protocol/package.json ./packages/protocol/
@@ -20,7 +20,8 @@ RUN yarn install && yarn cache clean
 
 COPY ./packages ./packages
 
-RUN yarn build
+RUN yarn build \
+  && chown -R node ./node_modules/.cache
 
 EXPOSE 8080
 
@@ -31,7 +32,7 @@ FROM node:16-alpine AS socketservice
 WORKDIR /usr/src/app
 
 RUN mkdir ./packages ./packages/stream ./packages/player ./packages/api ./packages/protocol ./packages/common ./packages/socket-service ./packages/types
-COPY ./package.json ./yarn.lock ./lerna.json ./
+COPY ./package.json ./yarn.lock ./lerna.json ./nx.json ./
 COPY ./packages/stream/package.json ./packages/stream/
 COPY ./packages/player/package.json ./packages/player/
 COPY ./packages/protocol/package.json ./packages/protocol/
@@ -63,7 +64,7 @@ FROM node:16-alpine AS authservice
 WORKDIR /usr/src/app
 
 RUN mkdir ./packages ./packages/auth-service ./packages/common
-COPY ./package.json ./yarn.lock ./lerna.json ./jest.config.js ./
+COPY ./package.json ./yarn.lock ./lerna.json ./nx.json ./jest.config.js ./
 COPY ./packages/api/package.json ./packages/api/
 COPY ./packages/common/package.json ./packages/common/
 COPY ./packages/types/package.json ./packages/types/
@@ -88,7 +89,7 @@ FROM node:16-alpine AS nodeservice
 WORKDIR /usr/src/app
 
 RUN mkdir ./packages ./packages/node-service ./packages/common ./packages/api
-COPY ./package.json ./yarn.lock ./lerna.json ./jest.config.js ./
+COPY ./package.json ./yarn.lock ./lerna.json ./nx.json ./jest.config.js ./
 COPY ./packages/common/package.json ./packages/common/
 COPY ./packages/types/package.json ./packages/types/
 COPY ./packages/api/package.json ./packages/api/
@@ -113,7 +114,7 @@ FROM node:16-alpine AS streamservice
 WORKDIR /usr/src/app
 
 RUN mkdir ./packages ./packages/node-service ./packages/common ./packages/api
-COPY ./package.json ./yarn.lock ./lerna.json ./jest.config.js ./
+COPY ./package.json ./yarn.lock ./lerna.json ./nx.json ./jest.config.js ./
 COPY ./packages/common/package.json ./packages/common/
 COPY ./packages/types/package.json ./packages/types/
 COPY ./packages/api/package.json ./packages/api/
@@ -139,7 +140,7 @@ FROM node:16-alpine AS recorderservice
 WORKDIR /usr/src/app
 
 RUN mkdir ./packages ./packages/node-service ./packages/common ./packages/api
-COPY ./package.json ./yarn.lock ./lerna.json ./jest.config.js ./
+COPY ./package.json ./yarn.lock ./lerna.json ./nx.json ./jest.config.js ./
 COPY ./packages/common/package.json ./packages/common/
 COPY ./packages/types/package.json ./packages/types/
 COPY ./packages/api/package.json ./packages/api/

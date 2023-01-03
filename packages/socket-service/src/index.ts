@@ -1,4 +1,5 @@
+import { installMonitor } from '@ftl/common';
 import app from './app';
 
-console.log('Listening or port 8080');
-app.listen(8080);
+const server = app.listen(8080);
+installMonitor(server);

@@ -3,3 +3,4 @@ export * from './recorder-service';
 export * from './baseevents';
 export * from './events';
 export * from './logging';
+export * from './service';

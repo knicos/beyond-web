@@ -54,7 +54,7 @@ service_test:
   needs: ["service_build"]
   script:
     - docker load -i image/service.tar.gz
-    - docker run webapp-service yarn test
+    - docker run webapp-service yarn test --skip-nx-cache
 
 client_test:
   stage: test
