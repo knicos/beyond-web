@@ -1,9 +1,11 @@
-import { Configuration, Inject, PlatformApplication } from '@tsed/common';
+import {
+  Configuration, HttpServer, Inject, PlatformApplication,
+} from '@tsed/common';
 import { $log } from '@tsed/logger';
 import express from 'express';
 import compress from 'compression';
 import cookieParser from 'cookie-parser';
-import { redisStreamListen, redisSetGroup } from '@ftl/common';
+import { redisStreamListen, redisSetGroup, installMonitor } from '@ftl/common';
 import './logger';
 
 $log.appenders.set('redis', {
@@ -37,6 +39,9 @@ export default class Server {
   @Inject()
   app: PlatformApplication;
 
+  @Inject(HttpServer)
+  httpServer: HttpServer;
+
   @Configuration()
   settings: Configuration;
 
@@ -58,5 +63,7 @@ export default class Server {
       .use(cookieParser())
       .use(express.urlencoded())
       .use(express.json());
+
+    installMonitor(this.httpServer);
   }
 }
