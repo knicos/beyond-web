@@ -57,6 +57,15 @@ export function reset() {
 
 reset();
 
+function peerCheck(id: string, resolve: ()=>void) {
+  if (!peerById.has(id)) resolve();
+  else {
+    setTimeout(() => {
+      peerCheck(id, resolve);
+    }, 20);
+  }
+}
+
 // eslint-disable-next-line import/prefer-default-export
 export function createSource(ws, address: string, token: AccessToken, ephemeral: boolean) {
   const p = new Peer(ws, true);
@@ -72,6 +81,16 @@ export function createSource(ws, address: string, token: AccessToken, ephemeral:
     state.set('sessionId', sessionId);
     ALS.run(state, async () => {
       $log.info('Node connected...', token, peer.string_id);
+      if (peerById.has(peer.string_id)) {
+        const oldPeer = peerById.get(peer.string_id);
+        if (oldPeer) {
+          await oldPeer.close();
+          await new Promise<void>((resolve) => {
+            peerCheck(peer.string_id, resolve);
+          });
+          NodeLogger.info(peer.string_id, 'Duplicate peer connection, closed old');
+        }
+      }
       peerUris[peer.string_id] = [];
       peerById.set(peer.string_id, peer);
 

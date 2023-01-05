@@ -86,6 +86,33 @@ describe('Socket-service integration test', () => {
 
       await new Promise((resolve) => peer.on('disconnect', resolve));
     });
+
+    it('closes duplicate connections', async () => {
+      const ws1 = new WebSocket('ws://localhost:8081/v1/socket');
+      const p1 = new Peer(ws1, false);
+      p1.bind('node_details', () => [`{"title": "Test", "id": "${p1.getUuid()}", "kind": "master"}`]);
+      await new Promise((resolve) => p1.on('connect', resolve));
+
+      expect(p1.status).toBe(2);
+
+      const p1Prom = new Promise((resolve) => p1.on('disconnect', resolve));
+
+      const ws2 = new WebSocket('ws://localhost:8081/v1/socket');
+      const p2 = new Peer(ws2, false);
+      p2.bind('node_details', () => [`{"title": "Test", "id": "${p2.getUuid()}", "kind": "master"}`]);
+      await new Promise((resolve) => p2.on('connect', resolve));
+
+      await p2.rpc('node_details');
+      await p1Prom;
+
+      expect(p1.status).toBe(3);
+      expect(p2.status).toBe(2);
+
+      ws2.close();
+      ws1.close();
+
+      await new Promise((resolve) => p2.on('disconnect', resolve));
+    });
   });
 
   describe('Input Stream', () => {
