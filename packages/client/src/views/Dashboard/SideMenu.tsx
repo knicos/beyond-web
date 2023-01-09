@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaHome, FaUserAlt, FaServer, FaVideo, FaChartLine, FaListAlt, FaTable, FaCubes } from 'react-icons/fa';
+import { FaHome, FaUserAlt, FaServer, FaVideo, FaChartLine, FaListAlt, FaTable, FaCubes, FaFilm } from 'react-icons/fa';
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
 
@@ -67,6 +67,10 @@ export function SideMenu() {
       <Link to={`${path}stats`}>
         <FaChartLine />
         <MenuText>Statistics</MenuText>
+      </Link>
+      <Link to={`${path}recordings`}>
+        <FaFilm />
+        <MenuText>Recordings</MenuText>
       </Link>
     </Container>
   )

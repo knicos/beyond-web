@@ -4,6 +4,7 @@ import {Node} from '../Node';
 import {Nodes} from '../Nodes';
 import {Streams} from '../Streams';
 import {StreamView} from '../Stream';
+import {Recordings} from '../Recordings'
 import MainListing from './MainListing';
 import { UnderConstruction } from './UnderConstruction';
 
@@ -16,6 +17,7 @@ export function Router() {
             <Route path={`${path}streams/:id/:fsid/:fid`} component={StreamView} />
             <Route path={`${path}streams`} component={Streams} />
             <Route path={`${path}stats`} component={UnderConstruction} />
+            <Route path={`${path}recordings`} component={Recordings} />
             <Route path={`${path}configs`} component={UnderConstruction} />
             <Route path={`${path}users`} component={UnderConstruction} />
             <Route path={`${path}groups`} component={UnderConstruction} />

@@ -15,6 +15,8 @@ COPY ./packages/socket-service/package.json ./packages/socket-service/
 COPY ./packages/node-service/package.json ./packages/node-service/
 COPY ./packages/auth-service/package.json ./packages/auth-service/
 COPY ./packages/stream-service/package.json ./packages/stream-service/
+COPY ./packages/recorder-service/package.json ./packages/recorder-service/
+COPY ./packages/playback-service/package.json ./packages/playback-service/
 
 RUN yarn install && yarn cache clean
 
@@ -159,3 +161,28 @@ COPY --from=build /usr/src/app/packages/recorder-service/dist/ ./packages/record
 USER node
 
 CMD ["yarn", "workspace", "@ftl/recorder-service", "run", "start"]
+
+FROM node:16-alpine AS playbackservice
+
+WORKDIR /usr/src/app
+
+RUN mkdir ./packages ./packages/node-service ./packages/common ./packages/api
+COPY ./package.json ./yarn.lock ./lerna.json ./nx.json ./jest.config.js ./
+COPY ./packages/common/package.json ./packages/common/
+COPY ./packages/types/package.json ./packages/types/
+COPY ./packages/api/package.json ./packages/api/
+COPY ./packages/playback-service/package.json ./packages/playback-service/
+
+RUN yarn install --production \
+  && yarn cache clean \
+  && yarn autoclean --init \
+  && yarn autoclean --force
+
+COPY --from=build /usr/src/app/packages/common/dist/ ./packages/common/dist/
+COPY --from=build /usr/src/app/packages/types/dist/ ./packages/types/dist/
+COPY --from=build /usr/src/app/packages/api/dist/ ./packages/api/dist/
+COPY --from=build /usr/src/app/packages/playback-service/dist/ ./packages/playback-service/dist/
+
+USER node
+
+CMD ["yarn", "workspace", "@ftl/playback-service", "run", "start"]

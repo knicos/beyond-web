@@ -39,6 +39,15 @@ services:
       - $HOME/ftl-data/recordings:/data/ftl
     command: ["yarn", "workspace", "@ftl/recorder-service", "run", "start:dev"]
 
+  playbackservice:
+    build:
+      context: ./
+      dockerfile: ./docker/Dockerfile.services
+      target: build
+    volumes:
+      - $HOME/ftl-data/recordings:/data/ftl
+    command: ["yarn", "workspace", "@ftl/playback-service", "run", "start:dev"]
+
   watchservice:
     image: node:16-alpine
     volumes:
