@@ -37,3 +37,9 @@ export const pinnedData = atom({
     key: 'pinnedData',
     default: new Set<number>(),
 });
+
+export const recordingList = atom({
+    key: 'recordingList',
+    default: [],
+  });
+  

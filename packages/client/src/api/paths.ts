@@ -11,3 +11,4 @@ export const NODES = `${API_PATH}/nodes`;
 export const STREAMS = `${API_PATH}/streams`;
 export const CONFIGS = `${API_PATH}/configuration`;
 export const RECORDER = `${API_PATH}/recorder`;
+export const PLAYBACK = `${API_PATH}/playback`;

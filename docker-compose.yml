@@ -13,6 +13,7 @@ services:
       FTL_NODE_SERVICE: nodeservice:8080
       FTL_STREAM_SERVICE: streamservice:8080
       FTL_RECORDER_SERVICE: recorderservice:8080
+      FTL_PLAYBACK_SERVICE: playbackservice:8080
     depends_on:
       - socketservice
       - authservice
@@ -21,6 +22,7 @@ services:
       - recorderservice
     volumes:
       - ./packages/client/dist:/usr/share/nginx/html
+  
   socketservice:
     image: app.ftlab.utu.fi/app-socketservice:${TAG:-latest}
     build:
@@ -35,6 +37,7 @@ services:
       - authmongo
     volumes:
       - ./:/usr/src/app
+  
   authservice:
     image: app.ftlab.utu.fi/app-authservice:${TAG:-latest}
     build:
@@ -50,6 +53,7 @@ services:
       - authmongo
     volumes:
       - ./:/usr/src/app
+  
   nodeservice:
     image: app.ftlab.utu.fi/app-nodeservice:${TAG:-latest}
     build:
@@ -65,6 +69,7 @@ services:
       - authmongo
     volumes:
       - ./:/usr/src/app
+  
   recorderservice:
     image: app.ftlab.utu.fi/app-recorderservice:${TAG:-latest}
     build:
@@ -80,6 +85,24 @@ services:
     volumes:
       - ./:/usr/src/app
       - "$HOME/ftl-data:/data/ftl"
+  
+  playbackservice:
+    image: app.ftlab.utu.fi/app-playbackservice:${TAG:-latest}
+    build:
+      context: ./
+      dockerfile: ./docker/Dockerfile.services
+      target: playbackservice
+    environment:
+      NODE_ENV: development
+      REDIS_HOST: redis
+      MONGO_HOST: authmongo
+    depends_on:
+      - redis
+      - authmongo
+    volumes:
+      - ./:/usr/src/app
+      - "$HOME/ftl-data:/data/ftl"
+  
   streamservice:
     image: app.ftlab.utu.fi/app-streamservice:${TAG:-latest}
     build:

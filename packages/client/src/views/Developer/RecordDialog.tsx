@@ -26,8 +26,8 @@ export function RecordDialog({ show, onRecord, onClose, stream }: Props) {
         onSubmit={(values) => onRecord({
           streams: [stream.uri],
           channels: [
-            ...(values.depth && [1]),
-            ...(values.colour && [0]),
+            ...(values.depth && [1] || []),
+            ...(values.colour && [0] || []),
           ]
         })}
       >
