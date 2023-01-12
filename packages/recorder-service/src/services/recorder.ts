@@ -29,7 +29,7 @@ interface ActiveRecording {
   id: string;
   owner: string;
   streams: string[];
-  streamCallbacks: Function[];
+  streamCallbacks: ((msg: Buffer) => void)[];
   channels: Set<number>;
   fd: fs.FileHandle;
   size: number;

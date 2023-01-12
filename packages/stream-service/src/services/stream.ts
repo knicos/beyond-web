@@ -36,6 +36,7 @@ export interface Stream {
 @Service()
 export default class StreamService {
     private streams = new Map<string, Stream>();
+    private streamsById = new Map<string, Stream>();
 
     private getFrame(uri: string, fsid: number, fid: number) {
       if (!this.streams.has(uri)) return null;
@@ -80,11 +81,13 @@ export default class StreamService {
         StreamLogger.info(data.id, 'Stream update:', data.operation, data.id, data.framesetId, data.frameId);
         if (data.operation === 'start') {
           if (data.framesetId === 255) {
-            this.streams.set(data.id, {
+            const sdata = {
               id: uuidv4(),
               uri: data.id,
               framesets: [],
-            });
+            };
+            this.streams.set(data.id, sdata);
+            this.streamsById.set(sdata.id, sdata);
           } else {
             const s = this.streams.get(data.id);
             const fsid = data.framesetId;
@@ -132,7 +135,7 @@ export default class StreamService {
     }
 
     async getInGroups(id: string, groups: string[]) {
-      return this.streams.get(id);
+      return this.streamsById.get(id);
     }
 
     async getThumbnail(id: string, frameset: number, frame: number, groups: string[]) {

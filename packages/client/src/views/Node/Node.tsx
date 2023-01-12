@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Formik, Field } from 'formik';
 import { useParams } from 'react-router';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Form, ButtonBar } from '../../components/Form';
 import { Container, TableContainer } from './styledComponents';
 import { getNode, saveNode, INode } from '../../api/nodes';
@@ -37,7 +37,7 @@ const devColumns = [
 export function Node() {
   const { id } = useParams<{ id: string }>();
   const [node, setNode] = useState<INode>();
-  const history = useHistory();
+  const navigate = useNavigate();
   
   useEffect(() => {
     getNode(id).then(setNode);
@@ -106,7 +106,7 @@ export function Node() {
               <button>
                 Delete
               </button>
-              <button onClick={() => history.goBack()}>
+              <button onClick={() => navigate(-1)}>
                 Cancel
               </button>
             </ButtonBar>

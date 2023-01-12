@@ -1,5 +1,5 @@
 import {
-  UseAuth, UseParam, ParamTypes, Controller as TSEDController,
+  UseAuth, UseParam, ParamTypes, Controller as TSEDController, Req,
 } from '@tsed/common';
 import { useDecorators } from '@tsed/core';
 import {
@@ -26,7 +26,10 @@ export function Public(): any {
 }
 
 export function UseToken(): ParameterDecorator {
-  return UseParam(ParamTypes.PLATFORM_REQUEST, {
-    expression: 'accessToken',
+  return UseParam({
+    expression: 'request.accessToken',
+    useMapper: false,
+    useValidation: false,
+    paramType: ParamTypes.$CTX,
   });
 }

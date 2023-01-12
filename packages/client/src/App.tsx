@@ -43,16 +43,16 @@ export default function App() {
 	return (
         <ThemeProvider theme={theme}>
             <GlobalStyle />
-            <React.Suspense fallback="Loading...">
-                <RecoilRoot>
-                    <PeerRoot />
-                    <StreamWatcher />
+              <RecoilRoot>
+                <React.Suspense fallback="Loading...">
                     <BrowserRouter>
                         <PageHeader />
                         <Router />
                     </BrowserRouter>
-                </RecoilRoot>
-            </React.Suspense>
+                    <PeerRoot />
+                    <StreamWatcher />
+                  </React.Suspense>
+              </RecoilRoot>
         </ThemeProvider>
     );
 }

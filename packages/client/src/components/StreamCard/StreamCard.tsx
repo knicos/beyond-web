@@ -1,6 +1,6 @@
 import React from 'react';
 import { StreamCardContainer, BackCard, StreamTitle, Overlays, StatusOverlay, InfoBar, Icon } from './styledComponents';
-import {useHistory} from 'react-router';
+import {useNavigate} from 'react-router';
 import {Link} from 'react-router-dom';
 import { FaPen, FaVideo, FaServer } from 'react-icons/fa';
 
@@ -37,11 +37,11 @@ function Status({ status }: { status: CardStatus }) {
 }
 
 export function StreamCard({ data }: { data: ICardDetails }) {
-  const history = useHistory();
+  const navigate = useNavigate();
 
   return (
     <StreamCardContainer onClick={() => {
-      history.push(data.link);
+      navigate(data.link);
     }}>
       <BackCard src={data.image} />
       <Overlays>

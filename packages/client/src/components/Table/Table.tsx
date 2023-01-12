@@ -56,7 +56,7 @@ const StyledTable = styled.table`
 
 interface IColumn {
   label: string;
-  fn: (data: any, index: number) => unknown;
+  fn: (data: any, index: number) => React.ReactNode;
 }
 
 interface Props {

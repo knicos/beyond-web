@@ -1,7 +1,7 @@
 import React from 'react';
 import {Table} from '../../components/Table';
 import {FaCircle} from 'react-icons/fa';
-import {useHistory} from 'react-router';
+import {useNavigate} from 'react-router';
 import {Card, CardTitle} from '../../components/SelectableCard/SelectableCard';
 import {useRecoilValue} from 'recoil';
 import {nodeList} from '../../recoil/atoms';
@@ -29,14 +29,14 @@ export function Nodes() {
   ];
 
   const path = process.env.ASSET_PATH;
-  const history = useHistory();
+  const navigate = useNavigate();
 
   return (
     <Card>
       <CardTitle>Nodes</CardTitle>
       <Table data={nodes || []} columns={columns} onClick={(data) => {
         console.log('CLICK NODE', data);
-        history.push(`${path}nodes/${data._id}`);
+        navigate(`${path}nodes/${data._id}`);
       }}/>
     </Card>
   )

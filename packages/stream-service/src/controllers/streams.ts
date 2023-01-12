@@ -20,8 +20,8 @@ export default class Streams {
   @Get('/')
   @Description('Get all available streams')
   @Groups('query')
-  async find(@QueryParams() page: Pageable, @UseToken() token: AccessToken): Promise<Stream[]> {
-    return this.streamService.findInGroups(token.user, token.groups, page.offset, page.limit);
+  async find(@QueryParams("page") page: Pageable, @UseToken() token: AccessToken): Promise<Stream[]> {
+    return this.streamService.findInGroups(token.user, token.groups, page?.offset || 0, page?.limit || 50);
   }
 
   @Get('/:id/thumbnail/:fs/:f')
@@ -41,6 +41,7 @@ export default class Streams {
   async get(@PathParams('id') id: string, @UseToken() token: AccessToken): Promise<Stream> {
     const result = await this.streamService.getInGroups(id, token.groups);
     if (!result) {
+      console.error('NO STREAM', id);
       throw new NotFound('stream_not_found');
     }
     return result;
