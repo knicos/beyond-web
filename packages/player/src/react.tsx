@@ -89,6 +89,10 @@ export function ReactPlayer({stream, channel, movement, onSelectPoint, points, i
         });
 
         state.player.play();
+
+        return () => {
+          state.player.cleanup();
+        }
     }, []);
 
     useEffect(() => {

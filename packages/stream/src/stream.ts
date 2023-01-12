@@ -190,7 +190,6 @@ export class FTLStream {
       this.interval = setInterval(() => {
         if (this.active && this.found) {
             this.enabledChannels.forEach((value, key) => {
-                console.log('Send request', value.stream, value.channel);
                 this.peer.send(this.uri, 0, [1,value.stream,255,value.channel,1],[255,7,35,255,0,Buffer.alloc(0)]);
             });
         }
