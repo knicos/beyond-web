@@ -5,13 +5,11 @@ import { AsyncLocalStorage } from 'async_hooks';
 import { redisAddItem, redisPublish, redisSendEvent } from '@ftl/common';
 import app from '../src/app';
 import { clearTimer } from '../src/source';
+import { BaseEventBody, Event } from '@ftl/api';
 
 const { encode } = require('msgpack5')();
 
-const mockRedisState = {
-  subscriptions: new Map<string, Function>(),
-  items: new Map<string, Set<string>>(),
-};
+var mockRedisState;
 
 type IPacketPair = [Array<number>, Array<number>];
 
@@ -26,8 +24,22 @@ jest.mock('@ftl/common', () => ({
   redisSetGroup: jest.fn(),
   redisConsumerId: jest.fn(),
   redisConsumerGroup: jest.fn(),
-  redisSendEvent: jest.fn(),
-  redisSetStreamCallback: jest.fn(),
+  redisSendEvent: jest.fn((evt: Event) => {
+    const cb = mockRedisState.callbacks.get(evt.event);
+    if (cb) {
+      cb(evt.body);
+    }
+  }),
+  redisSetStreamCallback: jest.fn((evt: string, cb: (msg: BaseEventBody) => void) => {
+    if (!mockRedisState) {
+      mockRedisState = {
+        subscriptions: new Map<string, Function>(),
+        items: new Map<string, Set<string>>(),
+        callbacks: new Map<string, (msg: BaseEventBody) => void>(),
+      };
+    }
+    mockRedisState.callbacks.set(evt, cb);
+  }),
   redisStreamListen: jest.fn(),
   redisAddItem: jest.fn((key: string, value: string) => {
     if (mockRedisState.items.has(key) === false) {
@@ -134,8 +146,8 @@ describe('Socket-service integration test', () => {
       expect(receivedData.length).toBeGreaterThan(0);
       expect(receivedData[0][0][4]).toBe(5);
 
-      expect(redisAddItem).toHaveBeenCalledWith('streams', 'ftl://test', expect.any(Number));
-      expect(redisAddItem).toHaveBeenCalledWith('activestreams', 'ftl://test', expect.any(Number));
+      expect(redisAddItem).toHaveBeenCalledWith('socket-service:streams', 'ftl://test', expect.any(Number));
+      expect(redisAddItem).toHaveBeenCalledWith('socket-service:activestreams', 'ftl://test', expect.any(Number));
       expect(redisSendEvent).toHaveBeenCalledWith({ event: 'events:stream', body: expect.any(Object) });
 
       ws.close();
@@ -160,7 +172,7 @@ describe('Socket-service integration test', () => {
         });
       });
 
-      mockRedisState.items.set('activestreams', new Set<string>(['ftl://test']));
+      mockRedisState.items.set('socket-service:activestreams', new Set<string>(['ftl://test']));
 
       await peer.rpc('enable_stream', 'ftl://test', 0, 0);
 
