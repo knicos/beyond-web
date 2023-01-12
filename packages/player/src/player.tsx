@@ -346,6 +346,11 @@ export class FTLPlayer {
 
       this.emit('pose', this.pose);
     }
+
+    cleanup() {
+      this.outer.removeChild(this.element);
+      this.outer.removeChild(this.renderer.domElement);
+    }
 }
 
 ee(FTLPlayer.prototype);
