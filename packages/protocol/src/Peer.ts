@@ -162,10 +162,10 @@ export class Peer {
 				let res = this.bindings[name].apply(this, args);
 				if (res instanceof Promise) {
 					res.then(r => {
-						this.sock.send(encode([1,id,name,r]));
+						this.sock.send(encode([1,id,name,r]) as unknown as Buffer);
 					});
 				} else {
-					this.sock.send(encode([1,id,name,res]));
+					this.sock.send(encode([1,id,name,res]) as unknown as Buffer);
 				}
 			} catch(e) {
 				console.error("Could to dispatch or return call", e);
@@ -175,7 +175,7 @@ export class Peer {
 			//console.log("Proxy for:", name, id);
 			args.unshift((res: unknown) => {
 				try {
-					this.sock.send(encode([1,id,name,res]));
+					this.sock.send(encode([1,id,name,res]) as unknown as Buffer);
 				} catch(e) {
 					console.log("ERROR")
 					this.close();
@@ -248,7 +248,7 @@ export class Peer {
 		this.callbacks[id] = cb;
 	
 		try {
-			this.sock.send(encode([0, id, name, args]));
+			this.sock.send(encode([0, id, name, args]) as unknown as Buffer);
 		} catch(e) {
 			this.close();
 		}
@@ -262,7 +262,7 @@ export class Peer {
 	 */
 	send(name: string, ...args: unknown[]) {
 		try {
-			this.sock.send(encode([0, name, args]));
+			this.sock.send(encode([0, name, args]) as unknown as Buffer);
 		} catch(e) {
 			this.close();
 		}
@@ -270,7 +270,7 @@ export class Peer {
 
 	sendB(name: string, args: unknown[]) {
 		try {
-			this.sock.send(encode([0, name, args]));
+			this.sock.send(encode([0, name, args]) as unknown as Buffer);
 		} catch(e) {
 			this.close();
 		}

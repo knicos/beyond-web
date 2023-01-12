@@ -1,7 +1,7 @@
 import React, {useState} from 'react';
 import {Table} from '../../components/Table';
 import {FaCircle, FaCheck, FaPen, FaTrashAlt} from 'react-icons/fa';
-import {useHistory} from 'react-router';
+import {useNavigate} from 'react-router';
 import {Container, Title, Gap, TitleRow} from './styledComponents';
 import {useRecoilValue} from 'recoil';
 import {streamList} from '../../recoil/atoms';
@@ -24,7 +24,7 @@ const StreamMenu = styled.div`
 export function Streams() {
   const streams = useRecoilValue<IStream[]>(streamList);
   const path = process.env.ASSET_PATH;
-  const history = useHistory();
+  const navigate = useNavigate();
   const [showAddCollection, setShowAddCollection] = useState(false);
   const [showAddStream, setShowAddStream] = useState(false);
 
@@ -44,7 +44,7 @@ export function Streams() {
           <span>{data.frame || 'No Name'}</span>
           <StreamMenu className="hidden">
             <IconButton onClick={() => {
-              history.push(`${path}streams/${data.id}/${data.fsix}/${data.fix}`);
+              navigate(`${path}streams/${data.id}/${data.fsix}/${data.fix}`);
             }}><FaPen /></IconButton>
             <IconButton onClick={() => {
               // Delete only one frame
@@ -83,7 +83,7 @@ export function Streams() {
           <span>{data.title || 'No Name'}</span>
           <StreamMenu className="hidden">
             <IconButton onClick={() => {
-              history.push(`${path}collections/${data.id}`);
+              navigate(`${path}collections/${data.id}`);
             }}><FaPen /></IconButton>
             <IconButton onClick={() => {
               deleteStream(data.id);

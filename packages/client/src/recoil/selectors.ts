@@ -13,9 +13,10 @@ export const currentSession = selector({
     get(sessionRequestId);
     try {
       const response = await axios.get(OAUTH2_VALIDATE);
+      console.log('Getting session', response.data);
       return response.data;
     } catch(err) {
-      console.log('ERROR', err.response);
+      // console.log('ERROR', err.response);
       return null;
     }
   },

@@ -49,7 +49,7 @@ export async function bindToStream(p: Peer, uri: string) {
 
     if (!p.isBound(parsedURI)) {
       NodeLogger.info(p.string_id, 'Adding local stream binding: ', parsedURI);
-      outputStreams.set(p.uri, new OutputStream(parsedURI, p));
+      outputStreams.set(p.string_id, new OutputStream(parsedURI, p));
     }
 
     return [Peer.uuid];

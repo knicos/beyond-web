@@ -75,7 +75,10 @@ interface Props {
 
 export default function StreamInfo({ stream, time }: Props) {
   const {latency, fps} = stream.getStatistics();
-  const [period, rx, tx] = stream.peer.getStatistics();
+  const stats = stream.peer.getStatistics();
+  const period = stats.duration;
+  const tx = stats.txRate;
+  const rx = stats.rxRate
 
   const capabilities = stream.data.get(72) || [];
 

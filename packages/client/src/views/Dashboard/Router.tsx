@@ -1,5 +1,5 @@
 import React from 'react';
-import {Switch, Route} from 'react-router';
+import {Routes, Route} from 'react-router';
 import {Node} from '../Node';
 import {Nodes} from '../Nodes';
 import {Streams} from '../Streams';
@@ -11,17 +11,17 @@ import { UnderConstruction } from './UnderConstruction';
 export function Router() {
     const path = process.env.ASSET_PATH;
     return (
-        <Switch>
-            <Route path={`${path}nodes/:id`} component={Node} />
-            <Route path={`${path}nodes`} component={Nodes} />
-            <Route path={`${path}streams/:id/:fsid/:fid`} component={StreamView} />
-            <Route path={`${path}streams`} component={Streams} />
-            <Route path={`${path}stats`} component={UnderConstruction} />
-            <Route path={`${path}recordings`} component={Recordings} />
-            <Route path={`${path}configs`} component={UnderConstruction} />
-            <Route path={`${path}users`} component={UnderConstruction} />
-            <Route path={`${path}groups`} component={UnderConstruction} />
-            <Route path={`${path}`} component={MainListing} />
-        </Switch>
+        <Routes>
+            <Route path={`${path}nodes/:id`} element={<Node/>} />
+            <Route path={`${path}nodes`} element={<Nodes/>} />
+            <Route path={`${path}streams/:id/:fsid/:fid`} element={<StreamView/>} />
+            <Route path={`${path}streams`} element={<Streams/>} />
+            <Route path={`${path}stats`} element={<UnderConstruction/>} />
+            <Route path={`${path}recordings`} element={<Recordings/>} />
+            <Route path={`${path}configs`} element={<UnderConstruction/>} />
+            <Route path={`${path}users`} element={<UnderConstruction/>} />
+            <Route path={`${path}groups`} element={<UnderConstruction/>} />
+            <Route path={`${path}*`} element={<MainListing/>} />
+        </Routes>
     )
 }

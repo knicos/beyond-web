@@ -19,11 +19,11 @@ export default class Nodes {
   @Get('/')
   @Description('Get all available users')
   async find(
-    @QueryParams() page: Pageable,
-    @QueryParams() query: NodeQuery,
+    @QueryParams("page") page: Pageable,
+    @QueryParams("query") query: NodeQuery,
     @UseToken() token: AccessToken,
   ): Promise<Node[]> {
-    return this.nodeService.findInGroups(token.groups, query, page.offset, page.limit);
+    return this.nodeService.findInGroups(token.groups, query || new NodeQuery(), page?.offset || 0, page?.limit || 50);
   }
 
   @Put('/:id')

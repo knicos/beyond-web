@@ -140,7 +140,7 @@ function Capabilities({data}: {data: number[]}) {
 }
 
 function RawValue({data, config, channel}: IDataComponentProps) {
-    const str = typeof data === 'object' ? JSON.stringify(data) : data;
+    const str = typeof data === 'object' ? JSON.stringify(data) : data as string;
     return <DataItem channel={channel} name={pupa(config.title, {channel})} value={str} />;
 }
 

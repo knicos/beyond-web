@@ -62,8 +62,8 @@ describe('Output Stream unit test', () => {
     const os = new OutputStream('ftl://test', p);
     expect(os).toBeTruthy();
 
-    const promise = new Promise<string>((resolve) => {
-      redisSubscribe('stream-out:ftl://test', (data: string) => {
+    const promise = new Promise<Buffer>((resolve) => {
+      redisSubscribe('stream-out:ftl://test', (data: Buffer) => {
         resolve(data);
       });
     });

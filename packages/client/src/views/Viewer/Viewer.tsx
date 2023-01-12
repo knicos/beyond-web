@@ -5,12 +5,12 @@ import {currentStream, peer} from '../../recoil/atoms';
 import {useLocation} from 'react-router';
 import qs from 'query-string';
 import {FTLStream} from '@ftl/stream';
-import {Peer} from '@ftl/protocol';
+import {Peer} from '@beyond/protocol';
 import {IStream, getStream} from '../../api/streams';
 
 export function Viewer() {
   const p: Peer = useRecoilValue(peer);
-  const [stream, setStream] = useRecoilState(currentStream);
+  const [stream, setStream] = useRecoilState<FTLStream>(currentStream);
   const params = qs.parse(useLocation().search);
   const [streamData, setStreamData] = useState<IStream>(null);
 
@@ -21,25 +21,32 @@ export function Viewer() {
   }, [params.id]);
 
   useEffect(() => {
-    if (!p) {
+    if (!p || p.status !== 2) {
         return () => {};
     }
-    if (stream?.uri !== params.s) {
+
+    setStream((oldStream) => {
+      if (oldStream?.uri !== params.s) {
         console.error('Stream is not correct', params);
-        if (stream && stream.active) {
+        if (oldStream && oldStream.active) {
           console.error('Current stream is still active', stream.uri);
         }
         const s = new FTLStream(p, params.s as string);
         s.enableVideo(0, 0, 21);
-        setStream(s);
+        return s;
+      } else {
+        return oldStream;
+      }
+    });
 
-        return () => {
-          console.info('Destroy stream', s.uri);
-          s.destroy();
-          setStream(null);
-        }
+    return () => {
+      if (stream) {
+        console.info('Destroy stream', stream.uri);
+        stream.destroy();
+        setStream(null);
+      }
     }
-  }, [p]);
+  }, [p, p?.status]);
 
   if (!stream) {
       return null;

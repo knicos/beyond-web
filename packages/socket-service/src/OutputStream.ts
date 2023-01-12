@@ -17,7 +17,7 @@ export default class OutputStream {
 
   private peer: Peer;
 
-  private onMessage: Function;
+  private onMessage: (msg: Buffer) => void;
 
   private bitrateScale = 1.0;
 
@@ -43,7 +43,7 @@ export default class OutputStream {
       this.pushFrame(latency, spacket, packet);
     });
 
-    const onMessage = (message) => {
+    const onMessage = (message: Buffer) => {
       const buf = (typeof message === 'string') ? new Uint8Array(JSON.parse(message).data) : message;
       try {
         const stats = this.peer.getStatistics();
@@ -51,6 +51,7 @@ export default class OutputStream {
         if (stats !== this.lastStats) {
           this.lastStats = stats;
           if (stats.txRatio > 4.0 && this.bitrateScale < 0.1) {
+            $log.info('TX Error, closing peer');
             this.peer.close();
             return;
           }

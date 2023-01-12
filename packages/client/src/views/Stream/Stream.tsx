@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Formik, Field } from 'formik';
 import { useParams } from 'react-router';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Form, ButtonBar } from '../../components/Form';
 import { Container } from './styledComponents';
 import { TableContainer } from '../Node/styledComponents';
@@ -53,7 +53,7 @@ export function StreamView() {
   const [config, setConfig] = useState<IConfig[]>([]);
   const [target, setTarget] = useState(null);
   const [showNewConfig, setShowNewConfig] = useState(false);
-  const history = useHistory();
+  const navigate = useNavigate();
   
   useEffect(() => {
     getStream(id).then(setStream);
@@ -143,7 +143,7 @@ export function StreamView() {
                 <button>
                   Delete
                 </button>
-                <button onClick={() => history.goBack()}>
+                <button onClick={() => navigate(-1)}>
                   Cancel
                 </button>
               </ButtonBar>

@@ -1,6 +1,6 @@
 import React from 'react';
 import {SelectableCard, Grid} from '../../components/SelectableCard/SelectableCard';
-import {useHistory, useLocation} from 'react-router';
+import {useNavigate, useLocation} from 'react-router';
 import styled from 'styled-components';
 import {ReactPlayer} from '@ftl/player';
 import {useRecoilValue, useSetRecoilState, useRecoilState} from 'recoil';
@@ -32,7 +32,7 @@ const TagButton = styled.button`
 
 export function GeneralView({ data }: { data: IStream }) {
     const path = process.env.ASSET_PATH;
-    const history = useHistory();
+    const navigate = useNavigate();
     const location = useLocation();
     const stream = useRecoilValue(currentStream);
 
@@ -55,12 +55,12 @@ export function GeneralView({ data }: { data: IStream }) {
         </FullWidthContainer>
         <Grid>
             <TagButton onClick={() => {
-                history.push(`${path}view/skr${location.search}`)
+                navigate(`${path}view/skr${location.search}`)
             }}>
                 SKR
             </TagButton>
             <TagButton onClick={() => {
-                history.push(`${path}view/developer${location.search}`)
+                navigate(`${path}view/developer${location.search}`)
             }}>
                 Developer
             </TagButton>

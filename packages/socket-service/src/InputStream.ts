@@ -2,6 +2,7 @@ import { DataPacket, Peer, StreamPacket } from '@beyond/protocol';
 import {
   redisPublish, redisSendEvent, redisSubscribe, redisUnsubscribe,
 } from '@ftl/common';
+import { $log } from '@tsed/logger';
 import { recordLatency } from './latencyManager';
 import { StreamLogger } from './logger';
 
@@ -22,7 +23,7 @@ export default class InputStream {
 
   data = {};
 
-  onMessage: Function;
+  onMessage: (msg: Buffer) => void;
 
   lastTS = 0;
 

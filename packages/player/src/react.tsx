@@ -104,26 +104,39 @@ export function ReactPlayer({stream, channel, movement, onSelectPoint, points, i
     }, [points, state.player]);
 
     useEffect(() => {
-        if (stream) {
-            // FIXME: What if the stream changes!!
-            //stream.enableVideo(0, 0, channel || 0);
-            stream.on('packet', (spkt, pkt) => {
-                const [_, fsid, fid, chan] = spkt;
-                if (state.player && fsid === 0 && fid === 0 && (chan === channel || (chan >= 32 && chan < 34))) {
-                    state.player.push(spkt, pkt);
-                }
-            });
-            stream.on('stopped', () => {
-                state.player.hardReset();
-                setMode('waiting');
-            });
-            stream.on('ready', () => {
-                state.player.reset();
-                setMode(state.player.isActive() ? 'playing' : 'paused');
-            });
-            stream.enableVideo(0, 0, channel || 0);
-            stream.start(0, 0, channel || 0);
+      if (stream) {
+        // FIXME: What if the stream changes!!
+        //stream.enableVideo(0, 0, channel || 0);
+
+        const packetHandler = (spkt, pkt) => {
+          const [_, fsid, fid, chan] = spkt;
+          if (state.player && fsid === 0 && fid === 0 && (chan === channel || (chan >= 32 && chan < 34))) {
+              state.player.push(spkt, pkt);
+          }
+        };
+
+        const stopHandler = () => {
+          state.player.hardReset();
+          setMode('waiting');
+        };
+
+        const readyHandler = () => {
+          state.player.reset();
+          setMode(state.player.isActive() ? 'playing' : 'paused');
+        };
+
+        stream.on('packet', packetHandler);
+        stream.on('stopped', stopHandler);
+        stream.on('ready', readyHandler);
+        stream.enableVideo(0, 0, channel || 0);
+        stream.start(0, 0, channel || 0);
+
+        return () => {
+          stream.off('packet', packetHandler);
+          stream.off('stopped', stopHandler);
+          stream.off('ready', readyHandler);
         }
+      }
     }, [stream]);
 
     if (state.player) {

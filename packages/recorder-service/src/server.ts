@@ -1,12 +1,14 @@
 import {
-  Configuration, Inject, PlatformApplication, HttpServer,
+  Configuration, Inject, PlatformApplication,
 } from '@tsed/common';
 import { $log } from '@tsed/logger';
 import express from 'express';
 import compress from 'compression';
 import cookieParser from 'cookie-parser';
 import { redisStreamListen, redisSetGroup, installMonitor } from '@ftl/common';
+import Http from 'http';
 import './logger';
+import Recordings from './controllers/recordings';
 
 $log.appenders.set('redis', {
   type: 'redis',
@@ -26,15 +28,15 @@ const rootDir = __dirname;
     logRequest: false,
   },
   mount: {
-    '/v1': `${rootDir}/controllers/**/*.ts`,
+    '/v1': [Recordings],
   },
 })
 export default class Server {
   @Inject()
   app: PlatformApplication;
 
-  @Inject(HttpServer)
-  httpServer: HttpServer;
+  @Inject(Http.Server)
+  httpServer: Http.Server;
 
   @Configuration()
   settings: Configuration;

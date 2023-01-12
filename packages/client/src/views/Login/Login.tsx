@@ -1,7 +1,7 @@
 import React from 'react';
 import { Formik, Field } from 'formik';
 import axios from 'axios';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { refreshSession } from '../../recoil/selectors';
 import { Form, ButtonBar } from '../../components/Form';
 import { LoginContainer } from './styledComponents';
@@ -23,7 +23,7 @@ async function login(username: string, password: string) {
 
 export function Login() {
   const refresh = refreshSession();
-  let history = useHistory();
+  const navigate = useNavigate();
 
   return (
     <Formik
@@ -31,7 +31,7 @@ export function Login() {
        onSubmit={async (values) => {
           await login(values.username, values.password);
           refresh();
-          history.push(process.env.ASSET_PATH);
+          navigate(process.env.ASSET_PATH);
        }}
     >
       {({ isSubmitting }) => (

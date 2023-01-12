@@ -5,11 +5,11 @@
   "devDependencies": {
     "@types/event-emitter": "^0.3.3",
     "@types/jest": "^26.0.24",
-    "@types/node": "^16.3.0",
-    "@types/react": "^17.0.15",
+    "@types/node": "^18.11.18",
+    "@types/react": "^18.0.26",
     "@types/three": "^0.130.1",
-    "jest": "^27.0.6",
-    "typescript": "^4.3.5"
+    "jest": "^29.3.1",
+    "typescript": "^4.9.4"
   },
   "scripts": {
     "clean": "rm -rf ./dist && rm -rf ./node_modules",
@@ -20,10 +20,10 @@
     "@ftl/stream": "1.0.0",
     "event-emitter": "^0.3.5",
     "mux.js": "^5.6.2",
-    "react": "^17.0.2",
+    "react": "^18.2.0",
     "react-icons": "^4.2.0",
     "rematrix": "^0.7.2",
-    "styled-components": "^5.3.0",
-    "three": "^0.131.2"
+    "styled-components": "^5.3.6",
+    "three": "^0.148.0"
   }
 }

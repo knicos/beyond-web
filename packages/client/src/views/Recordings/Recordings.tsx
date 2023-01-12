@@ -1,6 +1,6 @@
 import React from 'react';
 import {Table} from '../../components/Table';
-import {useHistory} from 'react-router';
+import {useNavigate} from 'react-router';
 import {Card, CardTitle} from '../../components/SelectableCard/SelectableCard';
 import {useRecoilValue, useRecoilState} from 'recoil';
 import {recordingList} from '../../recoil/atoms';
@@ -21,7 +21,7 @@ export function Recordings() {
   ];
 
   const path = process.env.ASSET_PATH;
-  const history = useHistory();
+  const navigate = useNavigate();
 
   return (
     <Card>

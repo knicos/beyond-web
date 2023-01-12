@@ -7,7 +7,7 @@ import DataListing from '../../components/DataListing';
 import {useLocation} from 'react-router';
 import qs from 'query-string';
 import {FTLStream} from '@ftl/stream';
-import {Peer} from '@ftl/protocol';
+import {Peer} from '@beyond/protocol';
 import {MenuBar} from './MenuBar';
 import {Tabs} from '../../components/Tabs';
 import SettingsListing from '../../components/SettingsListing';

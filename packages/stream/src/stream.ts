@@ -1,6 +1,6 @@
 import ee, {Emitter} from 'event-emitter';
 import allOff from 'event-emitter/all-off';
-import {Peer} from '@ftl/protocol';
+import {Peer} from '@beyond/protocol';
 import msgpack from 'msgpack5';
 const {encode, decode} = msgpack();
 
@@ -17,7 +17,7 @@ export class FTLStream {
 	peer: Peer;
   uri: string;
   paused = false;
-  active = true;
+  active = false;
   availableChannels = new Set<number>();
   availableSets = new Set<number>();
   availableSources = new Set<number>();
@@ -39,6 +39,8 @@ export class FTLStream {
 	constructor(peer: Peer, uri: string) {
     this.peer = peer;
     this.uri = uri;
+
+    console.log('Stream constructed', this);
 
     this.peer.bind(uri, (latency: number, streampckg: number[], pckg: any[]) => {
         if (this.paused || !this.active) {
@@ -151,15 +153,16 @@ export class FTLStream {
       }
     }
 
-    stop() {
+    async stop() {
+      console.log('STOP stream');
       this.active = false;
       if (this.interval) {
         clearInterval(this.interval);
         this.interval = null;
       }
       if (this.found) {
-        this.peer.rpc("disable_stream", () => {});
-        this.peer.unbind(this.uri);
+        await this.peer.rpc("disable_stream");
+        // this.peer.unbind(this.uri);
         this.found = false;
       }
       this.emit('stop');
@@ -168,37 +171,47 @@ export class FTLStream {
     destroy() {
       this.stop();
       allOff(this);
+      this.peer.unbind(this.uri);
       this.peer = null;
     }
 
-    start(fs: number, frame: number, channel: number) {
-      if (!this.peer) {
+    async start(fs: number, frame: number, channel: number) {
+      if (!this.peer || this.peer.status !== 2) {
         return;
+      }
+      if (this.active) {
+        await this.stop();
       }
       this.active = true;
       this.frame = frame;
 
+      console.log('START stream');
+
       this.interval = setInterval(() => {
         if (this.active && this.found) {
             this.enabledChannels.forEach((value, key) => {
+                console.log('Send request', value.stream, value.channel);
                 this.peer.send(this.uri, 0, [1,value.stream,255,value.channel,1],[255,7,35,255,0,Buffer.alloc(0)]);
             });
         }
       }, 500);
 
       if (!this.found) {
-        this.peer.rpc("enable_stream", res => {
-            if (!res) {
-                console.error('Stream not found', this.uri);
-                if (this.active) {
-                    setTimeout(() => this.start(fs, frame, channel), 500);
-                }
-                return;
+        try {
+        const res = await this.peer.rpc("enable_stream", this.uri, true);
+        if (!res) {
+            console.error('Stream not found', this.uri);
+            if (this.active) {
+                setTimeout(() => this.start(fs, frame, channel), 500);
             }
-            console.log('Stream connected');
-            this.found = true;
-            this.emit('ready');
-        }, this.uri, true);
+            return;
+        }
+        } catch(e) {
+          console.error('Some enable_stream failure', e);
+        }
+        console.log('Stream connected');
+        this.found = true;
+        this.emit('ready');
       } else {
         this.emit('ready');
       }
