@@ -1,11 +1,12 @@
 import { Peer } from '@beyond/protocol';
 import {
-  redisAddItem, redisRemoveItem, redisTopItems, redisSendEvent,
+  redisAddItem, redisRemoveItem, redisTopItems, redisSendEvent, redisSetStreamCallback,
 } from '@ftl/common';
 import { $log } from '@tsed/logger';
 import InputStream from './InputStream';
 import OutputStream from './OutputStream';
 import { NodeLogger } from './logger';
+import { StreamOperationEventBody } from '@ftl/api';
 
 const peerUris = new Map<string, string[]>();
 const uriToPeer = new Map<string, Peer>();
@@ -24,7 +25,7 @@ function removeQueryString(uri: string): string {
 }
 
 export async function getStreams(): Promise<string[]> {
-  const streams = await redisTopItems('streams');
+  const streams = await redisTopItems('socket-service:streams');
   const set = new Set<string>();
   const result = [];
   for (const s of streams.reverse()) {
@@ -38,7 +39,7 @@ export async function getStreams(): Promise<string[]> {
 }
 
 export async function getActiveStreams(): Promise<string[]> {
-  return redisTopItems('activestreams');
+  return redisTopItems('socket-service:activestreams');
 }
 
 export async function bindToStream(p: Peer, uri: string) {
@@ -69,7 +70,6 @@ export function removeStreams(peer: Peer) {
   if (puris) {
     for (let i = 0; i < puris.length; i++) {
       NodeLogger.info(peer.string_id, 'Removing stream: ', puris[i]);
-      redisRemoveItem('activestreams', puris[i]);
 
       redisSendEvent({
         event: 'events:stream',
@@ -121,8 +121,7 @@ export async function initStream(
   if (framesetId !== 255) {
     is.enabledFrames.add(`${framesetId}:${frameId}`);
   }
-  await redisAddItem('streams', uri, Date.now());
-  await redisAddItem('activestreams', parsedURI, Date.now());
+
   if (nodeCreated) {
     is.startStream();
   }
@@ -171,3 +170,13 @@ export function checkStreams(peer: Peer) {
     }, 500); // Give a delay to allow startup
   }
 }
+
+// Watch for stream events to add/remove active streams
+redisSetStreamCallback('events:stream', async (data: StreamOperationEventBody) => {
+  if (data.operation === 'start') {
+    await redisAddItem('socket-service:streams', data.id, Date.now());
+    await redisAddItem('socket-service:activestreams', data.id, Date.now());
+  } else if (data.operation === 'stop') {
+    await redisRemoveItem('socket-service:activestreams', data.id);
+  }
+});
