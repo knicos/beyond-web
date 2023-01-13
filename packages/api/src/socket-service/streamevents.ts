@@ -27,7 +27,7 @@ export interface StreamOperationEventBody extends StreamEventBody {
 
 export interface StreamOperationStartEventBody extends StreamOperationEventBody {
   operation: 'start';
-  node: string;
+  node?: string;
   owner: string;
   groups: string[];
   params?: Record<string, string>;

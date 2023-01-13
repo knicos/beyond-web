@@ -156,15 +156,6 @@ export function createSource(ws, address: string, token: AccessToken, ephemeral:
 
   p.bind('node_details', () => [`{"title": "FTL Web-Service", "id": "${p.getUuid()}", "kind": "master"}`]);
 
-  p.bind('list_streams', () => getStreams());
-
-  /** @deprecated */
-  p.bind('list_configurables', () => []);
-
-  /** @deprecated */
-  p.proxy('get_configurable', () => '{}');
-
-  /* Unused by new protocol */
   p.bind('find_stream', (uri: string, proxy) => {
     if (!proxy) return null;
     return new Promise((resolve) => {
@@ -179,12 +170,6 @@ export function createSource(ws, address: string, token: AccessToken, ephemeral:
       });
     });
   });
-
-  /** @deprecated */
-  p.bind('get_cfg', () => '{}')
-
-  /** @deprecated */
-  p.bind('update_cfg', () => '{}')
 
   // Register a new stream
   p.bind('add_stream', (uri: string) => {
