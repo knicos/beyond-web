@@ -69,45 +69,87 @@ client_test:
     - docker load -i image/client.tar.gz
     - docker run webapp-client yarn test
 
-latest_deploy:
+#latest_deploy:
+#  stage: deploy
+#  tags:
+#    - docker
+#    - git
+#  environment:
+#    name: production
+#    url: https://app.ftlab.utu.fi
+#  rules:
+#    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+#      when: manual
+#  needs: ["service_build","client_build","service_test","client_test"]
+#  variables:
+#    DOCKER_USER: $DOCKER_USER
+#    DOCKER_PASSWORD: $DOCKER_PASSWORD
+#  script:
+#    - docker load -i image/service.tar.gz
+#    - docker load -i image/client.tar.gz
+#    - COMPOSE_DOCKER_CLI_BUILD=1 docker-compose build --build-arg CLIENT_ID=615417781b5701158c4997ba --build-arg CLIENT_SECRET=l7FNrUMa3ILzi3qiyo5J44wVGC40YTBx
+#    - echo "$DOCKER_PASSWORD" | docker login -u $DOCKER_USER --password-stdin app.ftlab.utu.fi
+#    - docker-compose push
+
+deploy_client:
   stage: deploy
   tags:
     - docker
     - git
   environment:
-    name: production
+    name: client_production
     url: https://app.ftlab.utu.fi
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       when: manual
-  needs: ["service_build","client_build","service_test","client_test"]
+  needs: ["client_build","client_test"]
   variables:
     DOCKER_USER: $DOCKER_USER
     DOCKER_PASSWORD: $DOCKER_PASSWORD
   script:
-    - docker load -i image/service.tar.gz
     - docker load -i image/client.tar.gz
-    - COMPOSE_DOCKER_CLI_BUILD=1 docker-compose build --build-arg CLIENT_ID=615417781b5701158c4997ba --build-arg CLIENT_SECRET=l7FNrUMa3ILzi3qiyo5J44wVGC40YTBx
+    - docker build -t app.ftlab.utu.fi/app-client:latest -f ./docker/Dockerfile.client --build-arg CLIENT_ID=615417781b5701158c4997ba --build-arg CLIENT_SECRET=l7FNrUMa3ILzi3qiyo5J44wVGC40YTBx .
     - echo "$DOCKER_PASSWORD" | docker login -u $DOCKER_USER --password-stdin app.ftlab.utu.fi
-    - docker-compose push
+    - docker push app.ftlab.utu.fi/app-client:latest
 
-tag_deploy:
+deploy_auth:
   stage: deploy
   tags:
     - docker
     - git
-  only:
-    - tags
   environment:
-    name: production
+    name: auth_production
     url: https://app.ftlab.utu.fi
-  needs: ["service_build","client_build","service_test","client_test"]
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: manual
+  needs: ["service_build","service_test"]
   variables:
     DOCKER_USER: $DOCKER_USER
     DOCKER_PASSWORD: $DOCKER_PASSWORD
   script:
     - docker load -i image/service.tar.gz
-    - docker load -i image/client.tar.gz
-    - TAG="$CI_COMMIT_TAG" COMPOSE_DOCKER_CLI_BUILD=1 docker-compose build --build-arg CLIENT_ID=615417781b5701158c4997ba --build-arg CLIENT_SECRET=l7FNrUMa3ILzi3qiyo5J44wVGC40YTBx
+    - docker build -t app.ftlab.utu.fi/app-authservice:latest -f ./docker/Dockerfile.services --target authservice --build-arg CLIENT_ID=615417781b5701158c4997ba --build-arg CLIENT_SECRET=l7FNrUMa3ILzi3qiyo5J44wVGC40YTBx .
     - echo "$DOCKER_PASSWORD" | docker login -u $DOCKER_USER --password-stdin app.ftlab.utu.fi
-    - docker-compose push
+    - docker push app.ftlab.utu.fi/app-authservice:latest
+
+#tag_deploy:
+#  stage: deploy
+#  tags:
+#    - docker
+#    - git
+#  only:
+#    - tags
+#  environment:
+#    name: production
+#    url: https://app.ftlab.utu.fi
+#  needs: ["service_build","client_build","service_test","client_test"]
+#  variables:
+#    DOCKER_USER: $DOCKER_USER
+#    DOCKER_PASSWORD: $DOCKER_PASSWORD
+#  script:
+#    - docker load -i image/service.tar.gz
+#    - docker load -i image/client.tar.gz
+#    - TAG="$CI_COMMIT_TAG" COMPOSE_DOCKER_CLI_BUILD=1 docker-compose build --build-arg CLIENT_ID=615417781b5701158c4997ba --build-arg CLIENT_SECRET=l7FNrUMa3ILzi3qiyo5J44wVGC40YTBx
+#    - echo "$DOCKER_PASSWORD" | docker login -u $DOCKER_USER --password-stdin app.ftlab.utu.fi
+#    - docker-compose push
