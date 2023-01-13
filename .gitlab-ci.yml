@@ -113,6 +113,7 @@ deploy_client:
     - docker push app.ftlab.utu.fi/app-client:latest
 
 .service_deploy:
+  stage: deploy
   tags:
     - docker
     - git
