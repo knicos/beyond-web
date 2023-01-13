@@ -112,13 +112,12 @@ deploy_client:
     - echo "$DOCKER_PASSWORD" | docker login -u $DOCKER_USER --password-stdin app.ftlab.utu.fi
     - docker push app.ftlab.utu.fi/app-client:latest
 
-deploy_auth:
-  stage: deploy
+.service_deploy:
   tags:
     - docker
     - git
   environment:
-    name: auth_production
+    name: $ENV_NAME
     url: https://app.ftlab.utu.fi
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
@@ -129,9 +128,45 @@ deploy_auth:
     DOCKER_PASSWORD: $DOCKER_PASSWORD
   script:
     - docker load -i image/service.tar.gz
-    - docker build -t app.ftlab.utu.fi/app-authservice:latest -f ./docker/Dockerfile.services --target authservice --build-arg CLIENT_ID=615417781b5701158c4997ba --build-arg CLIENT_SECRET=l7FNrUMa3ILzi3qiyo5J44wVGC40YTBx .
+    - docker build -t app.ftlab.utu.fi/app-$SERVICE_NAME:latest -f ./docker/Dockerfile.services --target $SERVICE_NAME .
     - echo "$DOCKER_PASSWORD" | docker login -u $DOCKER_USER --password-stdin app.ftlab.utu.fi
-    - docker push app.ftlab.utu.fi/app-authservice:latest
+    - docker push app.ftlab.utu.fi/app-$SERVICE_NAME:latest
+
+deploy_auth:
+  variables:
+    ENV_NAME: auth_production
+    SERVICE_NAME: authservice
+  extends: .service_deploy
+
+deploy_socket:
+  variables:
+    ENV_NAME: socket_production
+    SERVICE_NAME: socketservice
+  extends: .service_deploy
+
+deploy_node:
+  variables:
+    ENV_NAME: node_production
+    SERVICE_NAME: nodeservice
+  extends: .service_deploy
+
+deploy_stream:
+  variables:
+    ENV_NAME: stream_production
+    SERVICE_NAME: streamservice
+  extends: .service_deploy
+
+deploy_record:
+  variables:
+    ENV_NAME: recorder_production
+    SERVICE_NAME: recorderservice
+  extends: .service_deploy
+
+deploy_playback:
+  variables:
+    ENV_NAME: playback_production
+    SERVICE_NAME: playbackservice
+  extends: .service_deploy
 
 #tag_deploy:
 #  stage: deploy
