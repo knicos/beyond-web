@@ -74,8 +74,12 @@ latest_deploy:
   tags:
     - docker
     - git
-  only:
-    - master
+  environment:
+    name: production
+    url: https://app.ftlab.utu.fi
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: manual
   needs: ["service_build","client_build","service_test","client_test"]
   variables:
     DOCKER_USER: $DOCKER_USER
@@ -94,6 +98,9 @@ tag_deploy:
     - git
   only:
     - tags
+  environment:
+    name: production
+    url: https://app.ftlab.utu.fi
   needs: ["service_build","client_build","service_test","client_test"]
   variables:
     DOCKER_USER: $DOCKER_USER
