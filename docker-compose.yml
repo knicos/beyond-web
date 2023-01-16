@@ -129,3 +129,28 @@ services:
     volumes:
       - ./.data:/data
     command: redis-stack-server --maxmemory 200mb --save "300 1" --appendonly no
+
+  opensearch:
+    image: opensearchproject/opensearch:latest
+    environment:
+      - "OPENSEARCH_JAVA_OPTS=-Xms1g -Xmx1g"
+      - "bootstrap.memory_lock=true"
+      - "discovery.type=single-node"
+      - "action.auto_create_index=true"
+    volumes:
+      - ./.data:/usr/share/opensearch/data
+
+  diagnosticservice:
+    image: app.ftlab.utu.fi/app-diagnosticservice:${TAG:-latest}
+    build:
+      context: ./
+      dockerfile: ./docker/Dockerfile.services
+      target: diagnosticservice
+    environment:
+      NODE_ENV: development
+      REDIS_HOST: redis
+    depends_on:
+      - redis
+      - opensearch
+    volumes:
+      - ./:/usr/src/app

@@ -23,6 +23,7 @@ export default class RedisLogger {
         clientId: state && state.get('clientId'),
         sessionId: state && state.get('sessionId'),
         groupName: redisConsumerGroup(),
+        timestamp: Date.now(),
       },
     });
   }
