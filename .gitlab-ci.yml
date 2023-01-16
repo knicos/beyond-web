@@ -169,6 +169,12 @@ deploy_playback:
     SERVICE_NAME: playbackservice
   extends: .service_deploy
 
+deploy_diagnostic:
+  variables:
+    ENV_NAME: diagnostic_production
+    SERVICE_NAME: diagnosticservice
+  extends: .service_deploy
+
 #tag_deploy:
 #  stage: deploy
 #  tags:
