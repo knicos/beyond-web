@@ -22,6 +22,7 @@ export default class RedisAppender extends BaseAppender {
         message: JSON.stringify(loggingEvent.data),
         level,
         resource: 'service',
+        timestamp: loggingEvent.startTime.getDate(),
       },
     });
   }

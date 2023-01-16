@@ -9,6 +9,13 @@ services:
     environment:
       FTL_SOCKET_NOAUTH: "true"
 
+  diagnosticservice:
+    build:
+      context: ./
+      dockerfile: ./docker/Dockerfile.services
+      target: build
+    command: ["yarn", "workspace", "@ftl/diagnostic-service", "run", "start:dev"]
+
   authservice:
     build:
       context: ./
@@ -59,6 +66,15 @@ services:
     image: redislabs/redisinsight:latest
     ports:
       - "8001:8001"
+
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:latest
+    ports:
+      - 5601:5601
+    expose:
+      - "5601"
+    environment:
+      OPENSEARCH_HOSTS: '["https://opensearch:9200"]'
 
   mongoexpress:
     image: mongo-express

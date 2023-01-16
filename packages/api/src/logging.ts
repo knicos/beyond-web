@@ -7,6 +7,7 @@ export interface LogBody extends BaseEventBody {
   groupName?: string;
   level: number;
   message: string;
+  timestamp: number;
 }
 
 export interface LogEvent extends BaseEvent {
