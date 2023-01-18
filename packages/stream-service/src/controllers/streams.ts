@@ -20,8 +20,10 @@ export default class Streams {
   @Get('/')
   @Description('Get all available streams')
   @Groups('query')
-  async find(@QueryParams("page") page: Pageable, @UseToken() token: AccessToken): Promise<Stream[]> {
-    return this.streamService.findInGroups(token.user, token.groups, page?.offset || 0, page?.limit || 50);
+  async find(@QueryParams('page') page: Pageable, @UseToken() token: AccessToken): Promise<Stream[]> {
+    return this.streamService.findInGroups(
+      token.user, token.groups, page?.offset || 0, page?.limit || 50,
+    );
   }
 
   @Get('/:id/thumbnail/:fs/:f')

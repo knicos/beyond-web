@@ -22,16 +22,19 @@ export default class RecorderController {
   }
 
   @Post('/')
+  @Description('Start a new recording')
   async create(@BodyParams() @Groups('creation') request: Recording, @UseToken() token: AccessToken): Promise<Recording> {
     return this.recorderService.create(request, token.user?.id);
   }
 
   @Get('/:id')
+  @Description('Get information about a specific recording')
   async get(@PathParams('id') id: string, @UseToken() token: AccessToken): Promise<Recording> {
     return this.recorderService.get(id, token.user?.id);
   }
 
   @Put('/:id')
+  @Description('Modify a recording, for example to stop the recording')
   async update(@PathParams('id') id: string, @BodyParams() @Groups('update') request: Recording, @UseToken() token: AccessToken): Promise<Recording> {
     return this.recorderService.update(id, token.user?.id, request);
   }

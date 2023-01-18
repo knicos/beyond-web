@@ -5,6 +5,10 @@ import {
   redisConsumerGroup, redisConsumerId, redisHSet, redisSendEvent,
 } from './redis';
 
+/**
+ * Monitors server metrics and sends to Redis.
+ * @param server Express HTTP Server
+ */
 export default function installMonitor(server: Server) {
   const h = monitorEventLoopDelay({ resolution: 20 });
 
