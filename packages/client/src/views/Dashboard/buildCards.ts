@@ -13,8 +13,6 @@ export function buildCards(streams: IStream[], nodes: INode[]): ICardDetails[] {
     editable: true,
   }))], [])], []);
 
-  console.log('STREAM CARDS', cStream);
-
   const cNodes: ICardDetails[] = nodes.map((s) => ({
     type: 'node',
     title: s.name,

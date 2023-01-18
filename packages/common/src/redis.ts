@@ -40,18 +40,6 @@ async function initRedis() {
         console.log('Redis Block ERROR', err);
       });
   
-      /*redisSub.on('message', (channel: Buffer, message: Buffer) => {
-        $log.info('On message', channel);
-        const strchan = channel.toString('utf8');
-  
-        if (handlers.has(strchan)) {
-          const hs = handlers.get(strchan);
-          for (const h of hs) {
-            h(message);
-          }
-        }
-      });*/
-  
       await tmpClient.connect();
       await redisSub.connect();
       await redisBlockClient.connect();
@@ -63,13 +51,25 @@ async function initRedis() {
   }
 }
 
+/**
+ * Publish data to Redis. This is for a stream of unimportant data.
+ * @param channel Redis key
+ * @param data Some JSON object to send
+ * @returns Status code
+ */
 export async function redisPublish(channel: string, data: unknown): Promise<number> {
   await initRedis();
   // Publish to redis
   return redisClient.publish(channel, data as string);
 }
 
-export async function redisSubscribe(channel: string, cb: (msg: Buffer) => void): Promise<void> {
+/**
+ * Listen for published data at a particular key.
+ * @param channel Redis key
+ * @param cb Callback function for received data
+ * @returns Promise
+ */
+export async function redisSubscribe(channel: string, cb: (msg: Buffer) => void) {
   await initRedis();
 
   const hasChannel = subscriptions.has(channel);
@@ -80,15 +80,28 @@ export async function redisSubscribe(channel: string, cb: (msg: Buffer) => void)
   }
 }
 
+/**
+ * Remove a previous subscription.
+ * @param channel Redis key
+ * @param cb The original callback function
+ * @returns Promise
+ */
 export async function redisUnsubscribe(channel: string, cb: (msg: Buffer) => void) {
   if (!subscriptions.has(channel)) {
     return;
   }
 
   subscriptions.delete(channel);
-  return redisSub.unsubscribe(channel, cb, true);
+  await redisSub.unsubscribe(channel, cb, true);
 }
 
+/**
+ * Set a value in the Redis key value database.
+ * @param key Redis key
+ * @param item Object to store at the key
+ * @param time Time-To-Live in seconds
+ * @returns Status
+ */
 export async function redisSet<T>(key: string, item: T, time?: number): Promise<string> {
   await initRedis();
   if (time) {
@@ -99,33 +112,67 @@ export async function redisSet<T>(key: string, item: T, time?: number): Promise<
   return redisClient.set(key, JSON.stringify(item));
 }
 
+/**
+ * Get a Redis value from the key value store.
+ * @param key Redis key
+ * @returns Object stored at that key.
+ */
 export async function redisGet<T>(key: string): Promise<T> {
   await initRedis();
   const result = await redisClient.get(key);
   return JSON.parse(result)
 }
 
+/**
+ * Get multiple keys in one call.
+ * @param keys Array of all keys
+ * @returns Array of corresponding values
+ */
 export async function redisMGet<T>(keys: string[]): Promise<T[]> {
   await initRedis();
   const result = await redisClient.mGet(keys)
   return result.map((v) => JSON.parse(v));
 }
 
+/**
+ * Remove a key/value entry from Redis
+ * @param key Redis key
+ * @returns Status
+ */
 export async function redisDelete(key: string): Promise<number> {
   await initRedis();
   return redisClient.del(key);
 }
 
+/**
+ * Add an item to a sorted set in Redis
+ * @param key Redis key
+ * @param item Value to be added (uniquely)
+ * @param time Timestamp or score to sort by
+ * @returns Status
+ */
 export async function redisAddItem(key: string, item: string, time: number): Promise<number> {
   await initRedis();
   return redisClient.zAdd(key, { score: time, value: item });
 }
 
+/**
+ * Remove an item from a Redis sorted set
+ * @param key Redis key
+ * @param item value of set item
+ * @returns Status
+ */
 export async function redisRemoveItem(key: string, item: string): Promise<number> {
   await initRedis();
   return redisClient.zRem(key, item);
 }
 
+/**
+ * Gets all items in the set that are less than 1 day old.
+ * This should be modified to allow for custom time periods.
+ * @param key Redis key for a set
+ * @returns Array of selected items
+ */
 export async function redisTopItems(key: string): Promise<string[]> {
   await initRedis();
   return redisClient.zRangeByScore(key, Date.now() - 1 * DAY, Date.now());
@@ -234,16 +281,6 @@ function itemsFromObject(obj: any): Record<string, string> {
   return result;
 }
 
-function objectFromKeys(keys: string[]): any {
-  const obj = {};
-  for (let i = 0; i < keys.length; i += 2) {
-    const k = keys[i + 1];
-    // eslint-disable-next-line no-restricted-globals
-    obj[keys[i]] = (isNaN(k as any)) ? k : parseFloat(k);
-  }
-  return obj;
-}
-
 function objectTypeCorrection(obj: any): any {
   for (const k of Object.keys(obj)) {
     const v = obj[k];
@@ -264,20 +301,38 @@ function objectFromValues(keys: string[], values: any[]): any {
   return obj;
 }
 
+/**
+ * Set multiple keys and values in a Redis hash structure
+ * @param key Redis key for hash structure
+ * @param data Object containing key/values
+ * @param ttl TTL in seconds
+ * @returns status
+ */
 export async function redisHSet(key: string, data: any, ttl: number) {
   await initRedis();
   const items = keysFromObject(data);
   return redisClient.multi().hSet(
-      key, items,
-    ).expire(key, ttl).exec();
+    key, items,
+  ).expire(key, ttl).exec();
 }
 
+/**
+ * Get selected hash keys into an object.
+ * @param key Redis key for hash structure
+ * @param items Array of hash keys to get
+ * @returns Value object
+ */
 export async function redisHGetM(key: string, items: string[]): Promise<any> {
   await initRedis();
   const result = await redisClient.hmGet(key, items);
   return objectFromValues(items, result);
 }
 
+/**
+ * Send an event structure to the specified Redis stream. It will insert any missing ID information.
+ * @param event Event name
+ * @returns Promise
+ */
 export async function redisSendEvent<T extends Event>(event: T) {
   await initRedis();
   if (!event.body.operationId) {
@@ -296,13 +351,14 @@ export async function redisSendEvent<T extends Event>(event: T) {
   }
   const items = itemsFromObject(event.body);
   if (!redisClient.xAdd) return;
-  return redisClient.xAdd(event.event, '*', items, {
+  await redisClient.xAdd(event.event, '*', items, {
     TRIM: {
       strategy: 'MAXLEN',
       strategyModifier: '~',
       threshold: 1000,
       limit: 1000,
-  }});
+    },
+  });
 }
 
 const streamKeys = new Set<string>();
@@ -315,27 +371,49 @@ let consumerId = null;
 const readyStreams = new Set<string>();
 const streamIds = new Map<string, string>();
 
+/**
+ * Called once to set the name of the service
+ * @param group Name of service
+ */
 export function redisSetGroup(group: string) {
   consumerGroup = group;
 }
 
+/**
+ * Not to be used directly.
+ * @param stream Stream key
+ */
 export async function redisCreateGroup(stream: string) {
   await initRedis();
   try {
     await redisClient.xGroupCreate(stream, consumerGroup, '$', { MKSTREAM: true });
-  } catch(e) {}
+  } catch (e) {}
 }
 
+/**
+ * Add a callback for particular events
+ * @param key Stream key
+ * @param cb Callback function for events
+ * @returns Promise
+ */
 export function redisSetStreamCallback<T extends Event>(key: T['event'], cb: StreamCallback<T['body']>) {
   streamCallbacks.set(key, cb);
   streamKeys.add(key);
   return redisCreateGroup(key);
 }
 
+/**
+ * Get the previously set service name
+ * @returns Service name
+ */
 export function redisConsumerGroup() {
   return consumerGroup || '';
 }
 
+/**
+ * Get the service ID number
+ * @returns UUID string
+ */
 export function redisConsumerId() {
   let name: string;
   if (consumerId) {
@@ -353,6 +431,16 @@ export function redisConsumerId() {
   return name;
 }
 
+/**
+ * Start listening for all Redis streams for which we have set a callback.
+ * This is the function which will actually call the correct callbacks when
+ * an event occurs. It is a semi-blocking function in that it blocks until
+ * an event occurs but then calls itself asynchronously to obtain the next
+ * event.
+ * @param optName Not needed
+ * @param newKeys Not needed
+ * @returns Promise
+ */
 export async function redisStreamListen(optName?: string, newKeys?: string[]) {
   let name = optName;
 
