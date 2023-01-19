@@ -49,7 +49,7 @@ export default class Server {
   settings: Configuration;
 
   public $beforeInit() {
-    redisSetGroup('recorder-service');
+    redisSetGroup('playback-service');
   }
 
   public $afterInit() {

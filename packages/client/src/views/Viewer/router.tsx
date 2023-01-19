@@ -9,9 +9,9 @@ export function Router({ data }: { data: IStream }) {
     const path = process.env.ASSET_PATH;
     return (
         <Routes>
-            <Route path={`${path}*`} element={<GeneralView data={data}/>} />
             <Route path={`${path}view/skr`} element={<SKRView />} />
             <Route path={`${path}view/developer`} element={<DeveloperView />} />
+            <Route path={`${path}*`} element={<GeneralView data={data}/>} />
         </Routes>
     )
 }

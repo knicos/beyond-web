@@ -30,6 +30,7 @@
     "@ftl/api": "1.0.0",
     "@ftl/common": "1.0.0",
     "@ftl/types": "1.0.0",
+    "@msgpack/msgpack": "^2.8.0",
     "@tsed/ajv": "^7.10.0",
     "@tsed/common": "^7.10.0",
     "@tsed/core": "^7.10.0",

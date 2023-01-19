@@ -41,5 +41,4 @@ export const pinnedData = atom({
 export const recordingList = atom({
     key: 'recordingList',
     default: [],
-  });
-  
+});
