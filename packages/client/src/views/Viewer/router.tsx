@@ -6,12 +6,11 @@ import {GeneralView} from './GeneralView';
 import {IStream} from '../../api/streams';
 
 export function Router({ data }: { data: IStream }) {
-    const path = process.env.ASSET_PATH;
     return (
         <Routes>
-            <Route path={`${path}view/skr`} element={<SKRView />} />
-            <Route path={`${path}view/developer`} element={<DeveloperView />} />
-            <Route path={`${path}*`} element={<GeneralView data={data}/>} />
+            <Route path={`skr`} element={<SKRView />} />
+            <Route path={`developer`} element={<DeveloperView />} />
+            <Route path={`*`} element={<GeneralView data={data}/>} />
         </Routes>
     )
 }
