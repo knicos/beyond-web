@@ -34,7 +34,7 @@ service_build:
   script:
     - docker build -t webapp-service --target build -f ./docker/Dockerfile.services .
     - mkdir image
-    - docker save webapp-service | gzip > image/service.tar.gz
+  #  - docker save webapp-service | gzip > image/service.tar.gz
     
   #artifacts:
   #  paths:
@@ -125,7 +125,7 @@ deploy_client:
     DOCKER_USER: $DOCKER_USER
     DOCKER_PASSWORD: $DOCKER_PASSWORD
   script:
-    - docker load -i image/service.tar.gz
+    # - docker load -i image/service.tar.gz
     - docker build -t app.ftlab.utu.fi/app-$SERVICE_NAME:latest -f ./docker/Dockerfile.services --target $SERVICE_NAME .
     - echo "$DOCKER_PASSWORD" | docker login -u $DOCKER_USER --password-stdin app.ftlab.utu.fi
     - docker push app.ftlab.utu.fi/app-$SERVICE_NAME:latest
