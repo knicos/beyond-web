@@ -19,25 +19,27 @@ export default class UserService {
     private groups: MongooseModel<Group>;
 
     async $onInit() {
-      const admin = await this.getByUsername('admin');
-      let adminGroup = await this.groups.findOne({ name: 'FTL Root' });
+      if (process.env.NODE_ENV !== 'test') {
+        const admin = await this.getByUsername('admin');
+        let adminGroup = await this.groups.findOne({ name: 'FTL Root' });
 
-      if (!adminGroup) {
-        adminGroup = await this.groups.create({
-          name: 'FTL Root',
-          scopes: ['*.*'],
-          children: [],
-        });
-      }
+        if (!adminGroup) {
+          adminGroup = await this.groups.create({
+            name: 'FTL Root',
+            scopes: ['*.*'],
+            children: [],
+          });
+        }
 
-      if (!admin) {
-        await this.create({
-          username: 'admin',
-          firstName: 'Admin',
-          lastName: 'User',
-          password: 'admin',
-          groups: [adminGroup],
-        });
+        if (!admin) {
+          await this.create({
+            username: 'admin',
+            firstName: 'Admin',
+            lastName: 'User',
+            password: 'admin',
+            groups: [adminGroup],
+          });
+        }
       }
     }
 

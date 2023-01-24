@@ -7,9 +7,6 @@ stages:
   - test
   - deploy
 
-services:
-  - docker:dind
-
 client_build:
   stage: build
   only:
@@ -39,9 +36,9 @@ service_build:
     - mkdir image
     - docker save webapp-service | gzip > image/service.tar.gz
     
-  artifacts:
-    paths:
-      - image
+  #artifacts:
+  #  paths:
+  #    - image
 
 service_test:
   stage: test
@@ -53,8 +50,8 @@ service_test:
     - git
   needs: ["service_build"]
   script:
-    - docker load -i image/service.tar.gz
-    - docker run webapp-service yarn test --skip-nx-cache
+    #- docker load -i image/service.tar.gz
+    - docker-compose -f ./docker/test/docker-compose.yml run test-service yarn test --skip-nx-cache
 
 client_test:
   stage: test

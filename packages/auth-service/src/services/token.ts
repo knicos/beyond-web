@@ -15,7 +15,7 @@ export default class TokenService {
       await redisDelete(id);
     }
 
-    async create(client: Client, user: User, ttl: number): Promise<AccessToken> {
+    async create(client: Client, user: User | null, ttl: number): Promise<AccessToken> {
       const groupIds = [
         ...user?.groups?.filter((g) => g).map((g) => g.toString()) || [],
         ...client?.groups?.filter((g) => g).map((g) => g.toString()) || [],

@@ -1,0 +1,14 @@
+version: "3.4"
+services:  
+  test-service:
+    image: webapp-service
+    environment:
+      NODE_ENV: test
+      REDIS_HOST: redis
+    depends_on:
+      - redis
+
+  redis:
+    image: redis/redis-stack-server:latest
+    command: redis-stack-server --maxmemory 200mb --save "300 1" --appendonly no
+
