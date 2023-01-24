@@ -17,6 +17,5 @@
 	  "jsx": "react",
 	  "allowJs": true
 	},
-	"include": ["./src"],
-	"exclude": ["**/node_modules", "**/jest.config.js", "**/*.test.ts"]
+	"include": ["./src"]
 }

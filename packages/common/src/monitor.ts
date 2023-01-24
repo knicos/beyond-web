@@ -10,6 +10,9 @@ import {
  * @param server Express HTTP Server
  */
 export default function installMonitor(server: Server) {
+  if (process.env.NODE_ENV === 'test') {
+    return;
+  }
   const h = monitorEventLoopDelay({ resolution: 20 });
 
   let idleTime = 0;

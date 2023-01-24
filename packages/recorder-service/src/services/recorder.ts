@@ -23,7 +23,7 @@ const { encode, decode } = require('msgpack5')();
 const HOUR = 60 * 60 * 1000;
 const DAY = 24 * HOUR;
 const GIGABYTE = 1024 * 1024 * 1024;
-const BASEPATH = '/data/ftl';
+const BASEPATH = (process.env.NODE_ENV === 'test') ? '/tmp' : '/data/ftl';
 
 interface ActiveRecording {
   id: string;
@@ -68,14 +68,14 @@ function sendReset(uri: string, fsid: number, channel: number) {
   const latency = 0;
   const spkt = [1, fsid, 255, channel, 5];
   const pkt = [255, 7, 35, 255, 0, Buffer.alloc(0)];
-  redisPublish(`stream-out:${uri}`, encode([latency, spkt, pkt]));
+  return redisPublish(`stream-out:${uri}`, encode([latency, spkt, pkt]));
 }
 
 function sendRequest(uri: string, fsid: number, channel: number) {
   const latency = 0;
   const spkt = [1, fsid, 255, channel, 1];
   const pkt = [255, 7, 35, 255, 0, Buffer.alloc(0)];
-  redisPublish(`stream-out:${uri}`, encode([latency, spkt, pkt]));
+  return redisPublish(`stream-out:${uri}`, encode([latency, spkt, pkt]));
 }
 
 async function processPackets(rec: ActiveRecording, entry: Recording) {
@@ -133,10 +133,29 @@ async function processRecording(rec: ActiveRecording) {
   await redisSet<Recording>(key, entry);
 }
 
-setInterval(() => {
+let intervalActive = false;
+
+const interval = setInterval(() => {
+  if (intervalActive) return;
   // Write stuff to files
+  intervalActive = true;
   activeRecordings.forEach(processRecording);
+  intervalActive = false;
 }, 1000);
+
+export function stopRecordingInterval() {
+  clearInterval(interval);
+  return new Promise<void>((resolve) => {
+    const cb = () => {
+      if (intervalActive) {
+        setTimeout(cb, 10);
+      } else {
+        resolve();
+      }
+    };
+    cb();
+  });
+}
 
 @Service()
 export default class RecorderService {
@@ -180,8 +199,8 @@ export default class RecorderService {
       filename,
       startTime: new Date(),
     }
-    redisSet<Recording>(`recording:${owner}:${newEntry.id}`, newEntry, 1 * DAY);
-    redisAddItem(`recordings:list:${owner}`, newEntry.id, Date.now());
+    await redisSet<Recording>(`recording:${owner}:${newEntry.id}`, newEntry, 1 * DAY);
+    await redisAddItem(`recordings:list:${owner}`, newEntry.id, Date.now());
 
     const fd = await createFTLFile(filename);
 
@@ -221,14 +240,14 @@ export default class RecorderService {
         q.push(reencoded);
       };
       r.streamCallbacks.push(f);
-      redisSubscribe(`stream-in:${uri}`, f);
+      await redisSubscribe(`stream-in:${uri}`, f);
       // TODO: Set a recording data channel
-      sendReset(uri, 255, 0);
+      await sendReset(uri, 255, 0);
       $log.info(` -- ${uri}`);
     }
     activeRecordings.set(newEntry.id, r);
 
-    redisSendEvent<RecordingEvent>({
+    await redisSendEvent<RecordingEvent>({
       event: 'events:recording',
       body: {
         id: r.id,

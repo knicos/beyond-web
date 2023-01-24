@@ -23,19 +23,21 @@ export default class GrantService {
     private tokenService: TokenService;
 
     async $onInit() {
-      const client = await this.clients.findOne({ name: 'WebApp' });
+      if (process.env.NODE_ENV !== 'test') {
+        const client = await this.clients.findOne({ name: 'WebApp' });
 
-      if (!client) {
-        // eslint-disable-next-line new-cap
-        const newClient = new this.clients({
-          _id: '614d906bf0d4d418b719b9a8',
-          name: 'WebApp',
-          grantTypes: ['password'],
-        });
-        const result = await newClient.save();
-        $log.info('Client token id', result.id);
-      } else {
-        $log.info('Client token id', client.id);
+        if (!client) {
+          // eslint-disable-next-line new-cap
+          const newClient = new this.clients({
+            _id: '614d906bf0d4d418b719b9a8',
+            name: 'WebApp',
+            grantTypes: ['password'],
+          });
+          const result = await newClient.save();
+          $log.info('Client token id', result.id);
+        } else {
+          $log.info('Client token id', client.id);
+        }
       }
     }
 
@@ -87,7 +89,7 @@ export default class GrantService {
       } */
 
       if (!client.grantTypes.includes(request.grant_type)) {
-        throw new OAuthException('unauthorized_client');
+        throw new OAuthException('unauthorized_client', 'Grant type not allowed');
       }
 
       switch (request.grant_type) {
@@ -97,7 +99,7 @@ export default class GrantService {
         case 'client_credentials':
           return this.clientGrant(client);
         default:
-          throw new OAuthException('unsupported_grant_type');
+          throw new OAuthException('unsupported_grant_type', 'Unsupported grant type');
       }
     }
 
