@@ -13,7 +13,7 @@ export async function getRecordings(): Promise<IRecordingPlayback[]> {
     const res = await axios.get(PLAYBACK);
     return res.data;
   } catch(err) {
-    alert("ERROR");
+    alert("Error: " + err.toString());
     return [];
   }
 }
@@ -23,7 +23,7 @@ export async function startPlayback(id : string): Promise<{}> {
     const res = await axios.post(PLAYBACK+'/startPlay/'+id);
     return res.data;
   } catch(err) {
-    alert("ERROR");
+    alert("Error: " + err.toString());
     return {};
   }
 }
@@ -33,7 +33,7 @@ export async function stopPlayback(id : string): Promise<{}> {
     const res = await axios.post(PLAYBACK+'/stopPlay/'+id);
     return res.data;
   } catch(err) {
-    alert("ERROR");
+    alert("Error: " + err.toString());
     return {};
   }
 }

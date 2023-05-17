@@ -5,6 +5,8 @@ import {Nodes} from '../Nodes';
 import {Streams} from '../Streams';
 import {StreamView} from '../Stream';
 import {Recordings} from '../Recordings'
+import {WhiteboardList} from '../Whiteboard'
+import {Whiteboard} from '../Whiteboard'
 import MainListing from './MainListing';
 import { UnderConstruction } from './UnderConstruction';
 
@@ -18,6 +20,8 @@ export function Router() {
             <Route path={`${path}streams`} element={<Streams/>} />
             <Route path={`${path}stats`} element={<UnderConstruction/>} />
             <Route path={`${path}recordings`} element={<Recordings/>} />
+            <Route path={`${path}whiteboard`} element={<WhiteboardList/>} />
+            <Route path={`${path}whiteboard/:id`} element={<Whiteboard/>} />
             <Route path={`${path}configs`} element={<UnderConstruction/>} />
             <Route path={`${path}users`} element={<UnderConstruction/>} />
             <Route path={`${path}groups`} element={<UnderConstruction/>} />

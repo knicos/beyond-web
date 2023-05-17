@@ -8,7 +8,7 @@ import cookieParser from 'cookie-parser';
 import { redisStreamListen, redisSetGroup, installMonitor } from '@ftl/common';
 import Http from 'http';
 import './logger';
-import PlaybackController from './controllers/playback';
+import WhiteboardController from './controllers/whiteboard';
 
 $log.appenders.set('redis', {
   type: 'redis',
@@ -28,12 +28,12 @@ const rootDir = __dirname;
     logRequest: false,
   },
   mount: {
-    '/v1': [PlaybackController],
+    '/v1': [WhiteboardController],
   },
   mongoose: [
     {
       id: 'default',
-      url: `mongodb://${process.env.MONGO_HOST}:27017/playback`,
+      url: `mongodb://${process.env.MONGO_HOST}:27017/whiteboard`,
       connectionOptions: {},
     },
   ],
@@ -49,7 +49,7 @@ export default class Server {
   settings: Configuration;
 
   public $beforeInit() {
-    redisSetGroup('playback-service');
+    redisSetGroup('whiteboard-service');
   }
 
   public $afterInit() {

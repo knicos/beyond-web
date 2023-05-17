@@ -38,7 +38,7 @@ module.exports = {
   plugins: [
     new HtmlWebpackPlugin({
       title: 'FT-Lab',
-    }), 
+    }),
     new webpack.ProvidePlugin({
         Buffer: ['buffer', 'Buffer'],
     }),

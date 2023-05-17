@@ -9,7 +9,7 @@ import PlaybackService from '../services/playback';
 import Recording from '../models/playback';
 
 @Controller('/playback')
-export default class RecorderController {
+export default class PlaybackController {
   @Inject()
   srvc: PlaybackService;
 
