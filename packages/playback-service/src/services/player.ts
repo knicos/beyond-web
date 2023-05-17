@@ -59,6 +59,8 @@ export default class Player {
 
   private timestampStart : number = Number.MAX_SAFE_INTEGER;
 
+  private timestampNow : number = 0;
+
   private loopCount : number = 0;
 
   private requested : number = 0;
@@ -134,22 +136,44 @@ export default class Player {
     }
   }
 
+  private tSent : number = 0;
+
+  private tSendMax : number = 5000; // maximum amount (ms) to output between calls
+
   /** Read packets for number of frames  */
   private async sendFrames(nFrames : number = 1) {
     let nFramesSent = -1;
     let timestamp = -1;
     let nPacketsSent = 0;
+    let done : boolean = false;
 
     try {
       for await (const pkt of this.readPackets()) {
         // TODO: need to check for end of frame packet, if missing generate one
         if (timestamp !== pkt.spkt.getTimestamp()) {
+          const timestampOld = timestamp;
           timestamp = pkt.spkt.getTimestamp();
+          if (timestampOld > 0) {
+            this.timestampNow = timestamp
+            const duration = timestamp - timestampOld;
+            this.tSent += duration;
+          }
+
           nFramesSent += 1;
+          // the packet is already decoded and must not be discarded (break check after publish)
 
           // record first and last frame for timestamp updates later
           this.timestampStart = Math.min(this.timestampStart, timestamp);
           this.timestampEnd = Math.max(this.timestampEnd, timestamp);
+
+          if (nFramesSent === nFrames) {
+            done = true;
+          }
+
+          if (this.tSent >= this.tSendMax) {
+            nFramesSent = nFrames; // do not re-init; create descriptive variable
+            done = true;
+          }
         }
 
         // Rewrite timestamp (timestamp must always increase), no pause
@@ -158,7 +182,7 @@ export default class Player {
         redisPublish(`stream-in:${this.baseUri}`, encode([0, pkt.spkt.data, pkt.dpkt.data]));
         nPacketsSent += 1;
 
-        if (nFramesSent === nFrames) {
+        if (done) {
           break;
         }
       }
@@ -169,9 +193,11 @@ export default class Player {
       if ((nFramesSent < nFrames) && !this.stopped) {
         try { await this.initDecoder(); } catch (error) { $log.error('bug?: ', error) }
         this.loopCount += 1;
+        this.timestampNow = 0;
+        $log.warn('loop count', this.loopCount);
       }
     }
-    //$log.info("packets sent: ", nPacketsSent);
+    $log.info("packets sent: ", nPacketsSent, "output buffer: ", this.tSent);
     return nFramesSent;
   }
 
@@ -196,8 +222,10 @@ export default class Player {
     this.onMessage = (message) => {
       const buf = (typeof message === 'string') ? new Uint8Array(JSON.parse(message).data) : message;
       const pkt = new Packet((decode(buf) as Array<any>).slice(1));
-      this.requested = Math.min(this.requestedMax, this.requested + pkt.dpkt.getFrameCount())
-      // sendFrames() can not be called here as async calls can interleave
+      const nFrames = pkt.dpkt.getFrameCount();
+      this.requested += nFrames; // track requests per source
+      // $log.info('requested: ', nFrames, 'total requested', this.requested);
+      // sendFrames() can not be called here as async calls could interleave
     }
 
     redisSubscribe(`stream-out:${this.baseUri}`, this.onMessage);
@@ -207,15 +235,21 @@ export default class Player {
     //       beginning and send channel info and wait for requests
 
     // NOTE: sendFrames may send less than requested. This likely also sends too fast.
+    //       timer can't be  too short, otherwise loop counter gets spammed
+    const tInterval = 250;
     this.timer = setInterval(async () => {
       try {
-        this.sendFrames(this.requested);
+        const requested = this.requested;
         this.requested = 0;
+        if (requested > 0) {
+          this.tSent = Math.max(0, this.tSent - tInterval)
+          this.sendFrames(requested);
+        }
       } catch (error) {
         $log.error('bug? sendFrames() failed', error);
         clearInterval(this.timer);
       }
-    }, 500);
+    }, tInterval);
   }
 
   public async stopStream() {

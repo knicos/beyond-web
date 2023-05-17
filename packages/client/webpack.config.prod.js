@@ -31,7 +31,7 @@ module.exports = {
     new CompressionPlugin(),
     new HtmlWebpackPlugin({
       title: 'FT-Lab',
-    }), 
+    }),
     new webpack.ProvidePlugin({
         Buffer: ['buffer', 'Buffer'],
     }),
