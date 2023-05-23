@@ -35,7 +35,7 @@ service_build:
     - docker build -t webapp-service --target build -f ./docker/Dockerfile.services .
     - mkdir image
   #  - docker save webapp-service | gzip > image/service.tar.gz
-    
+
   #artifacts:
   #  paths:
   #    - image
@@ -170,6 +170,12 @@ deploy_diagnostic:
   variables:
     ENV_NAME: diagnostic_production
     SERVICE_NAME: diagnosticservice
+  extends: .service_deploy
+
+deploy_sketchpad:
+  variables:
+    ENV_NAME: whiteboard_production
+    SERVICE_NAME: whiteboardservice
   extends: .service_deploy
 
 #tag_deploy:
