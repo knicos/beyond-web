@@ -140,15 +140,18 @@ export default class PngStream {
       new Uint8Array([0])   // data
     ];
 
-
     await redisPublish(`stream-in:${this.uri}`, encode([0, spkt, dpkt]));
-
   }
 
   public async sendFrame(img : Uint8Array) : Promise<void> {
     if ((Date.now() - this.lastFrameSentTs) <= 1000.0/this.maxFps) {
       // send has to be scheduled in case no further update arrives on time
       // return;
+    }
+
+    if (!this.bActive) {
+      // restart stream if timed out due to inactivity
+      this.sendEventStartStream();
     }
 
     this.frameNumber = Date.now();
@@ -191,7 +194,6 @@ export default class PngStream {
     this.onMessage = (message) => {
       const buf = (typeof message === 'string') ? new Uint8Array(JSON.parse(message).data) : message;
       const dpkt = (decode(buf) as Array<any>)[2];
-      //log("got request for frames: " + dpkt[2] + " (" + this.uri + ")");
       // TODO: Do not re-send if connected client re-requests the frame (only useful to
       //       re-send when more than one client connected). Interleaving can result in too
       //       many sent frames if more than one client is connected.
@@ -211,7 +213,7 @@ export default class PngStream {
 
   public async stop() : Promise<void> {
     this.sendEventStopStream();
-    this.updateTimeout();
+    this.updateTimeout(); // clears timer
     await redisUnsubscribe(`stream-out:${this.baseUri}`, this.onMessage);
   }
 }
