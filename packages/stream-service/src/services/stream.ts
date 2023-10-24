@@ -9,9 +9,15 @@ import {
   redisSet,
   redisHSet,
   redisHGetM,
+  redisPublish,
 } from '@ftl/common';
 import { StreamDataEventBody, StreamOperationEventBody } from '@ftl/api';
 import { StreamLogger } from '../logger';
+
+import { decode, decodeArrayStream, Decoder, DecodeError } from '@msgpack/msgpack';
+import { log, time } from 'console';
+
+const { encode } = require('msgpack5')();
 
 const HOUR = 60 * 60;
 
@@ -147,5 +153,31 @@ export default class StreamService {
     //}
 
     // return null;
+  }
+
+  /** Post an out of band packet to an existing stream */
+  async postToStream(id: string, channel: number, data: string) {
+    if (!this.streamsById.has(id)) return null;
+    const s = this.streamsById.get(id);
+
+    const spkt = [
+      Date.now(),                            // timestamp; needs to increment
+      s.framesets[0].framesetId,             // source id
+      s.framesets[0].frames[0].frameId,      // frame number
+      channel,                               // channel
+      8,                                     // flags (8: kFlagOutOfBand)
+    ];
+
+    const dpkt = [
+      103,  // codec (103: kMsgPack)
+      0,    // reserved
+      1,    // frame count (for this packet)
+      0,    // bit rate (0: highest); not used
+      1,    // packet_count (for this frame, frame + eof)
+      encode(data),
+    ];
+    log([spkt, dpkt])
+
+    await redisPublish(`stream-in:${s.uri}`, encode([0, spkt, dpkt]));
   }
 }
