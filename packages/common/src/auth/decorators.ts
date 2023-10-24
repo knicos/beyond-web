@@ -7,7 +7,7 @@ import {
 } from '@tsed/schema';
 import AuthMiddleware from './middleware';
 
-export function Controller(path: string): any {
+export function Controller(path: any): any {
   return useDecorators(
     TSEDController(path),
     UseAuth(AuthMiddleware, {}),

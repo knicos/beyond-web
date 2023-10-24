@@ -23,7 +23,7 @@ const rootDir = __dirname;
   port: 8080,
   debug: false,
   mount: {
-    '/v1': [Streams],
+    '/v1': [Streams]
   },
   logger: {
     logRequest: false,

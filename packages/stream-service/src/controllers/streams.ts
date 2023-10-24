@@ -1,18 +1,24 @@
 /* eslint-disable class-methods-use-this */
 import {
-  Get, Inject, PathParams, QueryParams,
+  Get, Post, Inject, PathParams, QueryParams, BodyParams
 } from '@tsed/common';
-import { Description, Groups, Header } from '@tsed/schema';
+import { Description, Groups, Header, string } from '@tsed/schema';
 import { AccessToken } from '@ftl/types';
 import { Controller, UseToken } from '@ftl/common';
+
 import { NotFound } from '@tsed/exceptions';
 import fs from 'fs';
 import StreamService, { Stream } from '../services/stream';
 import Pageable from '../models/pageable';
 
+import StreamsPublic from './public'
+
 const defaultThumb = fs.readFileSync('./resources/thumb.jpg');
 
-@Controller('/streams')
+@Controller({
+  path: '/streams',
+  children: [StreamsPublic],
+})
 export default class Streams {
   @Inject()
   streamService: StreamService;
@@ -26,7 +32,7 @@ export default class Streams {
     );
   }
 
-  @Get('/:id/thumbnail/:fs/:f')
+  @Get('/thumbnail/:id/:fs/:f')
   @Header({
     'Content-Type': 'image/jpeg',
     'Cache-Control': 'max-age=30',
@@ -39,7 +45,7 @@ export default class Streams {
     return result;
   }
 
-  @Get('/:id')
+  @Get('/stream/:id')
   async get(@PathParams('id') id: string, @UseToken() token: AccessToken): Promise<Stream> {
     const result = await this.streamService.getInGroups(id, token.groups);
     if (!result) {

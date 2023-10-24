@@ -41,7 +41,7 @@ export async function getStreams(): Promise<IStream[]> {
 
 export async function getStream(id: string): Promise<IStream> {
   try {
-    const res = await axios.get(`${STREAMS}/${id}`);
+    const res = await axios.get(`${STREAMS}/stream/${id}`);
     return res.data;
   } catch(err) {
     return null;
@@ -50,7 +50,7 @@ export async function getStream(id: string): Promise<IStream> {
 
 export async function deleteStream(id: string): Promise<boolean> {
   try {
-    await axios.delete(`${STREAMS}/${id}`);
+    await axios.delete(`${STREAMS}/stream/${id}`);
     return true;
   } catch(err) {
     return false;
@@ -68,9 +68,13 @@ export async function createStream(data: ISaveStream): Promise<IStream> {
 
 export async function saveStream(id: string, data: ISaveStream): Promise<IStream> {
   try {
-    const res = await axios.put(`${STREAMS}/${id}`, data);
+    const res = await axios.put(`${STREAMS}/stream/${id}`, data);
     return res.data;
   } catch(err) {
     return null;
   }
+}
+
+export async function sendReactionToStream(id: string, data: string) {
+    axios.post(`${STREAMS}/public/reaction/${id}`, {reaction: data})
 }
