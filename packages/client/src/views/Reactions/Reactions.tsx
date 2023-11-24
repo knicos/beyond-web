@@ -85,7 +85,22 @@ export function ReactionGrid() {
       name: "confused",
       codepoint: 0x1F615
     },
-
+    {
+      name: "sparkles",
+      codepoint: 0x2728
+    },
+    {
+      name: "hearteyes",
+      codepoint: 0x1F60D
+    },
+    {
+      name: "thumbsup",
+      codepoint: 0x1F44D
+    },
+    {
+      name: "pray",
+      codepoint: 0x1F64F
+    },
   ];
 
   return (
