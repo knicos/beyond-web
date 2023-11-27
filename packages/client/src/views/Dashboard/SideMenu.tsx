@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaHome, FaUserAlt, FaServer, FaVideo, FaChartLine, FaListAlt, FaTable, FaCubes, FaFilm, FaPencilAlt, FaChalkboard, FaPaintBrush } from 'react-icons/fa';
+import { FaHome, FaUserAlt, FaServer, FaVideo, FaChartLine, FaListAlt, FaTable, FaCubes, FaFilm, FaPencilAlt, FaChalkboard, FaPaintBrush, FaThumbsUp } from 'react-icons/fa';
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
 
@@ -75,6 +75,10 @@ export function SideMenu() {
       <Link to={`${path}whiteboard`}>
         <FaPaintBrush />
         <MenuText>Sketchpad</MenuText>
+      </Link>
+      <Link target="_blank" to={`${path}reactions`}>
+        <FaThumbsUp />
+        <MenuText>Reactions</MenuText>
       </Link>
     </Container>
   )

@@ -20,13 +20,13 @@ export const Grid = styled.div`
     grid-template-columns: repeat(4, 1fr);
     flex-wrap: wrap;
     gap: 1rem;
-    padding: 1rem;
+    padding: 2rem;
 `;
 
 export const Item = styled.button`
     display: block;
     width: 100%;
-    font-size: 8rem;
+    font-size: 9rem;
     text-align: center;
 `
 
@@ -122,7 +122,7 @@ export function RectionLink() {
   return (
     <div>
       <div>{url}</div>
-      <div style={{'padding': '2rem'}}><QRCodeCanvas value={url} size={250}/></div>
+      <div style={{'padding': '2rem'}}><QRCodeCanvas value={url} size={175}/></div>
     </div>
   );
 }
